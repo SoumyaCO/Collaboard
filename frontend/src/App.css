@@ -1,0 +1,218 @@
+body {
+  max-width: 100%;
+  background-color: #f0f4ef;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+}
+
+.Logo {
+  max-width: 50%;
+  height: auto;
+}
+
+.profile_container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: auto;
+}
+
+.settings_icon,
+.profile_img {
+  margin-right: 50px;
+  width: 28px;
+  cursor: pointer;
+  transition: 0.1s;
+}
+
+.settings_icon:hover,
+.profile_img:hover {
+  background-color: #ff4500;
+  border-radius: 30px;
+}
+
+.home-banner-container {
+  margin-top: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.home-bannerImage-container {
+  flex: 1;
+  text-align: right;
+}
+
+.home-bannerImage-container img {
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+}
+
+.primary-heading {
+  margin: 4rem;
+  font-size: clamp(1rem, 4vw, 3.4rem);
+  color: #0d1821;
+  max-width: 600px;
+  margin-bottom: 10px;
+}
+
+.secondary-text {
+  font-size: clamp(0.5rem, 3vw, 1.5rem);
+  max-width: 500px;
+  color: #344966;
+  margin: 1rem 4rem;
+  margin-bottom: 20px;
+}
+.btn_input_btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 3rem 3rem;
+}
+
+.New_Room,
+.join_btn {
+  background-color: #ff6347; /* Tomato */
+  border: 2px solid #ff4500; /* OrangeRed */
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 10px 2px;
+  cursor: pointer;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.New_Room:hover,
+.join_btn:hover {
+  background-color: #ff4500;
+  transform: scale(1.05);
+}
+.Room_link {
+  padding: 12px;
+  width: 300px;
+  margin: 10px 2px;
+  border: 2px solid #ff6347;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.Room_link:focus {
+  /* border-color: #ff4500 */
+  outline: none;
+  box-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
+}
+
+/* canvas  ******* */
+
+/* Tools and colors container */
+.tools-and-colors-container {
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  margin-bottom: 20px;
+}
+
+/* Tools section */
+.tools {
+  display: flex;
+  gap: 10px;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.tool img {
+  width: 24px;
+  height: 24px;
+}
+
+.tool:hover {
+  background-color: #e0e0e0;
+  transform: scale(1.1);
+}
+
+.active-button {
+  background-color: green;
+}
+
+/* Colors section */
+.colors {
+  display: flex;
+  gap: 10px;
+}
+
+.color-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.color-border-active {
+  background-color: rgb(211, 210, 210);
+}
+
+.color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.color-border:hover {
+  background-color: #e0e0e0;
+  transform: scale(1.1);
+}
+
+.red {
+  background-color: red;
+}
+
+.blue {
+  background-color: blue;
+}
+
+.green {
+  background-color: green;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
+/* Canvas */
+#canvas {
+  width: 97vw;
+  height: 85vh;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
