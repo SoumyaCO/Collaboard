@@ -69,7 +69,7 @@ const styles = {
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     padding: "20px",
     width: "330px", // width for popup
-    height:"250px",
+    height: "250px",
     textAlign: "center",
   },
   hashContainer: {
@@ -86,7 +86,6 @@ const styles = {
     width: "100%", // Full width of the popup
     boxSizing: "border-box",
   },
-  
 };
 
 export default SmallScreenComponent;

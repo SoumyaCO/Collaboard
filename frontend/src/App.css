@@ -209,8 +209,8 @@ nav {
 
 /* Canvas */
 #canvas {
-  width: 97vw;
-  height: 85vh;
+  /* width: 97vw;
+  height: 85vh; */
   border: 2px solid #ccc;
   border-radius: 10px;
   background-color: #fff;
