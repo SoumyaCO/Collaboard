@@ -1,4 +1,5 @@
 # Collaboard
+
 ## Collaborative Meeting and Drawing Anytime, Anywhere.
 
 ## Features:
@@ -12,23 +13,40 @@
 7. Administrator privilege to mute, forbid from drawing or kick a member from a room
 
 ## Contribution:
+
 ### (for beginners)
 
 1. Pick an issue
-2. Fork this repo
-3. go to your own repository copy the url
+2. install the node modules
 
 ```bash
-git clone <url>
+cd backend && npm install
+cd frontend && npm install
 ```
-4. run the application
+
+3. Spin up the database (mongodb)
+
+```bash
+docker-compose up
+```
+
+4. Migrate the database
+
+```bash
+npx prisma migrate
+```
+
+7. run the application
 
 start the **backend**
+
 ```bash
 cd backend
 npm run start
 ```
+
 start the **frontend**
+
 ```bash
 cd frontend
 npm run dev
