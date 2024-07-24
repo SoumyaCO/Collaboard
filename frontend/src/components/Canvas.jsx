@@ -4,24 +4,15 @@ import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 
 const App = () => {
+  // Define color options
   const colors = ["black", "red", "green", "orange", "blue", "yellow"];
-  
 
+  // State variables for tool, color, stroke width, etc.
   const [tool, setTool] = useState("pen");
-  // State to keep track of the current drawing tool
-
   const [selectedColor, setSelectedColor] = useState("red");
-  // State to keep track of the currently selected color
-
   const [strokeWidth, setStrokeWidth] = useState(5);
-  // State to keep track of the stroke width for the pen tool
-
   const [isPressed, setIsPressed] = useState(false);
-  // State to determine if the mouse button is pressed
-
   const [imageData, setImageData] = useState(null);
-  // State to store the image data of the canvas for undo functionality
-
   const [drawingData, setDrawingData] = useState({
     tool: tool,
     color: selectedColor,
@@ -30,16 +21,34 @@ const App = () => {
     width: 0,
     height: 0,
   });
-  // State to hold the drawing data, including tool type, color, and coordinates
 
+  // Canvas and context references
   const canvasRef = useRef(null);
-  // Reference to the canvas element
-
   const contextRef = useRef(null);
-  // Reference to the 2D drawing context of the canvas
 
+  // Set up the canvas and context on mount
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (ctx) {
+      contextRef.current = ctx;
+    }
+
+    const updateCanvasSize = () => {
+      canvas.width = canvas.clientWidth; // Set canvas width
+      canvas.height = canvas.clientHeight; // Set canvas height
+    };
+
+    window.addEventListener("resize", updateCanvasSize); // Update size on resize
+    updateCanvasSize(); // Set initial size
+
+    return () => {
+      window.removeEventListener("resize", updateCanvasSize); // Clean up
+    };
+  }, []);
+
+  // Get mouse position relative to canvas
   const getMousePosition = (event) => {
-    // Function to get the mouse position relative to the canvas
     const rect = canvasRef.current.getBoundingClientRect();
     return {
       x: event.clientX - rect.left,
@@ -47,9 +56,9 @@ const App = () => {
     };
   };
 
+  // Begin drawing or erasing
   const beginDraw = (e) => {
-    // Function to start drawing on the canvas when the mouse button is pressed
-    if (e.button !== 0) return; // Only proceed if the left mouse button is pressed
+    if (e.button !== 0) return; // Only handle left mouse button
 
     const { x, y } = getMousePosition(e);
     setIsPressed(true);
@@ -60,125 +69,115 @@ const App = () => {
     }));
 
     const ctx = contextRef.current;
-    ctx.beginPath(); // Start a new path for drawing
-    ctx.moveTo(x, y); // Move the drawing cursor to the initial mouse position
+    ctx.beginPath();
+    ctx.moveTo(x, y);
     setImageData(
-      ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height)
+      ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height) // Save image data
     );
-    // Save the current state of the canvas for undo functionality
   };
 
+  // Update drawing or erasing based on tool selection
   const updateDraw = (e) => {
-    // Function to update the drawing on the canvas as the mouse moves
-    if (!isPressed) return; // Only update if the mouse button is pressed
+    if (!isPressed) return;
 
     const { x, y } = getMousePosition(e);
     const ctx = contextRef.current;
+    const canvas = canvasRef.current;
+
+    if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
+      // If the cursor is outside the canvas bounds, stop drawing or erasing
+      setIsPressed(false);
+      return;
+    }
 
     if (tool === "pen") {
-      ctx.strokeStyle = selectedColor; // Set the color of the stroke
-      ctx.lineWidth = strokeWidth; // Set the width of the stroke
-      ctx.lineCap = "round"; // Set the end cap style of the stroke
-      ctx.lineJoin = "round"; // Set the join style of the stroke
-      ctx.lineTo(x, y); // Draw a line to the new mouse position
-      ctx.stroke(); // Apply the stroke to the canvas
+      ctx.strokeStyle = selectedColor; // Set color for pen
+      ctx.lineWidth = strokeWidth; // Set stroke width for pen
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineTo(x, y);
+      ctx.stroke(); // Draw line
     } else if (tool === "rect") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
-      ctx.putImageData(imageData, 0, 0); // Restore the previous state of the canvas
-      ctx.fillStyle = "rgba(0, 120, 215, 0.3)"; // Set the color for the rectangle preview
-      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Draw the rectangle preview
-      ctx.strokeStyle = "rgba(0, 120, 215, 0.6)"; // Set the border color for the rectangle
-      ctx.lineWidth = 2; // Set the border width
-      ctx.setLineDash([]); // Set a solid border line
-      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Draw the rectangle border
+      ctx.putImageData(imageData, 0, 0); // Restore previous image data
+      ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
+      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Draw rectangle
+      ctx.strokeStyle = "rgba(0, 120, 215, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Stroke rectangle
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
-      ctx.putImageData(imageData, 0, 0); // Restore the previous state of the canvas
+      ctx.putImageData(imageData, 0, 0); // Restore previous image data
 
-      // Draw the dashed border to indicate the area to be erased
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.5)"; // Set the border color for the eraser area
-      ctx.lineWidth = 1; // Set the border width
-      ctx.setLineDash([5, 5]); // Set dashed border style
-      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Draw the dashed border
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Draw eraser outline
 
-      // Draw the transparent preview for the area to be erased
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Set the color for the eraser preview
-      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Draw the eraser preview
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Erase content
     }
   };
 
+  // End drawing or erasing
   const endDraw = (e) => {
-    // Function to finalize the drawing or erasing when the mouse button is released
-    if (tool === "rect" && isPressed) {
-      const { x, y } = getMousePosition(e);
-      const ctx = contextRef.current;
-      setIsPressed(false);
+    if (!isPressed) return;
 
-      ctx.putImageData(imageData, 0, 0); // Restore the previous state of the canvas
-      ctx.fillStyle = selectedColor; // Set the final fill color for the rectangle
+    const ctx = contextRef.current;
+    const { x, y } = getMousePosition(e);
+
+    if (
+      x < 0 ||
+      x > canvasRef.current.width ||
+      y < 0 ||
+      y > canvasRef.current.height
+    ) {
+      // If the cursor is outside the canvas bounds, stop drawing or erasing
+      setIsPressed(false);
+      return;
+    }
+
+    if (tool === "rect") {
+      ctx.putImageData(imageData, 0, 0); // Restore previous image data
+      ctx.fillStyle = selectedColor;
       ctx.fillRect(
         drawingData.startX,
         drawingData.startY,
         x - drawingData.startX,
         y - drawingData.startY
-      ); // Draw the final rectangle
+      ); // Finalize rectangle
     } else if (tool === "eraser") {
-      const { x, y } = getMousePosition(e);
-      const ctx = contextRef.current;
-      setIsPressed(false);
-
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Set the color for the eraser preview
-      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Draw the eraser preview
+      const eraseX = Math.min(drawingData.startX, x);
+      const eraseY = Math.min(drawingData.startY, y);
+      const eraseWidth = Math.abs(width);
+      const eraseHeight = Math.abs(height);
 
-      // Calculate buffer to ensure proper erasure area
-      const calculateBuffer = (width, height) => {
-        let bufferX = strokeWidth;
-        let bufferY = strokeWidth;
-
-        if (width < 0) {
-          bufferX = -strokeWidth;
-        }
-
-        if (height < 0) {
-          bufferY = -strokeWidth;
-        }
-
-        return { bufferX, bufferY };
-      };
-
-      const { bufferX, bufferY } = calculateBuffer(width, height);
-
-      // Clear the specified rectangle area from the canvas with a buffer
       ctx.clearRect(
-        drawingData.startX - bufferX - strokeWidth / 2,
-        drawingData.startY - bufferY - strokeWidth / 2,
-        Math.abs(width) + bufferX * 2 + strokeWidth,
-        Math.abs(height) + bufferY * 2 + strokeWidth
-      );
-    } else {
-      setIsPressed(false); // Release the press state if no specific tool action
+        eraseX - strokeWidth / 2,
+        eraseY - strokeWidth / 2,
+        eraseWidth + strokeWidth,
+        eraseHeight + strokeWidth
+      ); // Clear area for eraser
     }
+    setIsPressed(false); // Stop drawing or erasing
   };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    canvas.width = 800; // Set canvas width
-    canvas.height = 800; // Set canvas height
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    // Get the 2D drawing context of the canvas
-
-    if (ctx) {
-      contextRef.current = ctx; // Store the context reference
+  // Handle mouse leaving the canvas
+  const handleMouseOut = () => {
+    if (isPressed) {
+      const ctx = contextRef.current;
+      ctx.putImageData(imageData, 0, 0); // Restore previous image data
+      setIsPressed(false); // Stop drawing when mouse leaves canvas
     }
-  }, [selectedColor, strokeWidth]); // Reinitialize the canvas context when color or stroke width changes
-
+  };
   return (
     <div className="app">
       <div className="tools-and-colors-container">
@@ -207,9 +206,11 @@ const App = () => {
       </div>
       <canvas
         ref={canvasRef}
+        className="canvas"
         onMouseDown={beginDraw}
         onMouseMove={updateDraw}
         onMouseUp={endDraw}
+        onMouseOut={handleMouseOut}
       />
     </div>
   );
