@@ -33,6 +33,7 @@ const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
+const SocketConnection_1 = require("./Controllers/SocketConnection");
 // create an express server
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.urlencoded({
@@ -41,30 +42,27 @@ app.use(body_parser_1.default.urlencoded({
 app.use((0, cors_1.default)());
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer);
-// connection logics
 // make a count of the sockets.
 let countOfConnection = 0;
 io.on("connection", (socket) => {
     ++countOfConnection;
     console.log(`Client Connected with Socket Id: ${socket.id}`);
     // on join-room event
-    socket.on("join-room", (roomId) => {
-        socket.join(roomId);
-        console.log(`socket ${socket.id} has joined room ${roomId}`);
-        socket.on("onDraw", (drawData) => {
-            io.to(roomId).emit("draw", { drawData: JSON });
+    socket.on("join-room", (roomData) => {
+        (0, SocketConnection_1.joinRoom)(socket, roomData);
+        socket.on("on-drawing", (drawData) => {
+            (0, SocketConnection_1.draw)(socket, drawData, roomData);
         });
-        socket.on("leave-room", (roomId) => {
-            socket.leave(roomId);
-            console.log(`socket ${socket.id} has left from room ${roomId}`);
+        socket.on("leave-room", () => {
+            (0, SocketConnection_1.leaveRoom)(socket);
         });
     });
 });
 app.get("/", (req, res) => {
-    res.send("Hello Sir");
+    res.send("Routes are yet to be implemented");
 });
 const PORT = process.env.PORT;
 console.log(PORT);
 httpServer.listen(PORT, () => {
-    console.log("listning on port: ", PORT);
+    console.log("listening on port: ", PORT);
 });

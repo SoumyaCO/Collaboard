@@ -1,9 +1,9 @@
 interface Room {
     id: string;
-    date: Date;
     AdminName: string;
     adminUserID: string;
-    board: Board;
+    members: User[];
+    boards: Board[];
 }
 
 // array of RoomData
