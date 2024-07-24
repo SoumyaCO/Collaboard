@@ -208,11 +208,11 @@ nav {
 }
 
 /* Canvas */
-#canvas {
-  /* width: 97vw;
-  height: 85vh; */
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.canvas {
+  border: 2px solid #000; /* Border for the canvas */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Shadow effect */
+  width: 89vw; /* 80% of the viewport width */
+  height: 85vh; /* 70% of the viewport height */
+  display: block;
+  margin: 0 auto; /* Center horizontally */
 }
