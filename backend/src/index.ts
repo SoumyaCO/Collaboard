@@ -7,7 +7,11 @@ import { Server, Socket } from "socket.io";
 import bodyParser from "body-parser";
 import cors from "cors";
 
+import { Room } from "./Models/Room";
+import { Drawing } from "./Models/Drawing";
+
 import { draw, joinRoom, leaveRoom } from "./Controllers/SocketConnection";
+import userRouter from './routes/userRoutes'
 
 // create an express server
 const app = express();
@@ -18,6 +22,11 @@ app.use(
   }),
 );
 app.use(cors());
+
+// routers starts here
+app.use('/user', userRouter);
+
+// routers ends here 
 
 const httpServer = createServer(app);
 const io: Server = new Server(httpServer);
