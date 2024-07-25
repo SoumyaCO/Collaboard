@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Collaborative Drawing and Video Conferencing Application",
   "main": "app.js",
-  "type": "module",
   "scripts": {
     "test": "node dist/index.js"
   },
@@ -13,11 +12,14 @@
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/mongoose": "^5.11.97",
     "@types/socket.io": "^3.0.2",
     "body-parser": "^1.20.2",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "mongoose": "^8.5.1",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {

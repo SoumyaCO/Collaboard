@@ -1,15 +1,11 @@
 version: '3'
 services:
-  mongo:
+  mongodb:
     image: mongodb/mongodb-community-server:6.0-ubi8
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoadmin
-      MONGO_INITDB_ROOT_PASSWORD: password123
     ports:
       - 27017:27017
     volumes:
-      - mongodata:/data/db
+      - type: bind
+        source: ./data
+        target: /data/db
 
-volumes:
-  mongodata:
-    driver: local

@@ -1,4 +1,4 @@
-interface Drawing {
+export interface Drawing {
     userId: string;
     tool: string;
     strokeWidth: number;

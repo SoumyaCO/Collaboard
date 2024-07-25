@@ -1,4 +1,7 @@
 import { Socket } from "socket.io";
+import { Room } from "../Models/Room";
+import { Board } from "../Models/Board";
+import { Drawing } from "../Models/Drawing";
 
 /**
  * Joins a client to a specified room and emits the current canvas state to it.
