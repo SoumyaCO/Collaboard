@@ -4,7 +4,7 @@ import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 
 const App = () => {
-  // Define color options
+  //  color options
   const colors = ["black", "red", "green", "orange", "blue", "yellow"];
 
   // State variables for tool, color, stroke width, etc.
@@ -26,7 +26,7 @@ const App = () => {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
-  // Set up the canvas and context on mount
+  // set up the canvas and context on mount
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -47,7 +47,7 @@ const App = () => {
     };
   }, []);
 
-  // Get mouse position relative to canvas
+  // get mouse position relative to canvas
   const getMousePosition = (event) => {
     const rect = canvasRef.current.getBoundingClientRect();
     return {
@@ -56,9 +56,9 @@ const App = () => {
     };
   };
 
-  // Begin drawing or erasing
+  // starting drawing or erasing
   const beginDraw = (e) => {
-    if (e.button !== 0) return; // Only handle left mouse button
+    if (e.button !== 0) return; // only handle left mouse button
 
     const { x, y } = getMousePosition(e);
     setIsPressed(true);
@@ -85,8 +85,7 @@ const App = () => {
     const canvas = canvasRef.current;
 
     if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
-      // If the cursor is outside the canvas bounds, stop drawing or erasing
-      setIsPressed(false);
+      // if the cursor is outside the canvas bounds, adjust drawing area
       return;
     }
 
@@ -101,26 +100,38 @@ const App = () => {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
+      // determines the x-coordinate of the top-left corner of the rectangle.
+      // If width is negative (mouse moved left), it sets rectX to x (current mouse x-coordinate),
+      // otherwise, it uses drawingData.startX.
+      const rectX = width < 0 ? x : drawingData.startX;
+      const rectY = height < 0 ? y : drawingData.startY;
+      const rectWidth = Math.abs(width);
+      const rectHeight = Math.abs(height);
+
       ctx.putImageData(imageData, 0, 0); // Restore previous image data
       ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
-      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Draw rectangle
+      ctx.fillRect(rectX, rectY, rectWidth, rectHeight); // Draw rectangle
       ctx.strokeStyle = "rgba(0, 120, 215, 0.6)";
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
-      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Stroke rectangle
+      ctx.strokeRect(rectX, rectY, rectWidth, rectHeight); // Stroke rectangle
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
-      ctx.putImageData(imageData, 0, 0); // Restore previous image data
+      const eraseX = width < 0 ? x : drawingData.startX;
+      const eraseY = height < 0 ? y : drawingData.startY;
+      const eraseWidth = Math.abs(width);
+      const eraseHeight = Math.abs(height);
 
+      ctx.putImageData(imageData, 0, 0); // Restore previous image data
       ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
       ctx.lineWidth = 1;
       ctx.setLineDash([5, 5]);
-      ctx.strokeRect(drawingData.startX, drawingData.startY, width, height); // Draw eraser outline
+      ctx.strokeRect(eraseX, eraseY, eraseWidth, eraseHeight); // Draw eraser outline
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.fillRect(drawingData.startX, drawingData.startY, width, height); // Erase content
+      ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // Erase content
     }
   };
 
@@ -174,21 +185,41 @@ const App = () => {
   const handleMouseOut = () => {
     if (isPressed) {
       const ctx = contextRef.current;
+
       ctx.putImageData(imageData, 0, 0); // Restore previous image data
       setIsPressed(false); // Stop drawing when mouse leaves canvas
     }
   };
+
+  // Select tool functions
+  const selectTool = (selectedTool) => {
+    setTool(selectedTool);
+  };
+
   return (
     <div className="app">
       <div className="tools-and-colors-container">
         <div className="tools">
-          <div className="tool pen" onClick={() => setTool("pen")}>
+          <div
+            className={`tool pen ${tool === "pen" ? "active-button" : ""}`}
+            onClick={() => selectTool("pen")}
+          >
             <img src={pen} alt="pen" />
           </div>
-          <div className="tool rectangle" onClick={() => setTool("rect")}>
+          <div
+            className={`tool rectangle ${
+              tool === "rect" ? "active-button" : ""
+            }`}
+            onClick={() => selectTool("rect")}
+          >
             <img src={rectangle} alt="rectangle" />
           </div>
-          <div className="tool eraser" onClick={() => setTool("eraser")}>
+          <div
+            className={`tool eraser ${
+              tool === "eraser" ? "active-button" : ""
+            }`}
+            onClick={() => selectTool("eraser")}
+          >
             <img src={eraser} alt="eraser" />
           </div>
         </div>
@@ -196,7 +227,9 @@ const App = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className="color-border"
+              className={`color-border ${
+                selectedColor === color ? "color-border-active" : ""
+              }`}
               onClick={() => setSelectedColor(color)}
             >
               <div className="color" style={{ backgroundColor: color }}></div>
@@ -210,7 +243,7 @@ const App = () => {
         onMouseDown={beginDraw}
         onMouseMove={updateDraw}
         onMouseUp={endDraw}
-        onMouseOut={handleMouseOut}
+        onMouseOut={handleMouseOut} // Handle mouse leaving canvas
       />
     </div>
   );
