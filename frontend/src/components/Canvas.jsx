@@ -100,6 +100,9 @@ const App = () => {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
 
+      // determines the x-coordinate of the top-left corner of the rectangle.
+      // If width is negative (mouse moved left), it sets rectX to x (current mouse x-coordinate),
+      // otherwise, it uses drawingData.startX.
       const rectX = width < 0 ? x : drawingData.startX;
       const rectY = height < 0 ? y : drawingData.startY;
       const rectWidth = Math.abs(width);
