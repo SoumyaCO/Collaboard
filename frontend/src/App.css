@@ -210,9 +210,9 @@ nav {
 /* Canvas */
 .canvas {
   border: 2px solid #000; /* Border for the canvas */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Shadow effect */
-  width: 89vw; /* 80% of the viewport width */
-  height: 85vh; /* 70% of the viewport height */
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.5); /* Shadow effect */
+  width: 89vw; 
+  height: 85vh; 
   display: block;
   margin: 0 auto; /* Center horizontally */
 }
