@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import {emitDrawing ,doDrawing} from "../utils/Socket";
 import pen from "../assets/pen.png";
 import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
@@ -74,6 +75,20 @@ const App = () => {
     setImageData(
       ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height) // Save image data
     );
+     
+    // emit drawing start
+     emitDrawing({
+      tool,
+      color: selectedColor,
+      strokeWidth,
+      x,
+      y,
+      startX: x,
+      startY: y,
+      width: 0,
+      height: 0,
+    });
+  
   };
 
   // Update drawing or erasing based on tool selection
@@ -95,7 +110,20 @@ const App = () => {
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.lineTo(x, y);
-      ctx.stroke(); // Draw line
+      ctx.stroke(); 
+          // emit pen drawing data
+          emitDrawing({
+            tool,
+            color: selectedColor,
+            strokeWidth,
+            x,
+            y,
+            startX: drawingData.startX,
+            startY: drawingData.startY,
+            width: 0,
+            height: 0,
+          });
+
     } else if (tool === "rect") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -115,6 +143,18 @@ const App = () => {
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.strokeRect(rectX, rectY, rectWidth, rectHeight); // Stroke rectangle
+      // Emit rectangle data
+      emitDrawing({
+        tool,
+        color: selectedColor,
+        strokeWidth,
+        x,
+        y,
+        startX: drawingData.startX,
+        startY: drawingData.startY,
+        width: rectWidth,
+        height: rectHeight,
+      });
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -131,7 +171,19 @@ const App = () => {
       ctx.strokeRect(eraseX, eraseY, eraseWidth, eraseHeight); // Draw eraser outline
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // Erase content
+      ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // erase content
+      // emit eraser data
+      emitDrawing({
+        tool,
+        color: selectedColor,
+        strokeWidth,
+        x,
+        y,
+        startX: drawingData.startX,
+        startY: drawingData.startY,
+        width: eraseWidth,
+        height: eraseHeight,
+      });
     }
   };
 
@@ -143,10 +195,7 @@ const App = () => {
     const { x, y } = getMousePosition(e);
 
     if (
-      x < 0 ||
-      x > canvasRef.current.width ||
-      y < 0 ||
-      y > canvasRef.current.height
+      x < 0 || x > canvasRef.current.width || y < 0 || y > canvasRef.current.height
     ) {
       // If the cursor is outside the canvas bounds, stop drawing or erasing
       setIsPressed(false);
@@ -181,7 +230,7 @@ const App = () => {
     setIsPressed(false); // Stop drawing or erasing
   };
 
-  // Handle mouse leaving the canvas
+  // handle mouse leaving the canvas
   const handleMouseOut = () => {
     if (isPressed) {
       const ctx = contextRef.current;
@@ -195,6 +244,33 @@ const App = () => {
   const selectTool = (selectedTool) => {
     setTool(selectedTool);
   };
+
+// listen for drawing data from the server
+  useEffect(() =>{
+    doDrawing((data) =>{
+      const ctx =contextRef .current;
+      const canvas =canvasRef.current;
+
+      if (data.tool === "pen"){
+        ctx.strokeStyle = data.color;
+        ctx,lineWidth =data.strokeWidth;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineTo(data.x, data.y);
+        ctx.stroke();
+      }
+      else if (data.tool === "rect"){
+        ctx.putImageData(imageData, 0, 0);
+        ctx.fillStyle = (data.color);
+        ctx.fillRect = (data.startX, data.startY, data.width, data.height);
+      }
+      else if (data.tool === "eraser"){
+        ctx.putImageData(imageData, 0, 0);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)" //body color canvas
+        ctx.fillRect = (data.startX, data.startY, data.width, data.height);
+      }
+    });
+  },[]);
 
   return (
     <div className="app">

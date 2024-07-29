@@ -42,7 +42,7 @@ start the **backend**
 
 ```bash
 cd backend
-npm run start
+node dist/index.js
 ```
 
 start the **frontend**
