@@ -143,6 +143,7 @@ const App = () => {
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.strokeRect(rectX, rectY, rectWidth, rectHeight); // Stroke rectangle
+
       // Emit rectangle data
       emitDrawing({
         tool,
@@ -155,6 +156,7 @@ const App = () => {
         width: rectWidth,
         height: rectHeight,
       });
+
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -171,6 +173,7 @@ const App = () => {
       ctx.strokeRect(eraseX, eraseY, eraseWidth, eraseHeight); // Draw eraser outline
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+
       ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // erase content
       // emit eraser data
       emitDrawing({
@@ -184,6 +187,7 @@ const App = () => {
         width: eraseWidth,
         height: eraseHeight,
       });
+      ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // Erase content
     }
   };
 
