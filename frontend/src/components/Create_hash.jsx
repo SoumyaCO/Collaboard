@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const generateRandomHash = () => {
@@ -17,6 +17,20 @@ const generateRandomHash = () => {
 const SmallScreenComponent = () => {
   const [hash, setHash] = useState(generateRandomHash());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // retrieve hash from sessionStorage or generate a new one
+    const storedHash = sessionStorage.getItem("sessionHash");
+    if (storedHash) {
+      setHash(storedHash);
+    } 
+    else
+     {
+      const newHash = generateRandomHash();
+      setHash(newHash);
+      sessionStorage.setItem("sessionHash", newHash);
+    }
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard
