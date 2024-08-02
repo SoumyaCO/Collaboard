@@ -5,7 +5,7 @@ const generateRandomHash = () => {
   const length = 30; // specified length of the hash
   let hash = "";
   const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
   for (let i = 0; i < length; i++) {
     hash += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -23,9 +23,7 @@ const SmallScreenComponent = () => {
     const storedHash = sessionStorage.getItem("sessionHash");
     if (storedHash) {
       setHash(storedHash);
-    } 
-    else
-     {
+    } else {
       const newHash = generateRandomHash();
       setHash(newHash);
       sessionStorage.setItem("sessionHash", newHash);

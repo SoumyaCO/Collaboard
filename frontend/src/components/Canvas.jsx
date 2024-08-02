@@ -9,6 +9,7 @@ const App = () => {
   const colors = ["black", "red", "green", "orange", "blue", "yellow"];
 
   // State variables for tool, color, stroke width, etc.
+  
   const [tool, setTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("red");
   const [strokeWidth, setStrokeWidth] = useState(5);
@@ -187,7 +188,7 @@ const App = () => {
         width: eraseWidth,
         height: eraseHeight,
       });
-      ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // Erase content
+      
     }
   };
 
@@ -198,8 +199,7 @@ const App = () => {
     const ctx = contextRef.current;
     const { x, y } = getMousePosition(e);
 
-    if (
-      x < 0 || x > canvasRef.current.width || y < 0 || y > canvasRef.current.height
+    if (x < 0 || x > canvasRef.current.width || y < 0 || y > canvasRef.current.height
     ) {
       // If the cursor is outside the canvas bounds, stop drawing or erasing
       setIsPressed(false);
@@ -249,32 +249,33 @@ const App = () => {
     setTool(selectedTool);
   };
 
-// listen for drawing data from the server
-  useEffect(() =>{
-    doDrawing((data) =>{
-      const ctx =contextRef .current;
-      const canvas =canvasRef.current;
 
-      if (data.tool === "pen"){
-        ctx.strokeStyle = data.color;
-        ctx,lineWidth =data.strokeWidth;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineTo(data.x, data.y);
-        ctx.stroke();
-      }
-      else if (data.tool === "rect"){
-        ctx.putImageData(imageData, 0, 0);
-        ctx.fillStyle = (data.color);
-        ctx.fillRect = (data.startX, data.startY, data.width, data.height);
-      }
-      else if (data.tool === "eraser"){
-        ctx.putImageData(imageData, 0, 0);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)" //body color canvas
-        ctx.fillRect = (data.startX, data.startY, data.width, data.height);
-      }
-    });
-  },[]);
+// Listen for drawing data from the server
+useEffect(() => {
+  const handleDrawing = (data) => {
+    const ctx = contextRef.current;
+    const canvas = canvasRef.current;
+
+    if (data.tool === "pen") {
+      ctx.strokeStyle = data.color;
+      ctx.lineWidth = data.strokeWidth;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineTo(data.x, data.y);
+      ctx.stroke();
+    } else if (data.tool === "rect") {
+      ctx.putImageData(imageData, 0, 0);
+      ctx.fillStyle = data.color;
+      ctx.fillRect(data.startX, data.startY, data.width, data.height);
+    } else if (data.tool === "eraser") {
+      ctx.putImageData(imageData, 0, 0);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.fillRect(data.startX, data.startY, data.width, data.height);
+    }
+  };
+
+  doDrawing(handleDrawing);
+}, [imageData]);
 
   return (
     <div className="app">
