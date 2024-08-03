@@ -211,8 +211,8 @@ nav {
 .canvas {
   border: 2px solid #000; /* Border for the canvas */
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.5); /* Shadow effect */
-  width: 89vw; 
-  height: 85vh; 
+  width: 89vw;
+  height: 85vh;
   display: block;
   margin: 0 auto; /* Center horizontally */
 }
