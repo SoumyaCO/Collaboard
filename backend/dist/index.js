@@ -35,6 +35,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const SocketConnection_1 = require("./Controllers/SocketConnection");
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 // create an express server
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.urlencoded({
@@ -42,6 +43,7 @@ app.use(body_parser_1.default.urlencoded({
 }));
 app.use((0, cors_1.default)());
 // routers starts here
+app.use('/auth', authRoutes_1.default);
 app.use('/user', userRoutes_1.default);
 // routers ends here 
 const httpServer = (0, http_1.createServer)(app);
