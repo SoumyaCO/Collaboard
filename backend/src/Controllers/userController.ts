@@ -2,8 +2,13 @@ import UserModel, { User } from "../Models/User";
 
 export const createUser = async (userData: User) => {
     const user = new UserModel(userData);
-    await user.save();
-    return user;
+
+    await user.save()
+        .then(() => {    // don't need a "value" in place of () (* as we're not logging this)
+            console.log("User Created");
+        }).catch(err => {
+            console.log(err);
+        })
 }
 
 export const deleteUser = async (userId: string) => {

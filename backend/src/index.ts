@@ -11,19 +11,23 @@ import { Room } from "./Models/Room";
 import { Drawing } from "./Models/Drawing";
 
 import { draw, joinRoom, leaveRoom } from "./Controllers/SocketConnection";
-import userRouter from './routes/userRoutes'
-
+import userRouter from './routes/userRoutes';
+import authRouter from './routes/authRoutes';
 // create an express server
 const app = express();
 
 app.use(
   bodyParser.urlencoded({
     extended: true,
-  }),
+  }), 
+  bodyParser.json({ 
+    type: 'application/json'
+ })
 );
+// app.use(bodyParser.json({ type: 'application/json' }))
 app.use(cors());
-
 // routers starts here
+app.use('/auth', authRouter);
 app.use('/user', userRouter);
 
 // routers ends here 
