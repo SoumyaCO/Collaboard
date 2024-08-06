@@ -16,8 +16,12 @@ exports.getUser = exports.updateUser = exports.deleteUser = exports.createUser =
 const User_1 = __importDefault(require("../Models/User"));
 const createUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     const user = new User_1.default(userData);
-    yield user.save();
-    return user;
+    yield user.save()
+        .then(value => {
+        console.log("User Created");
+    }).catch(err => {
+        console.log(err);
+    });
 });
 exports.createUser = createUser;
 const deleteUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {

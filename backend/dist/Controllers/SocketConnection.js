@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.draw = exports.leaveRoom = exports.joinRoom = void 0;
+exports.joinRoom = joinRoom;
+exports.leaveRoom = leaveRoom;
+exports.draw = draw;
 /**
  * Joins a client to a specified room and emits the current canvas state to it.
  *
@@ -17,7 +19,6 @@ function joinRoom(client, roomData) {
     client.to(roomData.id).emit("get-current-canvas", roomData.board.currentState);
     console.log(`[INFO] (joined...)Socket ${client.id} has joined room ${roomData.id}`);
 }
-exports.joinRoom = joinRoom;
 /**
  * Leave a client from the joined room and disconnects from the server
  * @param client - The socket instance representing the client
@@ -38,7 +39,6 @@ function leaveRoom(client) {
         console.error("[Error] Client is in more than one room");
     }
 }
-exports.leaveRoom = leaveRoom;
 /**
  * Listen for the <"Draw"> event from any client connected to the room and emits the event to the other members of the room
  * @param client   - The socket instance representing the client
@@ -56,4 +56,3 @@ exports.leaveRoom = leaveRoom;
 function draw(client, drawData, roomData) {
     client.to(roomData.id).emit("draw-on-canvas", drawData);
 }
-exports.draw = draw;
