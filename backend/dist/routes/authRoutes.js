@@ -36,12 +36,24 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.send('Email already exists');
     // Hash password
     let hashPassword = "";
-    const salt = yield bcryptjs_1.default.genSalt(10);
-    try {
-        hashPassword = yield bcryptjs_1.default.hash(req.body.password, salt);
+    let salt = "";
+    yield bcryptjs_1.default.genSalt(10)
+        .then(value => {
+        salt = value;
+    }).catch(e => {
+        console.log(e);
+    });
+    if (!req.body.password) {
+        console.log("Pass not found");
     }
-    catch (err) {
-        console.log(err);
+    else {
+        yield bcryptjs_1.default.hash(req.body.password, salt)
+            .then(value => {
+            hashPassword = value;
+        })
+            .catch(e => {
+            console.log(e);
+        });
     }
     // Create user
     const newUser = {
@@ -53,15 +65,7 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
         password: hashPassword,
         createdAt: new Date(),
     };
-    try {
-        (0, userController_1.createUser)(newUser);
-        res.send({
-            message: "User created"
-        });
-    }
-    catch (err) {
-        res.status(502).send(err);
-    }
+    yield (0, userController_1.createUser)(newUser);
 }));
 // login
 router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -19,10 +19,13 @@ const app = express();
 app.use(
   bodyParser.urlencoded({
     extended: true,
-  }),
+  }), 
+  bodyParser.json({ 
+    type: 'application/json'
+ })
 );
+// app.use(bodyParser.json({ type: 'application/json' }))
 app.use(cors());
-
 // routers starts here
 app.use('/auth', authRouter);
 app.use('/user', userRouter);

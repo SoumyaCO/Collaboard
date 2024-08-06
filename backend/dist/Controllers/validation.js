@@ -41,16 +41,16 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const registerValidation = (data) => {
     const schema = Joi.object({
         username: Joi.string()
-            .min(6),
+            .min(6).required(),
         firstName: Joi.string()
-            .min(2),
+            .min(2).required(),
         lastName: Joi.string()
-            .min(2),
+            .min(2).required(),
         email: Joi.string()
             .min(6)
-            .email(),
+            .email().required(),
         password: Joi.string()
-            .min(6),
+            .min(6).required(),
     });
     return schema.validate(data);
 };

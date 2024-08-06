@@ -40,7 +40,10 @@ const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.urlencoded({
     extended: true,
+}), body_parser_1.default.json({
+    type: 'application/json'
 }));
+// app.use(bodyParser.json({ type: 'application/json' }))
 app.use((0, cors_1.default)());
 // routers starts here
 app.use('/auth', authRoutes_1.default);

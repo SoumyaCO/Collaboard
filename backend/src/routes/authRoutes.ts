@@ -15,8 +15,6 @@ import { log } from "console";
 // import * as dotenv from "dotenv";
 // dotenv.config();
 
-
-
 const router = express.Router();
 
 const secret = process.env.JWT_PASS;
@@ -33,14 +31,26 @@ router.post('/register', async (req: Request, res: Response) => {
 
   // Hash password
   let hashPassword: string = "";
-  const salt: string = await bcrypt.genSalt(10);
-   await bcrypt.hash(req.body.password, salt)
-   .then(value=>{
-    hashPassword = value;
-   })
-  .catch(e =>{
-    console.log(e);
-  })
+  let salt: string = "";
+  await bcrypt.genSalt(10)
+    .then(value => {
+      salt = value
+    }).catch(e => {
+      console.log(e);
+    })
+  if (!req.body.password) {
+    console.log("Pass not found");
+
+  } else {
+    await bcrypt.hash(req.body.password, salt)
+      .then(value => {
+        hashPassword = value;
+      })
+      .catch(e => {
+        console.log(e);
+      })
+  }
+
   // Create user
   const newUser: User = {
     id: uuidv4(),
@@ -51,15 +61,8 @@ router.post('/register', async (req: Request, res: Response) => {
     password: hashPassword,
     createdAt: new Date(),
   };
-  try {
-    createUser(newUser);
-    res.send({
-      message: "User created"
-    });
-  }
-  catch (err) {
-    res.status(502).send(err);
-  }
+  await createUser(newUser);
+
 });
 
 // login
@@ -145,24 +148,24 @@ router.post('/reset-password/:id/:token', (req, res) => {
   const id = req.params.id;
   const token = req.params.token;
 
-  if(!secret) return res.send({msg: "Error with token"})
-  else{
+  if (!secret) return res.send({ msg: "Error with token" })
+  else {
     jwt.verify(token, secret, async (err, decoded) => {
       if (err) {
         return res.json({ msg: "Token error" })
       } else {
         const hashPassword = hash(req.body.password);
-        try{
-          UserModel.findByIdAndUpdate({_id : id}, {password: hashPassword})
-          return res.send({msg: "Password updated successfully"})
-        }catch(e){
-          return res.send({msg: e});
+        try {
+          UserModel.findByIdAndUpdate({ _id: id }, { password: hashPassword })
+          return res.send({ msg: "Password updated successfully" })
+        } catch (e) {
+          return res.send({ msg: e });
         }
       }
     })
   }
-  })
-  
+})
+
 
 
 export default router;
