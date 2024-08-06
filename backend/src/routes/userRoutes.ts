@@ -7,32 +7,8 @@ import {
   updateUser,
   getUser,
 } from "../Controllers/userController";
-import mongoose from "mongoose";
 
 const router = express.Router();
-
-let conn_str: string | undefined = "";
-if (process.env.NODE_ENVIRONMENT === "local") {
-  conn_str = process.env.MONGO_URL_LOCAL;
-  console.log(`[environment] local`.green.bold);
-} else {
-  conn_str = process.env.MONGO_URL_PROD;
-  console.log(`[environment] production`.green.bold);
-}
-
-if (!conn_str) {
-  console.error("Database connection string is undefined.".red.bold);
-  process.exit(1); // Exit the process if the connection string is not defined
-}
-
-mongoose
-  .connect(conn_str)
-  .then(() => {
-    console.log(`[Connected] connected to the database!\n`.cyan.bold);
-  })
-  .catch((error) => {
-    console.error(`Error: ${error}`.red.italic);
-  });
 
 router.post("/", async (req: Request, res: Response) => {
   try {

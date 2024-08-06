@@ -1,60 +1,50 @@
 import { Socket } from "socket.io";
-import { Room } from "../Models/Room";
-import { Board } from "../Models/Board";
-import { Drawing } from "../Models/Drawing";
+import RoomModel from "../Models/Room";
+
+// TODO: add more functions here and make the index.ts less cluttered
 
 /**
- * Joins a client to a specified room and emits the current canvas state to it.
- * 
- * @param {Socket} client - The socket instance representing the client.
- * @param {Room} roomData - An object containing the room's details, including its ID and the current state of the board.
- * 
- * @example
- * socket.on("<join-event>", (roomData: Room)=>{
- *      joinRoom(socket, roomData);
- * });
- */
-export function joinRoom(client: Socket, roomData: Room) {
-    client.join(roomData.id)
-    client.to(roomData.id).emit("get-current-canvas", roomData.board.currentState)
-    console.log(`[INFO] (joined...)Socket ${client.id} has joined room ${roomData.id}`);
+ * Checks for already exsisting room and then creates a room
+ * @param data: a room id basically
+ * @param client :Socket - socket.io socket instance
+*/
+
+export async function createRoom(client: Socket, data: any) {
+    client.join(data.id);
+    console.log(
+        `[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
+    );
+
+    await RoomModel.create({
+        roomId: data.id,
+        adminId: client.id,
+        members: [client.handshake.auth.username],
+    }).then(() => {
+        console.log("Room Created successfully in the database".green.italic)
+    }).catch((error) => {
+        console.log(`Error occurred ${error}`.red.underline)
+    })
 }
 
 /**
- * Leave a client from the joined room and disconnects from the server
- * @param client - The socket instance representing the client 
- * 
- * @example 
- * socket.on("<leave-event>", ()=> {
- *      leaveRoom(socket);
- * });
+ * Joins a room with given room code (specified by user)
+ * @param client: Socket object (from socket.io)
+ * @param data: any received from the client
  */
-export function leaveRoom(client: Socket) {
-    let rooms: Array<string> = Array.from(client.rooms)
-    if (rooms.length == 1) {
-        client.leave(rooms[0])
-        console.log(`[INFO] (left...)Socket ${client.id} has left from room ${rooms[0]}`);
-    }
-    else {
-        // Not a desired condition at all (a client in more than one room)
-        console.error("[Error] Client is in more than one room");
-    }
-}
 
-/**
- * Listen for the <"Draw"> event from any client connected to the room and emits the event to the other members of the room
- * @param client   - The socket instance representing the client 
- * @param drawData - Drawing Object, all the data need for drawing
- * @param roomData - Room Object, details about the room
- * 
- * @example
- * socket.on("<join-room-event>", (roomData) => {
- *  // logics ...
- *  socket.on("<draw-event>", (drawData) => {
- *      draw(socket, drawData, roomData);
- *  })
- * })
- */
-export function draw(client: Socket, drawData: Drawing, roomData: Room) {
-    client.to(roomData.id).emit("draw-on-canvas", drawData)
+export async function joinRoom(client: Socket, data: any) {
+    let isExist = await RoomModel.findOne({ roomId: data.id });
+    if (!isExist) {
+        console.log("room does not exists");
+    } else {
+        await RoomModel.updateOne(
+            { roomId: data.id },
+            { $push: { members: client.handshake.auth.username } },
+        );
+
+        client.join(data.id);
+        console.log(
+            `[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`,
+        );
+    }
 }

@@ -16,29 +16,7 @@ require("dotenv").config();
 require("colors");
 const express_1 = __importDefault(require("express"));
 const userController_1 = require("../Controllers/userController");
-const mongoose_1 = __importDefault(require("mongoose"));
 const router = express_1.default.Router();
-let conn_str = "";
-if (process.env.NODE_ENVIRONMENT === "local") {
-    conn_str = process.env.MONGO_URL_LOCAL;
-    console.log(`[environment] local`.green.bold);
-}
-else {
-    conn_str = process.env.MONGO_URL_PROD;
-    console.log(`[environment] production`.green.bold);
-}
-if (!conn_str) {
-    console.error("Database connection string is undefined.".red.bold);
-    process.exit(1); // Exit the process if the connection string is not defined
-}
-mongoose_1.default
-    .connect(conn_str)
-    .then(() => {
-    console.log(`[Connected] connected to the database!\n`.cyan.bold);
-})
-    .catch((error) => {
-    console.error(`Error: ${error}`.red.italic);
-});
 router.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield (0, userController_1.createUser)(req.body);

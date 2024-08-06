@@ -65,7 +65,9 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
         password: hashPassword,
         createdAt: new Date(),
     };
-    yield (0, userController_1.createUser)(newUser);
+    yield (0, userController_1.createUser)(newUser)
+        .then(() => res.send("user created"))
+        .catch(error => console.log(error));
 }));
 // login
 router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
