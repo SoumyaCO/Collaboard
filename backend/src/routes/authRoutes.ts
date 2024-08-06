@@ -61,8 +61,9 @@ router.post('/register', async (req: Request, res: Response) => {
     password: hashPassword,
     createdAt: new Date(),
   };
-  await createUser(newUser);
-
+  await createUser(newUser)
+    .then(() => res.send("user created"))
+    .catch(error => console.log(error))
 });
 
 // login
