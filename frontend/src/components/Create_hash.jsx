@@ -41,28 +41,27 @@ const SmallScreenComponent = () => {
       });
   };
 
-  const handleJoin = () => {
+  const handleCreateRoom = () => {
     // Retrieve user details from sessionStorage
-    const userId = sessionStorage.getItem("userId");
-    const username = sessionStorage.getItem("username");
+    // const userId = sessionStorage.getItem("userId");
+    // const username = sessionStorage.getItem("username");
+    const username = "toukir";
 
-    
     // initialize socket connection
-    const socket = io(Server_Url, { autoConnect: false });
-
+    const socket = io("http://localhost:8080", {
+      autoConnect: false,
+      auth: {
+        username: "",
+      },
+    });
+    socket.auth.username = username;
     // connect the socket
     socket.connect();
 
     // emit join request to create a room with hash and user details
-    socket.emit("JoinRoom", { hash, userId, username });
-
-    // Listen for server res
-    socket.on("roomCreated", (res) => {
-      if (res.success) {
-        navigate("/canvas");
-      } else {
-        alert("Failed to create room: " + res.message);
-      }
+    socket.emit("create-room", { id: hash }, (res) => {
+      console.log("Room created", res.cb_msg);
+      navigate("/canvas");
     });
 
     // handle socket disconnections
@@ -82,7 +81,7 @@ const SmallScreenComponent = () => {
             Copy
           </button>
         </div>
-        <button className="join_btn" onClick={handleJoin}>
+        <button className="join_btn" onClick={handleCreateRoom}>
           Join
         </button>
       </div>
