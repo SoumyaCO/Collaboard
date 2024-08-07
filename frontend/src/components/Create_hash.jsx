@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import io from "socket.io-client";
 const generateRandomHash = () => {
   const length = 30; // specified length of the hash
   let hash = "";
@@ -42,7 +42,35 @@ const SmallScreenComponent = () => {
   };
 
   const handleJoin = () => {
-    navigate("/canvas");
+    // Retrieve user details from sessionStorage
+    const userId = sessionStorage.getItem("userId");
+    const username = sessionStorage.getItem("username");
+
+    
+    // initialize socket connection
+    const socket = io(Server_Url, { autoConnect: false });
+
+    // connect the socket
+    socket.connect();
+
+    // emit join request to create a room with hash and user details
+    socket.emit("JoinRoom", { hash, userId, username });
+
+    // Listen for server res
+    socket.on("roomCreated", (res) => {
+      if (res.success) {
+        navigate("/canvas");
+      } else {
+        alert("Failed to create room: " + res.message);
+      }
+    });
+
+    // handle socket disconnections
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    // navigate("/canvas");
   };
 
   return (

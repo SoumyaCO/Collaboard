@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import BannerBackground from "../assets/background_r_img.png";
 import axios from "axios";
-import io, { Socket } from "socket.io-client";
+import io from "socket.io-client";
 
 const Server_Url = "https:";
 function HomePage() {
@@ -43,7 +43,8 @@ function HomePage() {
 
       if (response.data.exists) {
         // Room exists, initialize socket connection
-        const socket = io(Server_Url);
+        const socket = io(Server_Url,{autoConnection: false});
+        socket.connect();
 
         // emit room hash and user details
         Socket.emit("JoinRoom", { roomHash, userId, username });
