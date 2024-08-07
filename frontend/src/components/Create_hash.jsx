@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import io from "socket.io-client";
 const generateRandomHash = () => {
   const length = 30; // specified length of the hash
   let hash = "";
@@ -41,8 +41,35 @@ const SmallScreenComponent = () => {
       });
   };
 
-  const handleJoin = () => {
-    navigate("/canvas");
+  const handleCreateRoom = () => {
+    // Retrieve user details from sessionStorage
+    // const userId = sessionStorage.getItem("userId");
+    // const username = sessionStorage.getItem("username");
+    const username = "toukir";
+
+    // initialize socket connection
+    const socket = io("http://localhost:8080", {
+      autoConnect: false,
+      auth: {
+        username: "",
+      },
+    });
+    socket.auth.username = username;
+    // connect the socket
+    socket.connect();
+
+    // emit join request to create a room with hash and user details
+    socket.emit("create-room", { id: hash }, (res) => {
+      console.log("Room created", res.cb_msg);
+      navigate("/canvas");
+    });
+
+    // handle socket disconnections
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    // navigate("/canvas");
   };
 
   return (
@@ -54,7 +81,7 @@ const SmallScreenComponent = () => {
             Copy
           </button>
         </div>
-        <button className="join_btn" onClick={handleJoin}>
+        <button className="join_btn" onClick={handleCreateRoom}>
           Join
         </button>
       </div>

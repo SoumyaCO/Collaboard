@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.joinRoom = exports.createRoom = void 0;
+exports.createRoom = createRoom;
+exports.joinRoom = joinRoom;
 const Room_1 = __importDefault(require("../Models/Room"));
 // TODO: add more functions here and make the index.ts less cluttered
 /**
@@ -35,7 +36,6 @@ function createRoom(client, data) {
         });
     });
 }
-exports.createRoom = createRoom;
 /**
  * Joins a room with given room code (specified by user)
  * @param client: Socket object (from socket.io)
@@ -54,4 +54,3 @@ function joinRoom(client, data) {
         }
     });
 }
-exports.joinRoom = joinRoom;

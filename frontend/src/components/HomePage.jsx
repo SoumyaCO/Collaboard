@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import BannerBackground from "../assets/background_r_img.png";
 import axios from "axios";
-import io, { Socket } from "socket.io-client";
+import io from "socket.io-client";
 
-const Server_Url = "https:";
+const Server_Url = "http://localhost:8080";
 function HomePage() {
   const navigate = useNavigate();
   const [roomHash, setRoomHash] = useState("");
@@ -34,23 +34,38 @@ function HomePage() {
     try {
       // Retrieve user information from Session
 
-      const userId = sessionStorage.getItem("userId");
-      const username = sessionStorage.getItem("username");
+      // const userId = sessionStorage.getItem("userId");
+      // const username = sessionStorage.getItem("username");
+      const username = "toukir2";
       // First, check if the room exists
-      const response = await axios.post("${Server_Url}/check-room", {
-        hash: roomHash,
-      });
 
+      // initialize socket connection
+      const socket = io("http://localhost:8080", {
+        autoConnect: false,
+        auth: {
+          username: "",
+        },
+      });
       if (response.data.exists) {
         // Room exists, initialize socket connection
-        const socket = io(Server_Url);
+        const socket = io(Server_Url, { autoConnection: false });
+        socket.connect();
 
         // emit room hash and user details
-        Socket.emit("JoinRoom", { roomHash, userId, username });
-        // Listen for imageData from the server
-        socket.on("imagedata", (data) => {
-          navigate("/canvas", { state: { imageData: data } });
+        socket.emit("join-room", { id: roomHash },(res)=>{
+          if(!res.imgURL){
+            console.log("no image data ");
+            navigate("/canvas");
+          }
+          else{
+            navigate("/canvas", { state: { imageData: data } });
+          }
+         
         });
+        // // Listen for imageData from the server
+        // socket.on("imagedata", (data) => {
+        //   navigate("/canvas", { state: { imageData: data } });
+        // });
         socket.on("disconnect", () => {
           console.log("Socket disconnected");
         });
