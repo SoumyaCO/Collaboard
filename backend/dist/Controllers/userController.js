@@ -17,7 +17,7 @@ const User_1 = __importDefault(require("../Models/User"));
 const createUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     const user = new User_1.default(userData);
     yield user.save()
-        .then(value => {
+        .then(() => {
         console.log("User Created");
     }).catch(err => {
         console.log(err);

@@ -1,59 +1,57 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.draw = exports.leaveRoom = exports.joinRoom = void 0;
+exports.joinRoom = exports.createRoom = void 0;
+const Room_1 = __importDefault(require("../Models/Room"));
+// TODO: add more functions here and make the index.ts less cluttered
 /**
- * Joins a client to a specified room and emits the current canvas state to it.
- *
- * @param {Socket} client - The socket instance representing the client.
- * @param {Room} roomData - An object containing the room's details, including its ID and the current state of the board.
- *
- * @example
- * socket.on("<join-event>", (roomData: Room)=>{
- *      joinRoom(socket, roomData);
- * });
+ * Checks for already exsisting room and then creates a room
+ * @param data: a room id basically
+ * @param client :Socket - socket.io socket instance
+*/
+function createRoom(client, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        client.join(data.id);
+        console.log(`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`);
+        yield Room_1.default.create({
+            roomId: data.id,
+            adminId: client.id,
+            members: [client.handshake.auth.username],
+        }).then(() => {
+            console.log("Room Created successfully in the database".green.italic);
+        }).catch((error) => {
+            console.log(`Error occurred ${error}`.red.underline);
+        });
+    });
+}
+exports.createRoom = createRoom;
+/**
+ * Joins a room with given room code (specified by user)
+ * @param client: Socket object (from socket.io)
+ * @param data: any received from the client
  */
-function joinRoom(client, roomData) {
-    client.join(roomData.id);
-    client.to(roomData.id).emit("get-current-canvas", roomData.board.currentState);
-    console.log(`[INFO] (joined...)Socket ${client.id} has joined room ${roomData.id}`);
+function joinRoom(client, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let isExist = yield Room_1.default.findOne({ roomId: data.id });
+        if (!isExist) {
+            console.log("room does not exists");
+        }
+        else {
+            yield Room_1.default.updateOne({ roomId: data.id }, { $push: { members: client.handshake.auth.username } });
+            client.join(data.id);
+            console.log(`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`);
+        }
+    });
 }
 exports.joinRoom = joinRoom;
-/**
- * Leave a client from the joined room and disconnects from the server
- * @param client - The socket instance representing the client
- *
- * @example
- * socket.on("<leave-event>", ()=> {
- *      leaveRoom(socket);
- * });
- */
-function leaveRoom(client) {
-    let rooms = Array.from(client.rooms);
-    if (rooms.length == 1) {
-        client.leave(rooms[0]);
-        console.log(`[INFO] (left...)Socket ${client.id} has left from room ${rooms[0]}`);
-    }
-    else {
-        // Not a desired condition at all (a client in more than one room)
-        console.error("[Error] Client is in more than one room");
-    }
-}
-exports.leaveRoom = leaveRoom;
-/**
- * Listen for the <"Draw"> event from any client connected to the room and emits the event to the other members of the room
- * @param client   - The socket instance representing the client
- * @param drawData - Drawing Object, all the data need for drawing
- * @param roomData - Room Object, details about the room
- *
- * @example
- * socket.on("<join-room-event>", (roomData) => {
- *  // logics ...
- *  socket.on("<draw-event>", (drawData) => {
- *      draw(socket, drawData, roomData);
- *  })
- * })
- */
-function draw(client, drawData, roomData) {
-    client.to(roomData.id).emit("draw-on-canvas", drawData);
-}
-exports.draw = draw;

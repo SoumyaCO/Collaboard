@@ -1,19 +1,18 @@
-import mongoose from "mongoose";
-import BoardModel, { Board } from "./Board";
-import UserModel, { User } from "./User";
+import mongoose, { now } from "mongoose";
+
 export interface Room {
-    id: string,
-    adminID: string,
-    adminUserID: string,
-    members: User[],
-    board: Board
+    roomId: string;
+    adminId: string;
+    members: string[];
+    createdAt: Date;
 }
 
 const roomSchema = new mongoose.Schema<Room>({
-    adminID: { type: String, required: true, unique: true },
-    members: { type: [UserModel], required: true },
-    board: { type: BoardModel, required: true }
-})
+    roomId: { type: String, required: true, unique: true },
+    adminId: { type: String, required: true, unique: true },
+    members: { type: [String], required: true },
+    createdAt: { type: Date, default: now() },
+});
 
-const RoomModel = mongoose.model<Room>('User', roomSchema);
+const RoomModel = mongoose.model<Room>("Room", roomSchema);
 export default RoomModel;
