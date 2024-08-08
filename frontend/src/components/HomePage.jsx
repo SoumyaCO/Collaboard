@@ -37,6 +37,42 @@ function HomePage() {
       // const userId = sessionStorage.getItem("userId");
       // const username = sessionStorage.getItem("username");
       const username = "toukir2";
+      
+      // initialize socket connection
+      const socket = io(Server_Url, {
+        autoConnect: false,
+        auth: {
+          username: "",
+        },
+      });
+
+      socket.connect();
+
+      // emit room hash and user details
+
+      socket.emit("join-room", { id: roomHash }, (response) => {
+        if (response) {
+          if (response.imgURL) {
+            // room exists and image data is received
+            const imgURL = response.imgURL;
+            navigate("/canvas", { state: { imageURL: imgURL } });
+          } else {
+            // room exists but no image data is available
+            console.log("No image data available");
+            navigate("/canvas");
+          }
+        } else {
+          //  room does not exist
+          console.log("Room  does not exist ");
+          socket.disconnect(); // Disconnect the socket
+          setError("Room Not Available");
+        }
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+      });
+=======
       // First, check if the room exists
 
       // initialize socket connection
@@ -73,6 +109,7 @@ function HomePage() {
         setError("Room not found.");
       }
     } catch (err) {
+      console.error("Error occurred while joining the room:", err);
       setError("Error occurred while joining the room");
     } finally {
       setLoading(false);
