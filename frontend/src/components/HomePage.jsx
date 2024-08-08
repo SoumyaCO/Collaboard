@@ -37,7 +37,7 @@ function HomePage() {
       // const userId = sessionStorage.getItem("userId");
       // const username = sessionStorage.getItem("username");
       const username = "toukir2";
-      
+
       // initialize socket connection
       const socket = io(Server_Url, {
         autoConnect: false,
@@ -72,42 +72,6 @@ function HomePage() {
       socket.on("disconnect", () => {
         console.log("Socket disconnected");
       });
-=======
-      // First, check if the room exists
-
-      // initialize socket connection
-      const socket = io("http://localhost:8080", {
-        autoConnect: false,
-        auth: {
-          username: "",
-        },
-      });
-      if (response.data.exists) {
-        // Room exists, initialize socket connection
-        const socket = io(Server_Url, { autoConnection: false });
-        socket.connect();
-
-        // emit room hash and user details
-        socket.emit("join-room", { id: roomHash },(res)=>{
-          if(!res.imgURL){
-            console.log("no image data ");
-            navigate("/canvas");
-          }
-          else{
-            navigate("/canvas", { state: { imageData: data } });
-          }
-         
-        });
-        // // Listen for imageData from the server
-        // socket.on("imagedata", (data) => {
-        //   navigate("/canvas", { state: { imageData: data } });
-        // });
-        socket.on("disconnect", () => {
-          console.log("Socket disconnected");
-        });
-      } else {
-        setError("Room not found.");
-      }
     } catch (err) {
       console.error("Error occurred while joining the room:", err);
       setError("Error occurred while joining the room");

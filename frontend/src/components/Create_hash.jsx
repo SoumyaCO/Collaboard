@@ -51,9 +51,6 @@ const SmallScreenComponent = () => {
 
     // initialize socket connection
     const socket = io(Server_Url, {
-
-    const socket = io("http://localhost:8080", {
-
       autoConnect: false,
       auth: {
         username: "",
