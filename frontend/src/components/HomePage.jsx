@@ -37,42 +37,43 @@ function HomePage() {
       // const userId = sessionStorage.getItem("userId");
       // const username = sessionStorage.getItem("username");
       const username = "toukir2";
-      // First, check if the room exists
 
       // initialize socket connection
-      const socket = io("http://localhost:8080", {
+      const socket = io(Server_Url, {
         autoConnect: false,
         auth: {
           username: "",
         },
       });
-      if (response.data.exists) {
-        // Room exists, initialize socket connection
-        const socket = io(Server_Url, { autoConnection: false });
-        socket.connect();
 
-        // emit room hash and user details
-        socket.emit("join-room", { id: roomHash },(res)=>{
-          if(!res.imgURL){
-            console.log("no image data ");
+      socket.connect();
+
+      // emit room hash and user details
+
+      socket.emit("join-room", { id: roomHash }, (response) => {
+        if (response) {
+          if (response.imgURL) {
+            // room exists and image data is received
+            const imgURL = response.imgURL;
+            navigate("/canvas", { state: { imageURL: imgURL } });
+          } else {
+            // room exists but no image data is available
+            console.log("No image data available");
             navigate("/canvas");
           }
-          else{
-            navigate("/canvas", { state: { imageData: data } });
-          }
-         
-        });
-        // // Listen for imageData from the server
-        // socket.on("imagedata", (data) => {
-        //   navigate("/canvas", { state: { imageData: data } });
-        // });
-        socket.on("disconnect", () => {
-          console.log("Socket disconnected");
-        });
-      } else {
-        setError("Room not found.");
-      }
+        } else {
+          //  room does not exist
+          console.log("Room  does not exist ");
+          socket.disconnect(); // Disconnect the socket
+          setError("Room Not Available");
+        }
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+      });
     } catch (err) {
+      console.error("Error occurred while joining the room:", err);
       setError("Error occurred while joining the room");
     } finally {
       setLoading(false);
