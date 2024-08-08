@@ -7,12 +7,12 @@ const joinHash = sessionStorage.getItem("sessionHash");
 const socket = io(Server_Url, {
   autoConnect: false,
   auth: {
-    username: "",
+    username: "abcd",
   },
 });
 // socket.auth.username = username;
 // connect the socket
-socket.connect();
+// socket.connect();
 
 //emit
 

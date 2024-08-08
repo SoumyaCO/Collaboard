@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import BannerBackground from "../assets/background_r_img.png";
 import axios from "axios";
 import io from "socket.io-client";
+import { socket } from "../utils/Socket";
 
 const Server_Url = "http://localhost:8080";
 function HomePage() {
