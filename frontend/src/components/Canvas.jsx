@@ -15,6 +15,7 @@ const App = () => {
   const colors = ["black", "red", "green", "orange", "blue", "yellow"];
 
   // State variables for tool, color, stroke width, etc.
+
   const [tool, setTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("red");
   const [strokeWidth, setStrokeWidth] = useState(5);
@@ -56,6 +57,15 @@ const App = () => {
     };
   }, []);
   // Load image if URL is provided
+  useEffect(() => {
+    if (imageURL) {
+      const ctx = contextRef.current;
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = imageURL;
+    }
+  }, [imageURL]);
+
   useEffect(() => {
     if (imageURL) {
       const ctx = contextRef.current;

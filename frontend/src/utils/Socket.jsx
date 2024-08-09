@@ -10,7 +10,6 @@ const socket = io(Server_Url, {
     username: "",
   },
 });
-
 //emit
 
 const emitDrawing = (data) => {
@@ -51,5 +50,6 @@ const handleSendCurrentState = (canvas) => {
     }
   });
 };
+
 
 export { socket, emitDrawing, doDrawing, handleSendCurrentState };

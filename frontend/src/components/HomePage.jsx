@@ -60,7 +60,6 @@ function HomePage() {
           setError("Room Not Available");
         }
       });
-
       socket.on("disconnect", () => {
         console.log("Socket disconnected");
       });
