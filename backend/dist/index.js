@@ -74,7 +74,12 @@ mongoose_1.default
 });
 // routers ends here 
 const httpServer = (0, http_1.createServer)(app);
-const io = new socket_io_1.Server(httpServer);
+const io = new socket_io_1.Server(httpServer, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"]
+    }
+});
 // ------------------------------------------------------------ socket logics starts here
 io.sockets.on("connection", (socket) => {
     let username = socket.handshake.auth.username;
