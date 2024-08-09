@@ -155,7 +155,27 @@ router.post('/reset-password/:id/:token', (req, res) => {
       if (err) {
         return res.json({ msg: "Token error" })
       } else {
-        const hashPassword = hash(req.body.password);
+        // Hash password
+        let hashPassword: string = "";
+        let salt: string = "";
+        await bcrypt.genSalt(10)
+          .then(value => {
+            salt = value
+          }).catch(e => {
+            console.log(e);
+          })
+        if (!req.body.password) {
+          console.log("Pass not found");
+
+        } else {
+          await bcrypt.hash(req.body.password, salt)
+            .then(value => {
+              hashPassword = value;
+            })
+            .catch(e => {
+              console.log(e);
+            })
+        }
         try {
           UserModel.findByIdAndUpdate({ _id: id }, { password: hashPassword })
           return res.send({ msg: "Password updated successfully" })
