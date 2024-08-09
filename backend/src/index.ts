@@ -58,10 +58,10 @@ mongoose
 // routers ends here
 const httpServer = createServer(app);
 const io: Server = new Server(httpServer, {
-	cors: {
-		origin: "http://localhost:5173",
-		methods: ["GET", "POST"],
-	},
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
 });
 
 // ------------------------------------------------------------ socket logics starts here

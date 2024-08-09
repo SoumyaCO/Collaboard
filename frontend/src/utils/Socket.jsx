@@ -7,13 +7,9 @@ const joinHash = sessionStorage.getItem("sessionHash");
 const socket = io(Server_Url, {
   autoConnect: false,
   auth: {
-    username: "abcd",
+    username: "",
   },
 });
-// socket.auth.username = username;
-// connect the socket
-// socket.connect();
-
 //emit
 
 const emitDrawing = (data) => {
@@ -21,27 +17,39 @@ const emitDrawing = (data) => {
     ...data,
     joinHash: joinHash,
   };
-  socket.emit("on-drawing", data);
+
+  // Emit "on-drawing" event with data and a callback function
+  socket.emit("on-drawing", payload, (response) => {
+    // handle the server's response
+    console.log(response.cb_msg);
+  });
 };
 
 const doDrawing = (callback) => {
-  socket.on("draw-on-canvas", callback);
+  socket.on("draw-on-canvas", (data) => {
+    callback(data); // Pass the received data to the provided callback
+  });
 };
 
+// Function to handle the 'send-current-state' event
 const handleSendCurrentState = (canvas) => {
+  // Listen for the 'send-current-state' event from the server
   socket.on("send-current-state", (arg, callback) => {
     console.log("Server requested current state.");
 
     if (canvas && canvas.current) {
       const ctx = canvas.current.getContext("2d");
       if (ctx) {
-        const currentState = canvas.current.toDataURL(); // current canvas state as a data URL
+        const currentState = canvas.current.toDataURL(); // Get current canvas state as a data URL
         callback({ data: currentState }); // Send current state to the server
+      } else {
+        console.error("Unable to get canvas context.");
       }
     } else {
       console.error("Canvas not available.");
     }
   });
 };
+
 
 export { socket, emitDrawing, doDrawing, handleSendCurrentState };
