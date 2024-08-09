@@ -130,7 +130,7 @@ router.post('/forgot-password', async (req, res) => {
     from: 'skyhighyes@gmail.com',
     to: user.email,
     subject: 'Reset your password',
-    text: `http://localhost:${process.env.PORT}/reset-password/${user._id}/${TOKEN}`,
+    text: `http://localhost:${process.env.PORT}/auth/reset-password/${user._id}/${TOKEN}`,
   };
 
   // Send the email
@@ -177,7 +177,7 @@ router.post('/reset-password/:id/:token', (req, res) => {
             })
         }
         try {
-          UserModel.findByIdAndUpdate({ _id: id }, { password: hashPassword })
+          await UserModel.findByIdAndUpdate({ _id: id }, { password: hashPassword })
           return res.send({ msg: "Password updated successfully" })
         } catch (e) {
           return res.send({ msg: e });
