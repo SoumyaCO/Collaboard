@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import BannerBackground from "../assets/background_r_img.png";
-import axios from "axios";
-import io from "socket.io-client";
+import { socket } from "../utils/Socket";
 
-const Server_Url = "http://localhost:8080";
 function HomePage() {
   const navigate = useNavigate();
   const [roomHash, setRoomHash] = useState("");
@@ -39,17 +37,11 @@ function HomePage() {
       const username = "toukir2";
 
       // initialize socket connection
-      const socket = io(Server_Url, {
-        autoConnect: false,
-        auth: {
-          username: "",
-        },
-      });
 
       socket.connect();
 
       // emit room hash and user details
-
+      socket.auth.username = username;
       socket.emit("join-room", { id: roomHash }, (response) => {
         if (response) {
           if (response.imgURL) {

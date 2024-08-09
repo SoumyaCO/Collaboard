@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
+  socket,
   emitDrawing,
   doDrawing,
   handleSendCurrentState,
@@ -14,7 +15,6 @@ const App = () => {
   const colors = ["black", "red", "green", "orange", "blue", "yellow"];
 
   // State variables for tool, color, stroke width, etc.
-
   const [tool, setTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("red");
   const [strokeWidth, setStrokeWidth] = useState(5);
@@ -55,7 +55,7 @@ const App = () => {
       window.removeEventListener("resize", updateCanvasSize); // Clean up
     };
   }, []);
-
+  // Load image if URL is provided
   useEffect(() => {
     if (imageURL) {
       const ctx = contextRef.current;
@@ -138,6 +138,7 @@ const App = () => {
         startY: drawingData.startY,
         width: 0,
         height: 0,
+        isPressed: isPressed,
       });
     } else if (tool === "rect") {
       const width = x - drawingData.startX;
@@ -160,17 +161,7 @@ const App = () => {
       ctx.strokeRect(rectX, rectY, rectWidth, rectHeight); // Stroke rectangle
 
       // Emit rectangle data
-      emitDrawing({
-        tool,
-        color: selectedColor,
-        strokeWidth,
-        x,
-        y,
-        startX: drawingData.startX,
-        startY: drawingData.startY,
-        width: rectWidth,
-        height: rectHeight,
-      });
+      emitDrawing(drawingData);
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -190,17 +181,7 @@ const App = () => {
 
       ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // erase content
       // emit eraser data
-      emitDrawing({
-        tool,
-        color: selectedColor,
-        strokeWidth,
-        x,
-        y,
-        startX: drawingData.startX,
-        startY: drawingData.startY,
-        width: eraseWidth,
-        height: eraseHeight,
-      });
+      emitDrawing(drawingData);
     }
   };
 
@@ -230,7 +211,7 @@ const App = () => {
         drawingData.startY,
         x - drawingData.startX,
         y - drawingData.startY
-      ); // Finalize rectangle
+      ); // finalize rectangle
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -247,6 +228,7 @@ const App = () => {
         eraseHeight + strokeWidth
       ); // Clear area for eraser
     }
+
     setIsPressed(false); // Stop drawing or erasing
   };
 
@@ -271,28 +253,37 @@ const App = () => {
       const ctx = contextRef.current;
 
       if (data.tool === "pen") {
-        ctx.strokeStyle = data.color;
-        ctx.lineWidth = data.strokeWidth;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineTo(data.x, data.y);
-        ctx.stroke();
+        if (data.isPressed) {
+          ctx.strokeStyle = data.color;
+          ctx.lineWidth = data.strokeWidth;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.lineTo(data.x, data.y);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+        }
       } else if (data.tool === "rect") {
-        ctx.putImageData(imageData, 0, 0);
         ctx.fillStyle = data.color;
         ctx.fillRect(data.startX, data.startY, data.width, data.height);
       } else if (data.tool === "eraser") {
-        ctx.putImageData(imageData, 0, 0);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.fillRect(data.startX, data.startY, data.width, data.height);
+        ctx.clearRect(
+          data.startX - data.strokeWidth / 2,
+          data.startY - data.strokeWidth / 2,
+          data.width + data.strokeWidth,
+          data.height + data.strokeWidth
+        );
+        console.log("start x: ".data.startX);
+        console.log("start y: ".data.startY);
+        console.log(" width: ".data.width);
+        console.log("height: ".data.height);
       }
     };
-
     doDrawing(handleDrawing);
-  }, []);
+  }, [imageData]);
 
   useEffect(() => {
-    handleSendCurrentState(canvasRef); // set event listener for the current state
+    handleSendCurrentState(canvasRef);
   }, []);
 
   return (

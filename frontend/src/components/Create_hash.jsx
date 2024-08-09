@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import io from "socket.io-client";
+import { socket }  from "../utils/Socket";;
 
-const Server_Url = "http://localhost:8080";
+
 const generateRandomHash = () => {
   const length = 30; // specified length of the hash
   let hash = "";
@@ -49,13 +49,7 @@ const SmallScreenComponent = () => {
     // const username = sessionStorage.getItem("username");
     const username = "toukir";
 
-    // initialize socket connection
-    const socket = io(Server_Url, {
-      autoConnect: false,
-      auth: {
-        username: "",
-      },
-    });
+   
     socket.auth.username = username;
     // connect the socket
     socket.connect();
