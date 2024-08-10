@@ -58,10 +58,10 @@ mongoose
 // routers ends here
 const httpServer = createServer(app);
 const io: Server = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
+	cors: {
+		origin: "http://localhost:5173",
+		methods: ["GET", "POST"],
+	},
 });
 
 // ------------------------------------------------------------ socket logics starts here
@@ -86,7 +86,7 @@ io.sockets.on("connection", (socket: Socket) => {
 
 	socket.on("join-room", (data, callback) => {
 		let imageString: string = "";
-		joinRoom(socket, data);
+		joinRoom(socket, data, callback);
 
 		io.sockets
 			.in(data.id)
@@ -103,10 +103,17 @@ io.sockets.on("connection", (socket: Socket) => {
 							(error: Error, response: any) => {
 								if (error) {
 									console.log(`Error: ${error}`.red.underline);
+									callback({
+										success_msg: false, // check for this value @frontend for availability check
+										cb_msg: "no response from admin",
+										imgURL: null,
+									});
+									socket.disconnect(); // if the admin fails to send the data (disconnect the new joinee)
 								} else {
 									imageString = response[0].data; // getting the image string from the callback ( gives back an array `[{data: string}]`)
 									// ------------------------------------------ sending callback
 									callback({
+										got_imgURL: true,
 										cb_msg: "imgeString sending",
 										imgURL: imageString,
 									});
@@ -127,6 +134,12 @@ io.sockets.on("connection", (socket: Socket) => {
 			io.to(data.id).emit("draw-on-canvas", msg);
 		});
 	});
+});
+
+io.sockets.on("disconnect", (socket) => {
+	console.log(
+		`${socket.auth.username} has disconnected from the socket.io server`,
+	);
 });
 // ------------------------------------------------------------- socket logics ends here
 
