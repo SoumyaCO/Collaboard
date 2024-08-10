@@ -23,13 +23,16 @@ const App = () => {
   const [imageData, setImageData] = useState(null);
   const { state } = useLocation();
   const { imageURL } = state || {};
+
+  // drawing data state
   const [drawingData, setDrawingData] = useState({
     tool: tool,
-    color: selectedColor,
+    // color: selectedColor,
     startX: 0,
     startY: 0,
     width: 0,
     height: 0,
+    strokeWidth,
   });
 
   // Canvas and context references
@@ -57,15 +60,6 @@ const App = () => {
     };
   }, []);
   // Load image if URL is provided
-  useEffect(() => {
-    if (imageURL) {
-      const ctx = contextRef.current;
-      const img = new Image();
-      img.onload = () => ctx.drawImage(img, 0, 0);
-      img.src = imageURL;
-    }
-  }, [imageURL]);
-
   useEffect(() => {
     if (imageURL) {
       const ctx = contextRef.current;
@@ -129,6 +123,12 @@ const App = () => {
       // if the cursor is outside the canvas bounds, adjust drawing area
       return;
     }
+    // calculate the current width and height and update drawing data
+    setDrawingData((prevData) => ({
+      ...prevData,
+      width: x - prevData.startX,
+      height: y - prevData.startY,
+    }));
 
     if (tool === "pen") {
       ctx.strokeStyle = selectedColor; // Set color for pen
@@ -137,17 +137,12 @@ const App = () => {
       ctx.lineJoin = "round";
       ctx.lineTo(x, y);
       ctx.stroke();
-      // emit pen drawing data
+      // Emit drawing data while drawing
       emitDrawing({
-        tool,
-        color: selectedColor,
-        strokeWidth,
+        ...drawingData,
         x,
         y,
-        startX: drawingData.startX,
-        startY: drawingData.startY,
-        width: 0,
-        height: 0,
+        color: selectedColor,
         isPressed: isPressed,
       });
     } else if (tool === "rect") {
@@ -167,11 +162,8 @@ const App = () => {
       ctx.fillRect(rectX, rectY, rectWidth, rectHeight); // Draw rectangle
       ctx.strokeStyle = "rgba(0, 120, 215, 0.6)";
       ctx.lineWidth = 2;
-      ctx.setLineDash([]);
+      // ctx.setLineDash([]);
       ctx.strokeRect(rectX, rectY, rectWidth, rectHeight); // Stroke rectangle
-
-      // Emit rectangle data
-      emitDrawing(drawingData);
     } else if (tool === "eraser") {
       const width = x - drawingData.startX;
       const height = y - drawingData.startY;
@@ -190,8 +182,6 @@ const App = () => {
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
 
       ctx.fillRect(eraseX, eraseY, eraseWidth, eraseHeight); // erase content
-      // emit eraser data
-      emitDrawing(drawingData);
     }
   };
 
@@ -238,7 +228,12 @@ const App = () => {
         eraseHeight + strokeWidth
       ); // Clear area for eraser
     }
-
+    emitDrawing({
+      ...drawingData,
+      x,
+      y,
+      isPressed: !isPressed, //  end of drawing
+    });
     setIsPressed(false); // Stop drawing or erasing
   };
 
@@ -255,6 +250,10 @@ const App = () => {
   // Select tool functions
   const selectTool = (selectedTool) => {
     setTool(selectedTool);
+    setDrawingData((prevData) => ({
+      ...prevData,
+      tool: selectedTool,
+    }));
   };
 
   // listen for emited drawing data from the server
@@ -283,10 +282,6 @@ const App = () => {
           data.width + data.strokeWidth,
           data.height + data.strokeWidth
         );
-        console.log("start x: ".data.startX);
-        console.log("start y: ".data.startY);
-        console.log(" width: ".data.width);
-        console.log("height: ".data.height);
       }
     };
     doDrawing(handleDrawing);
@@ -343,7 +338,7 @@ const App = () => {
         onMouseDown={beginDraw}
         onMouseMove={updateDraw}
         onMouseUp={endDraw}
-        onMouseOut={handleMouseOut} // Handle mouse leaving canvas
+        onMouseOut={handleMouseOut}
       />
     </div>
   );
