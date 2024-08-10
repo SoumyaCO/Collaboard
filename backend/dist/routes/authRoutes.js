@@ -132,7 +132,7 @@ router.post('/forgot-password', (req, res) => __awaiter(void 0, void 0, void 0, 
         from: 'skyhighyes@gmail.com',
         to: user.email,
         subject: 'Reset your password',
-        text: `http://localhost:${process.env.PORT}/reset-password/${user._id}/${TOKEN}`,
+        text: `http://localhost:${process.env.PORT}/auth/reset-password/${user._id}/${TOKEN}`,
     };
     // Send the email
     transporter.sendMail(mailOptions, (error, info) => {
@@ -157,9 +157,33 @@ router.post('/reset-password/:id/:token', (req, res) => {
                 return res.json({ msg: "Token error" });
             }
             else {
-                const hashPassword = (0, validation_1.hash)(req.body.password);
+                // Hash password
+                let hashPassword = "";
+                let salt = "";
+                yield bcryptjs_1.default.genSalt(10)
+                    .then(value => {
+                    salt = value;
+                }).catch(e => {
+                    console.log(e);
+                });
+                if (!req.body.password) {
+                    console.log("Pass not found");
+                }
+                else {
+                    yield bcryptjs_1.default.hash(req.body.password, salt)
+                        .then(value => {
+                        hashPassword = value;
+                    })
+                        .catch(e => {
+                        console.log(e);
+                    });
+                }
                 try {
-                    User_1.default.findByIdAndUpdate({ _id: id }, { password: hashPassword });
+                    const user = yield User_1.default.findById(id);
+                    if (!user)
+                        return res.send({ msg: "user not found" });
+                    user.password = hashPassword;
+                    yield user.save();
                     return res.send({ msg: "Password updated successfully" });
                 }
                 catch (e) {
