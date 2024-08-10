@@ -14,8 +14,6 @@
 
 ## Contribution:
 
-### (for beginners)
-
 1. Pick an issue
 2. install the node modules
 
@@ -24,25 +22,19 @@ cd backend && npm install
 cd frontend && npm install
 ```
 
-3. Spin up the database (mongodb)
+3. Spin up the database locally (mongodb)
 
 ```bash
 docker-compose up
 ```
 
-4. Migrate the database
-
-```bash
-npx prisma migrate
-```
-
-7. run the application
+4. run the application
 
 start the **backend**
 
 ```bash
 cd backend
-node dist/index.js
+npm run start
 ```
 
 start the **frontend**
