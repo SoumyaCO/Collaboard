@@ -177,7 +177,11 @@ router.post('/reset-password/:id/:token', (req, res) => {
             })
         }
         try {
-          await UserModel.findByIdAndUpdate({ _id: id }, { password: hashPassword })
+          const user = await UserModel.findById(id)
+          if(!user)
+            return res.send({msg: "user not found"});
+          user.password = hashPassword;
+          await user.save();
           return res.send({ msg: "Password updated successfully" })
         } catch (e) {
           return res.send({ msg: e });
