@@ -7,6 +7,7 @@ import { Server, Socket } from "socket.io";
 import bodyParser from "body-parser";
 import cors from "cors";
 import mongoose from "mongoose";
+import cookieParser from 'cookie-parser';
 
 import RoomModel from "./Models/Room";
 
@@ -27,6 +28,7 @@ app.use(
 );
 // app.use(bodyParser.json({ type: 'application/json' }))
 app.use(cors());
+app.use(cookieParser());
 // routers starts here
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
