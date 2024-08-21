@@ -9,7 +9,16 @@ export interface User {
     password: string,
     createdAt: Date,
 }
-
+declare global 
+{
+    namespace Express 
+    {
+      interface Request 
+      {
+        user?: User;
+      }
+    }
+  }
 const userSchema = new mongoose.Schema<User>({
     username: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
