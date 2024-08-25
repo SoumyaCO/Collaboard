@@ -7,23 +7,25 @@ import RoomModel from "../Models/Room";
  * Checks for already exsisting room and then creates a room
  * @param data: a room id basically
  * @param client :Socket - socket.io socket instance
-*/
+ */
 
 export async function createRoom(client: Socket, data: any) {
-    client.join(data.id);
-    console.log(
-        `[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
-    );
+	client.join(data.id);
+	console.log(
+		`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
+	);
 
-    await RoomModel.create({
-        roomId: data.id,
-        adminId: client.id,
-        members: [client.handshake.auth.username],
-    }).then(() => {
-        console.log("Room Created successfully in the database".green.italic)
-    }).catch((error) => {
-        console.log(`Error occurred ${error}`.red.underline)
-    })
+	await RoomModel.create({
+		roomId: data.id,
+		adminId: client.id,
+		members: [client.handshake.auth.username],
+	})
+		.then(() => {
+			console.log("Room Created successfully in the database".green.italic);
+		})
+		.catch((error) => {
+			console.log(`Error occurred ${error}`.red.underline);
+		});
 }
 
 /**
@@ -33,18 +35,34 @@ export async function createRoom(client: Socket, data: any) {
  */
 
 export async function joinRoom(client: Socket, data: any) {
-    let isExist = await RoomModel.findOne({ roomId: data.id });
-    if (!isExist) {
-        console.log("room does not exists");
-    } else {
-        await RoomModel.updateOne(
-            { roomId: data.id },
-            { $push: { members: client.handshake.auth.username } },
-        );
+	let isExist = await RoomModel.findOne({ roomId: data.id });
+	if (!isExist) {
+		console.log("room does not exists");
+	} else {
+		await RoomModel.updateOne(
+			{ roomId: data.id },
+			{ $push: { members: client.handshake.auth.username } },
+		);
 
-        client.join(data.id);
-        console.log(
-            `[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`,
-        );
-    }
+		client.join(data.id);
+		console.log(
+			`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`,
+		);
+	}
+}
+
+/**
+ * Query the rooms collection and finds the admin socket id of a specific room.
+ * @param {string} roomId - room id of the room
+ * @return {Promise<Room>} adminSocketId - socket id of the admin (socket.io)
+ */
+export async function getAdmin(roomId: string): Promise<string> {
+	try {
+		const room = await RoomModel.findOne({ roomId: roomId });
+
+		return room?.adminId ?? "not found";
+	} catch (error) {
+		console.error("Error fetching admin: ", error);
+		throw new Error("Failed to fetch admin ID");
+	}
 }

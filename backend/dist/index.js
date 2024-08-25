@@ -43,13 +43,13 @@ const app = (0, express_1.default)();
 app.use(body_parser_1.default.urlencoded({
     extended: true,
 }), body_parser_1.default.json({
-    type: 'application/json'
+    type: "application/json",
 }));
 // app.use(bodyParser.json({ type: 'application/json' }))
 app.use((0, cors_1.default)());
 // routers starts here
-app.use('/auth', authRoutes_1.default);
-app.use('/user', userRoutes_1.default);
+app.use("/auth", authRoutes_1.default);
+app.use("/user", userRoutes_1.default);
 // database connection establishing here
 let conn_str = "";
 if (process.env.NODE_ENVIRONMENT === "local") {
@@ -72,7 +72,7 @@ mongoose_1.default
     .catch((error) => {
     console.error(`Error: ${error}`.red.italic);
 });
-// routers ends here 
+// routers ends here
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
@@ -87,12 +87,12 @@ io.sockets.on("connection", (socket) => {
     socket.on("create-room", (data, callback) => {
         (0, SocketConnection_1.createRoom)(socket, data);
         callback({
-            cb_msg: `room created ${data.id}`
+            cb_msg: `room created ${data.id}`,
         });
         // ---------------------- have to listen to the "on-drawing" event inside the join room
         socket.on("on-drawing", (msg, callback) => {
             callback({
-                cb_msg: "drawing data received"
+                cb_msg: "drawing data received",
             });
             console.log(`Id of the room: ${data.id}`.blue.italic);
             io.to(data.id).emit("draw-on-canvas", msg);
@@ -130,7 +130,7 @@ io.sockets.on("connection", (socket) => {
         socket.on("on-drawing", (msg, callback) => {
             // ---------------------- have to listen to the "on-drawing" event inside the join room
             callback({
-                cb_msg: "drawing data received"
+                cb_msg: "drawing data received",
             });
             io.to(data.id).emit("draw-on-canvas", msg);
         });
