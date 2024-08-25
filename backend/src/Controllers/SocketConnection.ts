@@ -1,6 +1,5 @@
 import { Socket } from "socket.io";
 import RoomModel from "../Models/Room";
-import { boolean } from "joi";
 
 // TODO: add more functions here and make the index.ts less cluttered
 
@@ -35,16 +34,10 @@ export async function createRoom(client: Socket, data: any) {
  * @param data: any received from the client
  */
 
-export async function joinRoom(client: Socket, data: any, callback: any) {
+export async function joinRoom(client: Socket, data: any) {
 	let isExist = await RoomModel.findOne({ roomId: data.id });
 	if (!isExist) {
 		console.log("room does not exists");
-		callback({
-			success_msg: false, // check for this value @frontend for availability check
-			cb_msg: "Room does not exist",
-			imgURL: null,
-		});
-		client.disconnect(); // if room does not exist disconect the user from the socket
 	} else {
 		await RoomModel.updateOne(
 			{ roomId: data.id },
@@ -55,6 +48,21 @@ export async function joinRoom(client: Socket, data: any, callback: any) {
 		console.log(
 			`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`,
 		);
-		return true;
+	}
+}
+
+/**
+ * Query the rooms collection and finds the admin socket id of a specific room.
+ * @param {string} roomId - room id of the room
+ * @return {Promise<Room>} adminSocketId - socket id of the admin (socket.io)
+ */
+export async function getAdmin(roomId: string): Promise<string> {
+	try {
+		const room = await RoomModel.findOne({ roomId: roomId });
+
+		return room?.adminId ?? "not found";
+	} catch (error) {
+		console.error("Error fetching admin: ", error);
+		throw new Error("Failed to fetch admin ID");
 	}
 }

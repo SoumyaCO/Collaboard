@@ -1,20 +1,26 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// server related imports
 import express from "express";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
+
+// middlewares
 import bodyParser from "body-parser";
 import cors from "cors";
+
+// database related imports
 import mongoose from "mongoose";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 
-import RoomModel from "./Models/Room";
+// controllers and models imports
+import { joinRoom, createRoom, getAdmin } from "./Controllers/SocketConnection";
 
-import { joinRoom, createRoom } from "./Controllers/SocketConnection";
-
+// routes import
 import userRouter from "./routes/userRoutes";
 import authRouter from "./routes/authRoutes";
+
 // create an express server
 const app = express();
 
@@ -26,9 +32,11 @@ app.use(
 		type: "application/json",
 	}),
 );
-// app.use(bodyParser.json({ type: 'application/json' }))
+
 app.use(cors());
 app.use(cookieParser());
+// app.use(express.static(__dirname + "/../../../Collab/public/")); // using for testing the backend (own frontend)
+
 // routers starts here
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
@@ -45,6 +53,7 @@ if (process.env.NODE_ENVIRONMENT === "local") {
 }
 
 if (!conn_str) {
+	// It's called a type guard we can use (?) sign also
 	console.error("Database connection string is undefined.".red.bold);
 	process.exit(1); // Exit the process if the connection string is not defined
 }
@@ -71,69 +80,68 @@ io.sockets.on("connection", (socket: Socket) => {
 	let username = socket.handshake.auth.username;
 	console.log(`Connected user: ${username}`);
 
-	socket.on("create-room", (data, callback) => {
+	socket.on("create-room", (data) => {
 		createRoom(socket, data);
-		callback({
-			cb_msg: `room created ${data.id}`,
-		});
 		// ---------------------- have to listen to the "on-drawing" event inside the join room
-		socket.on("on-drawing", (msg, callback) => {
-			callback({
-				cb_msg: "drawing data received",
-			});
-			console.log(`Id of the room: ${data.id}`.blue.italic);
-			io.to(data.id).emit("draw-on-canvas", msg);
+		socket.on("on-drawing", (msg) => {
+			socket.broadcast.to(data.id).emit("draw-on-canvas", msg);
 		});
 	});
 
-	socket.on("join-room", (data, callback) => {
-		let imageString: string = "";
-		joinRoom(socket, data, callback);
-
+	socket.on("join-room", async (data, callback) => {
+		await joinRoom(socket, data);
 		io.sockets
 			.in(data.id)
 			.emit("notification", { msg: `${username} joined the room` });
+		let adminID = await getAdmin(data.id);
+		io.to(adminID)
+			.timeout(5000)
+			.emit(
+				"send-current-state",
+				username,
+				handleSendCurrentStateError(callback),
+			);
 
-		RoomModel.findOne({ roomId: data.id })
-			.then((user: any) => {
-				if (user) {
-					io.to(user.adminId)
-						.timeout(5000)
-						.emit(
-							"send-current-state",
-							`hello from ${username}`,
-							(error: Error, response: any) => {
-								if (error) {
-									console.log(`Error: ${error}`.red.underline);
-									callback({
-										success_msg: false, // check for this value @frontend for availability check
-										cb_msg: "no response from admin",
-										imgURL: null,
-									});
-									socket.disconnect(); // if the admin fails to send the data (disconnect the new joinee)
-								} else {
-									imageString = response[0].data; // getting the image string from the callback ( gives back an array `[{data: string}]`)
-									// ------------------------------------------ sending callback
-									callback({
-										got_imgURL: true,
-										cb_msg: "imgeString sending",
-										imgURL: imageString,
-									});
-								}
-							},
-						);
+		function handleSendCurrentStateError(callback: Function) {
+			return (error: Error, response: any) => {
+				if (error) {
+					console.log(`Error: ${error}`.red.underline);
+					console.log(
+						`${socket.handshake.auth.username} disconnected`.red.underline,
+					);
+					return callback({
+						allow: false,
+						cb_msg: "Access denied due to error",
+						stack_data: null,
+					});
 				}
-			})
-			.catch((e) => {
-				console.log(`Error: ${e}`.red.underline);
+				handleResponse(response, callback);
+			};
+		}
+
+		function handleResponse(response: any, callback: Function) {
+			if (!response?.[0]?.allow) {
+				socket.disconnect();
+				return callback({
+					allow: false,
+					cb_msg: "Access denied by Admin",
+					stack_data: null,
+				});
+			}
+			const stack_data = response[0].data;
+			return callback({
+				allow: true,
+				cb_msg: "Drawing stack sending",
+				stack_data: stack_data,
 			});
+		}
 
 		socket.on("on-drawing", (msg, callback) => {
 			// ---------------------- have to listen to the "on-drawing" event inside the join room
 			callback({
 				cb_msg: "drawing data received",
 			});
-			io.to(data.id).emit("draw-on-canvas", msg);
+			socket.broadcast.to(data.id).emit("draw-on-canvas", msg);
 		});
 	});
 });
@@ -145,11 +153,11 @@ io.sockets.on("disconnect", (socket) => {
 });
 // ------------------------------------------------------------- socket logics ends here
 
-app.get("/", (req, res) => {
-	res.send("Routes are yet to be implemented");
-});
+// app.get("/", (_, res) => {
+// 	res.send("Routes are yet to be implemented");
+// });
 
-const PORT: string | undefined = process.env.PORT;
+const PORT: string = process.env.PORT ?? "8080";
 console.log(PORT);
 httpServer.listen(PORT, () => {
 	console.log("listening on port: ", PORT);
