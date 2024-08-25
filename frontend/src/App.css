@@ -216,3 +216,24 @@ nav {
   display: block;
   margin: 0 auto; /* Center horizontally */
 }
+
+
+canvas {
+  cursor: auto;
+}
+
+.canvas-resize-nwse {
+  cursor: nwse-resize;
+}
+
+.canvas-resize-nesw {
+  cursor: nesw-resize;
+}
+
+.canvas-resize-ns {
+  cursor: ns-resize;
+}
+
+.canvas-resize-ew {
+  cursor: ew-resize;
+}
