@@ -356,7 +356,7 @@ const Canvas = () => {
           drawingData.startY + height / 2,
           Math.abs(width) / 2,
           Math.abs(height) / 2,
-          0, // Rotation angle
+          0, 
           0,
           Math.PI * 2
         );
