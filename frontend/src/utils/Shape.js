@@ -8,11 +8,10 @@ class Shape {
   }
 
   draw(ctx) {
-    // To be overridden by subclasses
+    
   }
 
   clear(ctx) {
-    // To be overridden by subclasses
   }
 }
 

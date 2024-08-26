@@ -1,14 +1,31 @@
 import React, { useState } from "react";
 import "../Login_Register.css";
-
+import axios from "axios";
+import Cookies from "js-cookie";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login:", { email, password });
+    axios
+      .post("http://localhost:8080/auth/login", {
+        email,
+        password,
+      })
+      .then((response) => {
+        console.log(response.data);
+
+        if (response.data) {
+          Cookies.set("authToken", response.data);
+          alert("Login successful! User ID:");
+        } else {
+          alert("Login failed: ", response);
+        }
+      })
+      .catch((error) => {
+        alert("An error occurred: ", error);
+      });
   };
 
   return (
