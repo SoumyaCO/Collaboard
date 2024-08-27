@@ -1,11 +1,19 @@
-frontend/node_modules
+# frontend directories
 frontend/node_modules
 frontend/src/components/canvas_exp_2.jsx
 frontend/src/components/canvas_exp.jsx
 
+
+# backend directories
 backend/node_modules
 backend/.env
 backend/data
+
+# backend build directory
+backend/dist
+
+# Editor configurations and files
 .vscode
 .idea
 .zed
+.DS_Store
