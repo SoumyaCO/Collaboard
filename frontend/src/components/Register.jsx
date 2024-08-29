@@ -25,7 +25,7 @@ const Register = () => {
         if (r.data === "user created") {
           alert("Registration successful!");
 
-          navigate("/login");
+          navigate("/login"); 
           console.log(r);
         } else if (r.data === "Email already exists") {
           console.log(r);

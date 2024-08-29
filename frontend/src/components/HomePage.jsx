@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./Navbar";
 import BannerBackground from "../assets/background_r_img.png";
 import { socket } from "../utils/Socket";
 
@@ -73,8 +72,6 @@ function HomePage() {
 
   return (
     <div className="home_contain">
-      <Navbar />
-
       <div className="home-banner-container">
         <div className="btn_input_btn">
           <button className="New_Room" onClick={handleCreateRoom}>

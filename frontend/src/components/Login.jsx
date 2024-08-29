@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Login_Register.css";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { UserContext } from "../App.jsx";
+
 const Login = () => {
+  const { state, dispatch } = useContext(UserContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,7 +23,9 @@ const Login = () => {
 
         if (response.data) {
           Cookies.set("authToken", response.data);
-          alert("Login successful! User ID:");
+          dispatch({ type: "USER", payload: true });
+          alert("Login successful!");
+          navigate("/");
         } else {
           alert("Login failed: ", response);
         }
