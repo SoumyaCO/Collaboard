@@ -567,7 +567,7 @@ const Canvas = () => {
       </div>
       <canvas
         ref={canvasRef}
-        width={1690}
+        width={1680}
         height={740}
         style={{ border: "1px solid black" }}
       ></canvas>
