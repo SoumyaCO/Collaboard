@@ -19,8 +19,6 @@ const Login = () => {
         password,
       })
       .then((response) => {
-        console.log(response.data);
-
         if (response.data) {
           Cookies.set("authToken", response.data);
           dispatch({ type: "USER", payload: true });

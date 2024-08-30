@@ -105,6 +105,53 @@ nav {
   background-color: #0056b3;
 }
 
+/* profile page */
+
+.profile_body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f7f6;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.profile-container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  text-align: center;
+}
+
+.profile-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #007bff;
+}
+
+.username {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 10px 0 5px;
+}
+
+.name {
+  font-size: 1.2rem;
+  color: #555;
+  margin: 0;
+}
+
+.email {
+  font-size: 1rem;
+  color: #777;
+  margin: 5px 0 0;
+}
+
 /* home */
 .home-banner-container {
   margin-top: 6rem;

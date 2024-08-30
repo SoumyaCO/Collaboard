@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import profile from "../assets/profile_img.png";
 import logo from "../assets/logo.png";
 import Avatar from "../assets/profile_avatar/avatar1.jpg";
@@ -8,11 +8,32 @@ import { UserContext } from "../App";
 
 const Navbar = () => {
   const { state, dispatch } = useContext(UserContext);
-
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   const isLoggedIn = state?.isLoggedIn;
+
+  const callProfilePage = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/auth/getdata", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw error;
+      }
+      const data = await res.json();
+      setUser(data);
+    } catch (err) {}
+  };
+  useEffect(() => {
+    callProfilePage();
+  }, []);
 
   const handleProfileClick = () => {
     if (state) {
@@ -53,8 +74,14 @@ const Navbar = () => {
                   alt="Avatar"
                   className="dropdown_profile_img"
                 />
-                <p className="user_id">UserID123</p>{" "}
-                <button onClick={() => navigate("/Profile")}>Profile</button>
+                <p className="user_id">{user.username}</p>{" "}
+                <button
+                  onClick={() => {
+                    navigate("/Profile");
+                  }}
+                >
+                  Profile
+                </button>
                 <button onClick={handleLogout}>Logout</button>
               </div>
             )}
