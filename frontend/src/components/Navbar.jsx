@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
+
 import profile from "../assets/profile_img.png";
 import logo from "../assets/logo.png";
 import Avatar from "../assets/profile_avatar/avatar1.jpg";
@@ -8,6 +9,7 @@ import { UserContext } from "../App";
 
 const Navbar = () => {
   const { state, dispatch } = useContext(UserContext);
+
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const navigate = useNavigate();
   const [user, setUser] = useState(null);

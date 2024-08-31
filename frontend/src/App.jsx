@@ -8,6 +8,7 @@ import HashPage from "./components/Create_hash";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
+
 import { initialState, reducer } from "../src/Reducer/useReducer";
 
 // contextApi
@@ -26,6 +27,7 @@ const Routing = () => {
 
       {/* <Route path="/Logout" element={<Logout />} />
       <Route path="*" element={<ErrorPage />} />  */}
+
     </Routes>
   );
 };

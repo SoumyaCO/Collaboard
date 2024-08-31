@@ -1,56 +1,57 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
-const Profile = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  const callProfilePage = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/auth/profile", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
-      const data = await res.json();
-      setUser(data);
-    } catch (err) {
-      console.log(err); //log
-      navigate("/Login");
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    callProfilePage();
-  }, []);
-
-  if (loading) {
-    return <div className="profile-container">Loading...</div>;
-  }
-  if (!user) {
-    return <div className="profile-container">No user data available</div>;
-  }
+import editIcon from '../assets/edit.png'
+export default function Profile() {
   return (
-    <div className="profile-container">
-      <img
-        src={user.profilePhoto}
-        alt="Profile Photo"
-        className="profile-photo"
-      />
-      <h1 className="username">{user.username}</h1>
-      <p className="name">{user.name}</p>
-      <p className="email">{user.email}</p>
-    </div>
-  );
-};
+    <div className="profile-page-grid">
+      <div className="profile-photo">
+        <img src="https://www.w3schools.com/images/lamp.jpg" alt="img" />
+      </div>
+      <div className="profile-name">
+        <h1 className="profile-name-h1">Soumyadip Bhattacharjya</h1>
+      </div>
+      <button className="edit-profile-icon">EDIT</button>
+      <div className="meetings">
+        <div className="meeting-heading">
+          <h1>Meetings</h1>
+          <button>Add Meeting</button>
+        </div>
+        <ul>
+          <li>
+            <div>
+              <div className="meeting-title">System Design Meeting</div>
+              <div className="meeting-date">04/09/2024</div>
+              <button className="meeting-join-icon">Join</button>
+              <button className="meeting-edit-icon">
+                <img src={editIcon} alt="hello" />
+              </button>
+              <button className="meeting-invite">Invite</button>
+            </div>
+          </li>
 
-export default Profile;
+          <li>
+            <div>
+              <div className="meeting-title">Code refactoring Meeting</div>
+              <div className="meeting-date">06/09/2024</div>
+              <button className="meeting-join-icon">Join</button>
+              <button className="meeting-edit-icon">
+                <img src={editIcon} alt="hello" />
+              </button>
+              <button className="meeting-invite">Invite</button>
+            </div>
+          </li>
+
+          <li>
+            <div>
+              <div className="meeting-title">System Design Meeting</div>
+              <div className="meeting-date">09/09/2024</div>
+              <button className="meeting-join-icon">Join</button>
+              <button className="meeting-edit-icon">
+                <img src={editIcon} alt="hello" />
+              </button>
+              <button className="meeting-invite">Invite</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div >
+  )
+}
