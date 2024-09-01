@@ -216,4 +216,10 @@ router.get("/getdata", Authenticate, (req, res) => {
   res.send(req.user);
 });
 
+// logout route
+router.get("/logout", (req, res) => {
+  res.clearCookie("authToken", { path: "/" }); 
+  res.status(200).send("User logged out successfully"); 
+});
+
 export default router;

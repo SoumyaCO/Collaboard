@@ -27,8 +27,8 @@ nav {
 
 .settings_icon,
 .profile_img {
-  margin-right: 50px;
-  width: 28px;
+  margin-right: 40px;
+  width: 30px;
   cursor: pointer;
   transition: 0.1s;
 }
@@ -75,7 +75,6 @@ nav {
 
 .profile_wrapper:hover .profile_dropdown,
 .profile_dropdown:hover {
-
   opacity: 1; /* Show dropdown */
   visibility: visible;
 }
@@ -87,15 +86,15 @@ nav {
 }
 
 .dropdown_profile_img {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
 }
 
 .profile_dropdown p {
-  margin: 10px 0;
-  font-size: 14px;
-  color: #333;
+  margin: 15px 0;
+  font-size: 20px;
+  color: #063970;
 }
 
 .profile_dropdown button {
@@ -111,54 +110,6 @@ nav {
 .profile_dropdown button:hover {
   background-color: #0056b3;
 }
-
-/* profile page */
-
-.profile_body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f7f6;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.profile-container {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
-  text-align: center;
-}
-
-.profile-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #007bff;
-}
-
-.username {
-  font-size: 1.5rem;
-  color: #333;
-  margin: 10px 0 5px;
-}
-
-.name {
-  font-size: 1.2rem;
-  color: #555;
-  margin: 0;
-}
-
-.email {
-  font-size: 1rem;
-  color: #777;
-  margin: 5px 0 0;
-}
-
 
 /* home */
 .home-banner-container {
@@ -391,31 +342,47 @@ canvas {
   border-radius: 30px;
 }
 
-.profile-photo>img {
+.profile-photo > img {
   height: inherit;
   width: inherit;
   border-radius: inherit;
 }
 
-
-.profile-name {
-  position: relative;
-  top: 50%;
-  left: 40%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  grid-row: 1;
+.profile-info {
+  grid-row: 1 / 2;
   grid-column: 2;
-  height: 100px;
-  width: 80%;
-  padding: 10px;
+  background-color: white;
   border: 3px solid #ff4500;
   border-radius: 10px;
+  padding: 10px;
+  height: 80%;
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.profile-name>h1 {
+.profile-info h1,
+.profile-info h2,
+.profile-info h3 {
   text-align: center;
+  margin: 5px 0;
+}
+
+.profile-username {
+  color: #333333; /* Dark color */
   font-size: 2rem;
+}
+
+.profile-name {
+  color: #666666; /* Medium gray */
+  font-size: 1.5rem;
+}
+
+.profile-email {
+  color: #999999; /* Light gray */
+  font-size: 1rem;
 }
 
 .edit-profile-icon {
@@ -432,11 +399,9 @@ canvas {
   background-color: #ff6347;
 }
 
-
 .edit-profile-icon:active {
   transform: translate(2px, 3px);
   box-shadow: gray 1px 1px 1px;
-
 }
 
 .meetings {
@@ -445,7 +410,6 @@ canvas {
   grid-column: 1/6;
 }
 
-
 .meeting-heading {
   display: flex;
   flex-direction: row;
@@ -453,38 +417,37 @@ canvas {
   padding: 20px 50px 0px 50px;
 }
 
-.meeting-heading>h1 {
+.meeting-heading > h1 {
   font-size: 1.5rem;
   font-family: monospace;
   text-align: center;
   background-color: white;
 }
 
-.meeting-heading>button {
+.meeting-heading > button {
   background-color: #ff4500;
   height: 50px;
   border-radius: 20px;
   box-shadow: gray 2px 5px 2px;
 }
 
-.meeting-heading>button:hover {
+.meeting-heading > button:hover {
   background-color: #ff6347;
 }
 
-.meeting-heading>button:active {
+.meeting-heading > button:active {
   transform: translate(2px, 3px);
   box-shadow: gray 1px 1px 1px;
 }
 
-.meetings>ul {
+.meetings > ul {
   background-color: white;
   height: inherit;
   overflow-y: scroll;
   margin: 0px;
-
 }
 
-.meetings>ul>li {
+.meetings > ul > li {
   display: grid;
   height: 3.5rem;
   row-gap: 5px;
@@ -493,22 +456,20 @@ canvas {
   border-radius: 10px;
 }
 
-.meetings>ul>li>div {
+.meetings > ul > li > div {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr 1fr 1fr;
   border-radius: inherit;
-
 }
 
-.meetings>ul>li>div>div {
+.meetings > ul > li > div > div {
   border-radius: inherit;
   text-align: center;
   margin: 2px 3px 2px 3px;
   line-height: 3rem;
 }
 
-
-.meetings>ul>li>div>button {
+.meetings > ul > li > div > button {
   background-color: #ff6347;
   border-radius: 10px;
   margin-left: 10px;
@@ -516,11 +477,11 @@ canvas {
   margin-bottom: 3px;
 }
 
-.meetings>ul>li>div>button:hover {
+.meetings > ul > li > div > button:hover {
   background-color: #ff4500;
 }
 
-.meetings>ul>li>div>button:active {
+.meetings > ul > li > div > button:active {
   transform: translate(1px, 2px);
 }
 
@@ -540,7 +501,7 @@ canvas {
   grid-column: 4;
 }
 
-.meeting-edit-icon>img {
+.meeting-edit-icon > img {
   height: 20px;
 }
 
