@@ -8,7 +8,6 @@ import HashPage from "./components/Create_hash";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
-
 import { initialState, reducer } from "../src/Reducer/useReducer";
 
 // contextApi
@@ -20,14 +19,11 @@ const Routing = () => {
       <Route path="/" element={<Home />} />
       <Route path="/Canvas" element={<Canvas />} />
       <Route path="/HashPage" element={<HashPage />} />
-      {/* <Route path="/about" element={<About />} /> */}
       <Route path="/Login" element={<Login />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/Profile" element={<Profile />} />
 
-      {/* <Route path="/Logout" element={<Logout />} />
-      <Route path="*" element={<ErrorPage />} />  */}
-
+      {/* <Route path="*" element={<ErrorPage />} /> */}
     </Routes>
   );
 };

@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { UserContext } from "../App.jsx";
 
 const Login = () => {
-  const { state, dispatch } = useContext(UserContext);
+  const { dispatch } = useContext(UserContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
