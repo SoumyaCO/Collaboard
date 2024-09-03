@@ -5,6 +5,7 @@ import Avatar from "../assets/profile_avatar/avatar1.jpg";
 import SettingsIcon from "../assets/Settings.png";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../App";
+import Cookies from "js-cookie";
 
 const Navbar = () => {
   const { state, dispatch } = useContext(UserContext);
@@ -12,13 +13,16 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch user profile data when logged in
   useEffect(() => {
-    if (state?.isLoggedIn) {
+    const token = Cookies.get("authToken");
+    if (token) {
+      dispatch({ type: "USER", payload: true });
       fetchUserProfile();
+    } else {
+      dispatch({ type: "USER", payload: false });
+      setUser(null); // Reset user state if no token
     }
-  }, [state?.isLoggedIn]);
-
+  }, [dispatch]); // effect runs when ever dispatch changes
   const fetchUserProfile = async () => {
     try {
       const res = await fetch("http://localhost:8080/auth/getdata", {
@@ -69,6 +73,11 @@ const Navbar = () => {
       console.error("Logout error: ", err);
     }
   };
+  useEffect(() => {
+    if (state?.isLoggedIn) {
+      fetchUserProfile();
+    }
+  }, [state?.isLoggedIn]);
 
   const RenderMenu = () => (
     <div className="profile_container">
