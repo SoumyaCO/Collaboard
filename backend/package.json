@@ -4,6 +4,7 @@
   "description": "Collaborative Drawing and Video Conferencing Application",
   "main": "app.js",
   "scripts": {
+    "test": "npx jest",
     "start": "npx ts-node src/index.ts"
   },
   "author": "Soumyadip Bhattacharjya (SoumyaCO)",
@@ -23,6 +24,7 @@
     "colors": "^1.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "joi": "^17.13.3",
@@ -30,6 +32,7 @@
     "mongoose": "^8.5.1",
     "nodemailer": "^6.9.14",
     "socket.io": "^4.7.5",
+    "supertest": "^7.0.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
@@ -39,6 +42,7 @@
     "@types/joi": "^17.2.2",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.12",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
     "jest": "^29.7.0",
     "socket.io-client": "^4.7.5",
