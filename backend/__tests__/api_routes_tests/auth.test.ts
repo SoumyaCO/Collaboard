@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import request = require("supertest");
+import request from "supertest";
 
 import { httpServer } from "../../src/index";
 import { randomUser } from "../test_utils/random";

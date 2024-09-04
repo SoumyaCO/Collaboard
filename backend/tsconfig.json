@@ -19,9 +19,4 @@
     "node_modules",
     "__tests__/**/*.test.ts",
   ],
-  "references": [
-    {
-      "path": "./__tests__/tsconfig.json",
-    }
-  ]
 }
