@@ -1,6 +1,6 @@
 import UserModel, { User } from "../Models/User";
 
-export const createUser = async (userData: User) => {
+export const createUser = async (userData: any) => {
 	const user = new UserModel(userData);
 
 	await user
