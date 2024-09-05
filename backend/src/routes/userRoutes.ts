@@ -1,42 +1,45 @@
 require("dotenv").config();
 import "colors";
 import express, { Request, Response } from "express";
-import {
-	createUser,
-	deleteUser,
-	updateUser,
-	getUser,
-} from "../Controllers/userController";
+import { deleteUser, updateUser, getUser } from "../Controllers/userController";
 
 const router = express.Router();
 
-router.post("/", async (req: Request, res: Response) => {
+router.delete("/:username", async (req: Request, res: Response) => {
 	try {
-		const user = await createUser(req.body);
-		res.status(201).send(user);
+		const result = await deleteUser(req.params.username);
+		if (result === 1) {
+			res.status(200).send({ msg: "user successfully deleted!", error: null });
+		} else {
+			res.status(400).send({ msg: "No such user exist" });
+		}
 	} catch (error) {
 		console.error(`[Error]: ${error}`.red.italic);
+		res.status(500).send({ msg: "internal error", error: error });
 	}
 });
 
-router.delete("/:userId", async (req: Request, res: Response) => {
+router.put("/:username", async (req: Request, res: Response) => {
 	try {
-		await deleteUser(req.params.userId);
-		res.status(204).send("user successfully deleted!");
+		const user = await updateUser(req.params.username, req.body);
+		if (user) {
+			res.status(201).send({ msg: "User Updated", data: user });
+		} else {
+			res.status(400).send({ msg: "Bad request", data: null });
+		}
 	} catch (error) {
-		console.error(`[Error]: ${error}`.red.italic);
+		res.status(500).send({ msg: `Internal Error: ${error}`, data: undefined });
 	}
-});
-
-router.put("/:userId", async (req: Request, res: Response) => {
-	const user = await updateUser(req.params.userId, req.body);
-	res.send(user);
 });
 
 // for testing purpose this route returns a message
 router.get("/:email", async (req: Request, res: Response) => {
-	const user = await getUser(req.params.email);
-	res.send(user);
+	try {
+		const user = await getUser(req.params.email);
+		res.status(200).send({ msg: "user exist", data: user });
+	} catch (error) {
+		res.status(500).send({ msg: "server error", data: undefined });
+	}
 });
 
 export default router;

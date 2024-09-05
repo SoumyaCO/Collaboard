@@ -15,13 +15,15 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer, { Transporter } from "nodemailer";
 
-import e from "express";
-import { log } from "console";
-
-// import * as dotenv from "dotenv";
-// dotenv.config();
-
 const router = express.Router();
+
+declare global {
+	namespace Express {
+		interface Request {
+			user?: User;
+		}
+	}
+}
 
 const secret = process.env.JWT_PASS;
 
@@ -58,15 +60,16 @@ router.post("/register", async (req: Request, res: Response) => {
 			});
 	}
 
-	// Create user
-	const newUser: User = {
+	/*
+	 * Usring "Partial<Type> to make fields optional"
+	 */
+	const newUser: Partial<User> = {
 		id: uuidv4(),
 		username: req.body.username,
 		firstName: req.body.firstName,
 		lastName: req.body.lastName,
 		email: req.body.email,
 		password: hashPassword,
-		createdAt: new Date(),
 	};
 	await createUser(newUser)
 		.then(() => res.send("user created"))
@@ -224,8 +227,8 @@ router.get("/logout", (req, res) => {
 
 // logout route
 router.get("/logout", (req, res) => {
-  res.clearCookie("authToken", { path: "/" }); 
-  res.status(200).send("User logged out successfully"); 
+	res.clearCookie("authToken", { path: "/" });
+	res.status(200).send("User logged out successfully");
 });
 
 export default router;
