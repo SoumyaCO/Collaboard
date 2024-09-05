@@ -25,15 +25,6 @@ declare global {
 	}
 }
 
-type NewUser = {
-	id: string;
-	username: string;
-	firstName: string;
-	lastName: string;
-	email: string;
-	password: string;
-};
-
 const secret = process.env.JWT_PASS;
 
 router.post("/register", async (req: Request, res: Response) => {
@@ -70,10 +61,9 @@ router.post("/register", async (req: Request, res: Response) => {
 	}
 
 	/*
-	 * It's a type of NewUser (defined at the top).
-	 * Because avatar, createdAt -> these fields are not required
+	 * Usring "Partial<Type> to make fields optional"
 	 */
-	const newUser: NewUser = {
+	const newUser: Partial<User> = {
 		id: uuidv4(),
 		username: req.body.username,
 		firstName: req.body.firstName,

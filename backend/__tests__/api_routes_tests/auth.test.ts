@@ -23,12 +23,14 @@ afterEach(async () => {
 /* Register a new test client, login, check for JWT and check for entry in DB */
 describe("Register, Login & getting JWT back in header", () => {
 	const random_user = randomUser();
+
 	it("should register a client", async () => {
 		const res = await request(httpServer)
 			.post("/auth/register")
 			.send(random_user);
-		expect(res.statusCode).toBe(200); // this should be 201 (problem in backend)
+		expect(res.statusCode).toBe(200);
 	});
+
 	it("should return not null JWT token upon login", async () => {
 		const res = await request(httpServer).post("/auth/login").send({
 			email: random_user.email,
@@ -37,12 +39,20 @@ describe("Register, Login & getting JWT back in header", () => {
 		expect(res.statusCode).toBe(200);
 		expect(res.header.authtoken).toBeDefined();
 	});
+
 	it("should create a database entry for the registered client", async () => {
-		const res = await request(httpServer).get(`/user/${random_user.email}`);
-		expect(res.body.username).toBe(random_user.username);
-		expect(res.body.firstName).toBe(random_user.firstName);
-		expect(res.body.lastName).toBe(random_user.lastName);
-		expect(res.body.password).not.toBe(random_user.password);
+		const res = await request(httpServer).get(`/user/${random_user.username}`);
+		expect(res.body.data.username).toBe(random_user.username);
+		expect(res.body.data.firstName).toBe(random_user.firstName);
+		expect(res.body.data.lastName).toBe(random_user.lastName);
+		expect(res.body.data.password).not.toBe(random_user.password); // check if the password is hashed or not
+	});
+
+	it("should delete the db entries", async () => {
+		const res = await request(httpServer).delete(
+			`/user/${random_user.username}`,
+		);
+		expect(res.statusCode).toBe(200);
 	});
 });
 
