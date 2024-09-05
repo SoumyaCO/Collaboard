@@ -1,6 +1,6 @@
 import UserModel, { User } from "../Models/User";
 
-export const createUser = async (userData: User) => {
+export const createUser = async (userData: Partial<User>) => {
 	const user = new UserModel(userData);
 
 	await user
@@ -14,20 +14,28 @@ export const createUser = async (userData: User) => {
 		});
 };
 
-export const deleteUser = async (userId: string) => {
-	await UserModel.deleteOne({ userId });
+export const deleteUser = async (username: string) => {
+	try {
+		const result = await UserModel.deleteOne({ username });
+		return result.deletedCount;
+	} catch (error) {
+		console.log("Error deleting: ", error);
+	}
 };
 
-export const updateUser = async (userId: string, updateData: User) => {
-	const user = await UserModel.findOneAndUpdate({ userId }, updateData, {
+export const updateUser = async (
+	username: string,
+	updateData: Partial<User>,
+) => {
+	const user = await UserModel.findOneAndUpdate({ username }, updateData, {
 		new: true,
 	});
 	return user;
 };
 
-export const getUser = async (email: string) => {
+export const getUser = async (username: string) => {
 	try {
-		const user = await UserModel.findOne({ email: email });
+		const user = await UserModel.findOne({ username: username });
 		return user;
 	} catch (error) {
 		console.error("Error Querying for user");

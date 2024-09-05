@@ -4,7 +4,7 @@
   "description": "Collaborative Drawing and Video Conferencing Application",
   "main": "app.js",
   "scripts": {
-    "test": "npx jest",
+    "test": "npx jest --runInBand",
     "start": "npx ts-node src/index.ts"
   },
   "author": "Soumyadip Bhattacharjya (SoumyaCO)",
