@@ -9,23 +9,21 @@ import RoomModel from "../Models/Room";
  * @param client :Socket - socket.io socket instance
  */
 
-export async function createRoom(client: Socket, data: any) {
-	client.join(data.id);
-	console.log(
-		`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
-	);
+export async function createRoom(client: Socket, data: any, username: string) {
+  client.join(data.id);
+  console.log(`[ADMIN CREATED} ${username} created the room: ${data.id}`);
 
-	await RoomModel.create({
-		roomId: data.id,
-		adminId: client.id,
-		members: [client.handshake.auth.username],
-	})
-		.then(() => {
-			console.log("Room Created successfully in the database".green.italic);
-		})
-		.catch((error) => {
-			console.log(`Error occurred ${error}`.red.underline);
-		});
+  await RoomModel.create({
+    roomId: data.id,
+    adminId: client.id,
+    members: [username],
+  })
+    .then(() => {
+      console.log("Room Created successfully in the database".green.italic);
+    })
+    .catch((error) => {
+      console.log(`Error occurred ${error}`.red.underline);
+    });
 }
 
 /**
@@ -34,21 +32,21 @@ export async function createRoom(client: Socket, data: any) {
  * @param data: any received from the client
  */
 
-export async function joinRoom(client: Socket, data: any) {
-	let isExist = await RoomModel.findOne({ roomId: data.id });
-	if (!isExist) {
-		console.log("room does not exists");
-	} else {
-		await RoomModel.updateOne(
-			{ roomId: data.id },
-			{ $push: { members: client.handshake.auth.username } },
-		);
+export async function joinRoom(client: Socket, data: any, username:string) {
+  let isExist = await RoomModel.findOne({ roomId: data.id });
+  if (!isExist) {
+    console.log("room does not exists");
+  } else {
+    await RoomModel.updateOne(
+      { roomId: data.id },
+      { $push: { members:username } }
+    );
 
-		client.join(data.id);
-		console.log(
-			`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${data.id}`,
-		);
-	}
+    client.join(data.id);
+    console.log(
+      `[MEMBER JOINED] ${username} joined the room: ${data.id}`
+    );
+  }
 }
 
 /**
@@ -57,12 +55,12 @@ export async function joinRoom(client: Socket, data: any) {
  * @return {Promise<Room>} adminSocketId - socket id of the admin (socket.io)
  */
 export async function getAdmin(roomId: string): Promise<string> {
-	try {
-		const room = await RoomModel.findOne({ roomId: roomId });
+  try {
+    const room = await RoomModel.findOne({ roomId: roomId });
 
-		return room?.adminId ?? "not found";
-	} catch (error) {
-		console.error("Error fetching admin: ", error);
-		throw new Error("Failed to fetch admin ID");
-	}
+    return room?.adminId ?? "not found";
+  } catch (error) {
+    console.error("Error fetching admin: ", error);
+    throw new Error("Failed to fetch admin ID");
+  }
 }

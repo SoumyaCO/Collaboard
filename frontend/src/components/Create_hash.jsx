@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../utils/Socket";
+import Cookies from "js-cookie";
 
 const generateRandomHash = () => {
   const length = 30; // specified length of the hash
@@ -44,7 +45,7 @@ const SmallScreenComponent = () => {
 
   const handleCreateRoom = () => {
     socket.connect();
-
+    console.log(Cookies.get("authToken"));
     // emit join request to create a room with hash and user details
     socket.emit("create-room", { id: hash }, (res) => {
       navigate("/canvas");

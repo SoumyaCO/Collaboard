@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import profile from "../assets/profile_img.png";
 import logo from "../assets/logo.png";
-import Avatar from "../assets/profile_avatar/avatar1.jpg";
 import SettingsIcon from "../assets/Settings.png";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../App";
@@ -39,6 +38,7 @@ const Navbar = () => {
 
       const data = await res.json();
       setUser(data);
+      localStorage.setItem("username",data.username);
       console.log("Fetched user data:", data);
     } catch (err) {
       console.error(err);
