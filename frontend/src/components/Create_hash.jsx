@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { socket }  from "../utils/Socket";;
+import { socket } from "../utils/Socket";
 
-const Server_Url = "http://localhost:8080";
 const generateRandomHash = () => {
   const length = 30; // specified length of the hash
   let hash = "";
@@ -44,18 +43,10 @@ const SmallScreenComponent = () => {
   };
 
   const handleCreateRoom = () => {
-    // Retrieve user details from sessionStorage
-    // const userId = sessionStorage.getItem("userId");
-    // const username = sessionStorage.getItem("username");
-    const username = "toukir";
-
-    socket.auth.username = username;
-    // connect the socket
     socket.connect();
 
     // emit join request to create a room with hash and user details
     socket.emit("create-room", { id: hash }, (res) => {
-      console.log("Room created", res.cb_msg);
       navigate("/canvas");
     });
 
@@ -63,7 +54,9 @@ const SmallScreenComponent = () => {
     socket.on("disconnect", () => {
       console.log("Socket disconnected");
     });
-
+    socket.on("connect_error", (error) => {
+      console.error("connect error:", error);
+    });
     // navigate("/canvas");
   };
 

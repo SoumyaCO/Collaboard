@@ -43,19 +43,20 @@ function HomePage() {
       socket.auth.username = username;
       socket.emit("join-room", { id: roomHash }, (response) => {
         if (response) {
-          if (response.imgURL) {
-            // room exists and image data is received
-            const imgURL = response.imgURL;
-            navigate("/canvas", { state: { imageURL: imgURL } });
+          if (response.allow) {
+            DRAWING_STACK = response.stack_data;
+            navigate("/canvas", {
+              state: { drawingStack: response.stack_data },
+            });
           } else {
-            // room exists but no image data is available
-            console.log("No image data available");
-            navigate("/canvas");
+            // room exists but no drawing data is available
+            console.log("No drawing data available");
+            navigate("/canvas", { state: { drawingStack: [] } });
           }
         } else {
           //  room does not exist
           console.log("Room  does not exist ");
-          socket.disconnect(); // Disconnect the socket
+          socket.disconnect();
           setError("Room Not Available");
         }
       });

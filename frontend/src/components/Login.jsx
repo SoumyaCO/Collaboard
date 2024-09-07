@@ -14,22 +14,28 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
-      .post("http://localhost:8080/auth/login", {
-        email,
-        password,
-      })
+      .post(
+        "http://localhost:8080/auth/login",
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      )
       .then((response) => {
-        if (response.data) {
-          Cookies.set("authToken", response.data);
+        if (response.status === 200) {
+          // Cookies.set("authToken", response.data.token);
           dispatch({ type: "USER", payload: true });
           alert("Login successful!");
           navigate("/");
         } else {
-          alert("Login failed: ", response);
+          alert("Login failed: " + response.data.message);
         }
       })
       .catch((error) => {
-        alert("An error occurred: ", error);
+        alert("An error occurred: " + error.message);
       });
   };
 

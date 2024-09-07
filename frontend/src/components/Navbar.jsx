@@ -38,8 +38,8 @@ const Navbar = () => {
       }
 
       const data = await res.json();
-      console.log("Fetched user data:", data);
       setUser(data);
+      console.log("Fetched user data:", data);
     } catch (err) {
       console.error(err);
     }
@@ -90,14 +90,18 @@ const Navbar = () => {
         onMouseLeave={() => setIsDropdownVisible(false)}
       >
         <img
-          src={state?.isLoggedIn ? Avatar : profile}
+          src={state?.isLoggedIn ? user?.avatar : profile}
           alt="Profile"
           className={state?.isLoggedIn ? "profile_Avatar" : "profile_img"}
           onClick={handleProfileClick}
         />
         {isDropdownVisible && state?.isLoggedIn && (
           <div className="profile_dropdown">
-            <img src={Avatar} alt="Avatar" className="dropdown_profile_img" />
+            <img
+              src={user.avatar}
+              alt="Avatar"
+              className="dropdown_profile_img"
+            />
             <p className="user_id">{user?.username || "user"}</p>
             <button onClick={() => navigate("/Profile")}>Profile</button>
             <button onClick={handleLogout}>Logout</button>
