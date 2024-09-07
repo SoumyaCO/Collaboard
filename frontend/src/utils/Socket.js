@@ -1,30 +1,53 @@
 import { io } from "socket.io-client";
+import Cookies from "js-cookie";
+
 const Server_Url = "http://localhost:8080";
 const joinHash = sessionStorage.getItem("sessionHash");
 
-//initialize socket connection
+let user = null;
 
+// export const findUsername = async () => {
+//   try {
+//     const res = await fetch("http://localhost:8080/auth/getdata", {
+//       method: "GET",
+//       headers: {
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//       },
+//       credentials: "include",
+//     });
+
+//     if (!res.ok) {
+//       throw new Error("Failed to fetch user profile");
+//     }
+//     const data = await res.json();
+//     user = data;
+//   } catch (err) {
+//     navigate("/Login");
+//   }
+// };
+
+// findUsername();
+
+// socket connection
 const socket = io(Server_Url, {
   autoConnect: false,
   auth: {
-    username: "",
+    token: Cookies.get("authToken"),
   },
 });
-//emit
 
+// Emit drawing data to the server
 const emitDrawing = (data) => {
   const payload = {
     ...data,
     joinHash: joinHash,
   };
 
-  // Emit "on-drawing" event with data and a callback function
-  socket.emit("on-drawing", payload, (response) => {
-    // handle the server's response
-    console.log(response.cb_msg);
-  });
+  socket.emit("on-drawing", payload, (response) => {});
 };
 
+// Listen for drawing updates from the server
 const doDrawing = (callback) => {
   socket.on("draw-on-canvas", (data) => {
     callback(data); // Pass the received data to the provided callback
@@ -34,14 +57,14 @@ const doDrawing = (callback) => {
 // Function to handle the 'send-current-state' event
 const handleSendCurrentState = (canvas) => {
   // Listen for the 'send-current-state' event from the server
-  socket.on("send-current-state", (arg, callback) => {
+  socket.on("send-current-state", (callback) => {
     console.log("Server requested current state.");
 
     if (canvas && canvas.current) {
       const ctx = canvas.current.getContext("2d");
       if (ctx) {
-        const currentState = canvas.current.toDataURL(); // Get current canvas state as a data URL
-        callback({ data: currentState }); // Send current state to the server
+        const currentState = canvas.current.toDataURL();
+        callback({ data: currentState });
       } else {
         console.error("Unable to get canvas context.");
       }
@@ -51,5 +74,23 @@ const handleSendCurrentState = (canvas) => {
   });
 };
 
+// Function to request the current state from the server
+const requestCurrentState = () => {
+  socket.emit("request-current-state", joinHash);
+};
 
-export { socket, emitDrawing, doDrawing, handleSendCurrentState };
+// Handle the reception of the current state from the server
+const handleCurrentState = (callback) => {
+  socket.on("current-state", (data) => {
+    callback(data); // Pass the received data to the provided callback
+  });
+};
+
+export {
+  socket,
+  emitDrawing,
+  doDrawing,
+  handleSendCurrentState,
+  requestCurrentState,
+  handleCurrentState,
+};

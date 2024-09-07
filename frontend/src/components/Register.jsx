@@ -22,12 +22,12 @@ const Register = () => {
         password,
       })
       .then((r) => {
-        if (r.data === "user created") {
+        if (r.data.msg === "user created") {
           alert("Registration successful!");
 
-          navigate("/login"); 
+          navigate("/login");
           console.log(r);
-        } else if (r.data === "Email already exists") {
+        } else if (r.data.msg === "Email already exists") {
           console.log(r);
           alert("Email already exists. Please use a different email.");
         }
