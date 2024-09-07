@@ -3,7 +3,11 @@
 To Understand only the events and callbacks over the socket.io will require a great deal of attention, it's complicated, because it's made by me, and I love to do things in a complicated way.
 
 > **NOTE**: If you are not familiar with socket.io, then first check it with some patient.
-> Key points to remember 1. It's not websocket 2. websocket and socket.io speaks different languages. (like one speaks "Hindi" and the other speaks "Bangla")
+> Key points to remember 
+>
+> 1. It's not websocket 
+> 2. websocket and socket.io speaks different languages.
+> (like one speaks "Hindi" and the other speaks "Bangla")
 
 ## Events list and their possible works in one place
 
