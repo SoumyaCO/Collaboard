@@ -13,7 +13,7 @@ const Canvas = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("red");
-  const [drawingStack, setDrawingStack] = useStateS(
+  const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
   const [selectedId, setSelectedId] = useState(null);
@@ -433,25 +433,22 @@ const Canvas = () => {
             <img src={pen} alt="pen" />
           </div>
           <div
-            className={`tool rectangle ${
-              tool === "rect" ? "active-button" : ""
-            }`}
+            className={`tool rectangle ${tool === "rect" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("rect")}
           >
             <img src={rectangle} alt="rectangle" />
           </div>
           <div
-            className={`tool ellipse ${
-              tool === "ellipse" ? "active-button" : ""
-            }`}
+            className={`tool ellipse ${tool === "ellipse" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("ellipse")}
           >
             <img src={ellipse} alt="ellipse" />
           </div>
           <div
-            className={`tool eraser ${
-              tool === "eraser" ? "active-button" : ""
-            }`}
+            className={`tool eraser ${tool === "eraser" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("eraser")}
           >
             <img src={eraser} alt="eraser" />
@@ -467,9 +464,8 @@ const Canvas = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className={`color-border ${
-                selectedColor === color ? "color-border-active" : ""
-              }`}
+              className={`color-border ${selectedColor === color ? "color-border-active" : ""
+                }`}
               onClick={() => setSelectedColor(color)}
             >
               <div className="color" style={{ backgroundColor: color }}></div>

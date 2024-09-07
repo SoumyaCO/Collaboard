@@ -28,7 +28,7 @@ describe("Register, Login & getting JWT back in header", () => {
 		const res = await request(httpServer)
 			.post("/auth/register")
 			.send(random_user);
-		expect(res.statusCode).toBe(200);
+		expect(res.statusCode).toBe(201);
 	});
 
 	it("should return not null JWT token upon login", async () => {
@@ -37,7 +37,7 @@ describe("Register, Login & getting JWT back in header", () => {
 			password: random_user.password,
 		});
 		expect(res.statusCode).toBe(200);
-		expect(res.header.authtoken).toBeDefined();
+		expect(res.header["set-cookie"]).toBeDefined();
 	});
 
 	it("should create a database entry for the registered client", async () => {

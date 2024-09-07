@@ -43,7 +43,7 @@ describe("Update and Delete user", () => {
 		const res = await request(httpServer)
 			.post("/auth/register")
 			.send(random_user);
-		expect(res.statusCode).toBe(200);
+		expect(res.statusCode).toBe(201);
 		expect(res.body).toBeDefined();
 	});
 
