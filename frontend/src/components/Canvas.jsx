@@ -379,22 +379,112 @@ const Canvas = () => {
     ]
   );
 
-  const handleMouseUp = useCallback(() => {
-    if (!isDrawing) return;
+  const handleMouseUp = useCallback(
+    (event) => {
+      if (!isDrawing) return;
 
-    const ctx = getContext();
-    if (tool === "rect" || tool === "ellipse") {
-      setDrawingStack((prevStack) => [...prevStack, drawingData]);
-      setDrawingData((prevData) => ({
-        ...prevData,
-        id: prevData.id + 1,
-      }));
-    }
+      const ctx = getContext();
+      const { offsetX, offsetY } = event;
+      const width = offsetX - drawingData.startX;
+      const height = offsetY - drawingData.startY;
 
-    setIsDrawing(false);
-    setResizeHandle(null);
-    drawFromStack(drawingStack);
-  }, [isDrawing, getContext, drawingData, tool, drawingStack]);
+      if (tool === "rect") {
+        if (width === 0 || height === 0) return;
+
+        let rect = new Rectangle(
+          [drawingData.startX, drawingData.startY],
+          [width, height],
+          drawingData.color
+        );
+
+        // Update the drawing stack
+        let updatedStack =
+          tool === "edit" && selectedId !== null
+            ? drawingStack.map((r, index) => {
+                if (index === selectedId) {
+                  return {
+                    ...r,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return r;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
+                  x: drawingData.startX,
+                  y: drawingData.startY,
+                  width: width,
+                  height: height,
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
+
+        setDrawingStack(updatedStack);
+        drawFromStack(updatedStack);
+        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
+      } else if (tool === "ellipse") {
+        if (width === 0 || height === 0) return;
+
+        let ellipse = new Ellipse(
+          [drawingData.startX, drawingData.startY],
+          [width / 2, height / 2],
+          drawingData.color
+        );
+
+        // Update the drawing stack
+        let updatedStack =
+          tool === "edit" && selectedId !== null
+            ? drawingStack.map((e, index) => {
+                if (index === selectedId) {
+                  return {
+                    ...e,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return e;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
+                  x: drawingData.startX,
+                  y: drawingData.startY,
+                  width: width,
+                  height: height,
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
+
+        setDrawingStack(updatedStack);
+        drawFromStack(updatedStack);
+        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
+      }
+
+      setIsDrawing(false);
+      setSelectedId(null);
+      setResizeHandle(null);
+    },
+
+    [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
+  );
 
   useEffect(() => {
     drawFromStack(drawingStack);
@@ -433,22 +523,25 @@ const Canvas = () => {
             <img src={pen} alt="pen" />
           </div>
           <div
-            className={`tool rectangle ${tool === "rect" ? "active-button" : ""
-              }`}
+            className={`tool rectangle ${
+              tool === "rect" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("rect")}
           >
             <img src={rectangle} alt="rectangle" />
           </div>
           <div
-            className={`tool ellipse ${tool === "ellipse" ? "active-button" : ""
-              }`}
+            className={`tool ellipse ${
+              tool === "ellipse" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("ellipse")}
           >
             <img src={ellipse} alt="ellipse" />
           </div>
           <div
-            className={`tool eraser ${tool === "eraser" ? "active-button" : ""
-              }`}
+            className={`tool eraser ${
+              tool === "eraser" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("eraser")}
           >
             <img src={eraser} alt="eraser" />
@@ -464,8 +557,9 @@ const Canvas = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className={`color-border ${selectedColor === color ? "color-border-active" : ""
-                }`}
+              className={`color-border ${
+                selectedColor === color ? "color-border-active" : ""
+              }`}
               onClick={() => setSelectedColor(color)}
             >
               <div className="color" style={{ backgroundColor: color }}></div>

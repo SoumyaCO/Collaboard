@@ -3,8 +3,10 @@ import Cookies from "js-cookie";
 
 const Server_Url = "http://localhost:8080";
 const joinHash = sessionStorage.getItem("sessionHash");
+const username = localStorage.getItem("username");
+console.log("socket", username);
 
-let user = null;
+// let user = null;
 
 // export const findUsername = async () => {
 //   try {
@@ -30,10 +32,12 @@ let user = null;
 // findUsername();
 
 // socket connection
+
 const socket = io(Server_Url, {
   autoConnect: false,
   auth: {
     token: Cookies.get("authToken"),
+    username: username,
   },
 });
 
