@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BannerBackground from "../assets/background_r_img.png";
-import { socket } from "../utils/Socket";
+import { socket } from "./Create_hash";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -29,40 +29,9 @@ function HomePage() {
     setError("");
 
     try {
-      // Retrieve user information from Session
-
-      // const userId = sessionStorage.getItem("userId");
-      // const username = sessionStorage.getItem("username");
-      const username = "toukir2";
-
-      // initialize socket connection
-
       socket.connect();
 
-      // emit room hash and user details
-      socket.auth.username = username;
-      socket.emit("join-room", { id: roomHash }, (response) => {
-        if (response) {
-          if (response.allow) {
-            DRAWING_STACK = response.stack_data;
-            navigate("/canvas", {
-              state: { drawingStack: response.stack_data },
-            });
-          } else {
-            // room exists but no drawing data is available
-            console.log("No drawing data available");
-            navigate("/canvas", { state: { drawingStack: [] } });
-          }
-        } else {
-          //  room does not exist
-          console.log("Room  does not exist ");
-          socket.disconnect();
-          setError("Room Not Available");
-        }
-      });
-      socket.on("disconnect", () => {
-        console.log("Socket disconnected");
-      });
+      socket.emit("join-room", { id: roomHash });
     } catch (err) {
       console.error("Error occurred while joining the room:", err);
       setError("Error occurred while joining the room");
@@ -70,7 +39,25 @@ function HomePage() {
       setLoading(false);
     }
   };
+  socket.on("event", () => {
+    console.log("socket event hit");
+    console.log("Message Object: ", message);
+    socket.emit("event", message);
+  });
 
+  socket.on("permission-from-admin", (message) => {
+    if (message.allow) {
+      navigate("/Canvas", {
+        state: { drawingStack: message.drawingStack },
+      });
+    } else {
+      console.log("not accepted");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected");
+  });
   return (
     <div className="home_contain">
       <div className="home-banner-container">

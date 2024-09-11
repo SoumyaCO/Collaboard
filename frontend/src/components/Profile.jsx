@@ -27,6 +27,8 @@ export default function Profile() {
       }
       const data = await res.json();
       setUser(data);
+      localStorage.setItem("username",data.username);
+
       setOriginalUser(data);
       setEditedUser(data); // Initialize editedUser with user data
     } catch (err) {

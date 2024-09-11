@@ -5,8 +5,8 @@ import pen from "../assets/pen.png";
 import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
-import Shape from "../utils/Shape";
 import edit from "../assets/edit.png";
+import { socket } from "./Create_hash";
 
 const Canvas = () => {
   const canvasRef = useRef(null);
@@ -30,6 +30,68 @@ const Canvas = () => {
     height: 0,
     strokeWidth: 2,
   });
+
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupUsername, setPopupUsername] = useState("");
+  let clientID = "";
+  let roomID = "";
+
+  useEffect(() => {
+    socket.on("user-requested-to-join", (username) => {
+      setPendingUser(username);
+      setPopupVisible(true);
+    });
+    socket.on("send-current-state", (username, callback) => {
+      callback({ data: drawingStack });
+    });
+
+    socket.on("draw-on-canvas", (drawingData) => {
+      setDrawingStack((prevStack) => [...prevStack, drawingData]);
+    });
+    socket.on("new-joiner-alert", (data) => {
+      console.log("new joiner hit");
+
+      setPopupUsername(data.username);
+      clientID = data.clientID;
+      roomID = data.roomID;
+      setPopupVisible(true);
+    });
+
+    socket.on("user-accepted", (username) => {
+      setPopupVisible(false);
+    });
+
+    socket.on("user-denied", (username) => {
+      setPopupVisible(false);
+    });
+
+    return () => {
+      socket.off("user-requested-to-join");
+      socket.off("send-current-state");
+      socket.off("draw-on-canvas");
+      socket.off("user-accepted");
+      socket.off("user-denied");
+    };
+  }, [drawingStack]);
+  const handlePopupAccept = () => {
+    console.log("admin accepted");
+
+    socket.emit("permission", {
+      clientID: clientID,
+      allow: true,
+      message: "welcome friend",
+      drawingStack: drawingStack,
+    });
+  };
+
+  const handlePopupDeny = () => {
+    socket.emit("deny-user", {
+      clientID: clientID,
+      allow: false,
+      message: "get lost",
+      drawingStack: [],
+    });
+  };
 
   function calculateBuffer(width, height, gap) {
     let bufferX = gap;
@@ -573,6 +635,19 @@ const Canvas = () => {
         height={740}
         style={{ border: "1px solid black" }}
       ></canvas>
+      {popupVisible && (
+        <div id="popup" className="popup">
+          <div className="popup-content">
+            <span id="name-popup">{popupUsername} wants to join the room.</span>
+            <button id="accept-btn" onClick={handlePopupAccept}>
+              Accept
+            </button>
+            <button id="deny-btn" onClick={handlePopupDeny}>
+              Deny
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
