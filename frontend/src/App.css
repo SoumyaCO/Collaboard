@@ -534,3 +534,31 @@ canvas {
   grid-column: 5;
   margin-right: 0px;
 }
+
+//popup//
+
+.popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 500px;
+  height: 500px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.popup.active {
+  display: flex;
+}
+
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.popup-content button {
+  margin: 5px;
+}

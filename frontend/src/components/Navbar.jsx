@@ -19,7 +19,7 @@ const Navbar = () => {
       fetchUserProfile();
     } else {
       dispatch({ type: "USER", payload: false });
-      setUser(null); // Reset user state if no token
+      setUser(null);
     }
   }, [dispatch]); // effect runs when ever dispatch changes
   const fetchUserProfile = async () => {
@@ -38,7 +38,9 @@ const Navbar = () => {
 
       const data = await res.json();
       setUser(data);
-      localStorage.setItem("username",data.username);
+
+      localStorage.setItem("username", data.username);
+
       console.log("Fetched user data:", data);
     } catch (err) {
       console.error(err);

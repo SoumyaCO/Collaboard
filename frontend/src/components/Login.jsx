@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Login_Register.css";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { UserContext } from "../App.jsx";
 
 const Login = () => {

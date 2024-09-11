@@ -1,27 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { socket } from "../utils/Socket";
-import Cookies from "js-cookie";
+import { createSocket } from "../utils/Socket";
+import { makeid } from "../utils/MakeId.js";
 
-const generateRandomHash = () => {
-  const length = 30; // specified length of the hash
-  let hash = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-
-  for (let i = 0; i < length; i++) {
-    hash += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-
-  return hash;
-};
+const generateRandomHash = () => makeid(30);
+export const socket = createSocket();
 
 const SmallScreenComponent = () => {
   const [hash, setHash] = useState(generateRandomHash());
   const navigate = useNavigate();
 
   useEffect(() => {
-    // retrieve hash from sessionStorage or generate a new one
+    // Retrieve hash from sessionStorage or generate a new one
     const storedHash = sessionStorage.getItem("sessionHash");
     if (storedHash) {
       setHash(storedHash);
@@ -45,20 +35,25 @@ const SmallScreenComponent = () => {
 
   const handleCreateRoom = () => {
     socket.connect();
-    console.log(Cookies.get("authToken"));
-    // emit join request to create a room with hash and user details
-    socket.emit("create-room", { id: hash }, (res) => {
-      navigate("/canvas");
+
+    //create a room with hash
+    socket.emit("create-room", { id: hash }, (response) => {
+      if (response.success) {
+        navigate("/Canvas");
+      } else {
+        console.error("Error creating room:");
+      }
     });
 
-    // handle socket disconnections
+    // Handle socket disconnections
     socket.on("disconnect", () => {
       console.log("Socket disconnected");
     });
-    socket.on("connect_error", (error) => {
-      console.error("connect error:", error);
-    });
-    // navigate("/canvas");
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
   };
 
   return (
