@@ -37,16 +37,24 @@ const Canvas = () => {
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
 
-  socket.on("draw-on-canvas", (data) => {
-    setDrawingStack(data.drawingStack);
-    drawFromStack(data.drawingStack);
-    console.log("draw-on-canvas", data.drawingStack);
-  });
+  useEffect(() => {
+    socket.on("draw-on-canvas", (data) => {
+      setDrawingStack((prevStack) => {
+        drawFromStack(data.drawingStack);
+        console.log("draw-on-canvas", data.drawingStack);
+        return data.drawingStack;
+      });
+    });
+
+    return () => {
+      socket.off("draw-on-canvas");
+    };
+  }, []);
 
   useEffect(() => {
-    socket.on("draw-on-canvas", (drawingData) => {
-      setDrawingStack((prevStack) => [...prevStack, drawingData]);
-    });
+    // socket.on("draw-on-canvas", (drawingData) => {
+    //   setDrawingStack((prevStack) => [...prevStack, drawingData]);
+    // });
     socket.on("new-joiner-alert", (data) => {
       console.log("new joiner hit");
 
@@ -443,6 +451,8 @@ const Canvas = () => {
       const width = offsetX - drawingData.startX;
       const height = offsetY - drawingData.startY;
 
+      let updatedStack;
+
       if (tool === "rect") {
         if (width === 0 || height === 0) return;
 
@@ -453,7 +463,7 @@ const Canvas = () => {
         );
 
         // Update the drawing stack
-        let updatedStack =
+        updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((r, index) => {
                 if (index === selectedId) {
@@ -497,7 +507,7 @@ const Canvas = () => {
         );
 
         // Update the drawing stack
-        let updatedStack =
+        updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((e, index) => {
                 if (index === selectedId) {
@@ -530,16 +540,15 @@ const Canvas = () => {
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
-        // emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
-
         setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
       }
 
       setIsDrawing(false);
       setSelectedId(null);
       setResizeHandle(null);
+      console.log("mouse up ", updatedStack);
+      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
     },
-
     [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
   );
 
