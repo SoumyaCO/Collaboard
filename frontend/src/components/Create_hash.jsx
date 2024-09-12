@@ -50,7 +50,6 @@ const SmallScreenComponent = () => {
       console.log("Socket disconnected");
     });
 
-    // Cleanup on component unmount
     return () => {
       socket.disconnect();
     };
@@ -91,7 +90,7 @@ const styles = {
     borderRadius: "9px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     padding: "20px",
-    width: "330px", // width for popup
+    width: "330px",
     height: "250px",
     textAlign: "center",
   },

@@ -20,27 +20,14 @@ export const createSocket = () => {
   });
 };
 
-
 // Emit drawing data to the server
 const emitDrawing = (socket, data) => {
-  const payload = {
-    ...data,
-    joinHash: joinHash,
-  };
-
-  socket.emit("on-drawing", payload, (response) => {
-    console.log("on-drawing:", response);
-  });
+  socket.emit("on-drawing", data);
 };
 
 // Listen for drawing updates from the server
-const doDrawing = (socket, callback) => {
-  socket.on("draw-on-canvas", (data) => {
-    callback(data);
-  });
-};
 
 // Handle 'send-current-state' event from the server
 
 // Export functions
-export { emitDrawing, doDrawing };
+export { emitDrawing };

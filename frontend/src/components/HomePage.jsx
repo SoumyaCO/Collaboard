@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BannerBackground from "../assets/background_r_img.png";
 import { socket } from "./Create_hash";
@@ -39,21 +39,25 @@ function HomePage() {
       setLoading(false);
     }
   };
-  socket.on("event", () => {
-    console.log("socket event hit");
-    console.log("Message Object: ", message);
-    socket.emit("event", message);
-  });
 
-  socket.on("permission-from-admin", (message) => {
-    if (message.allow) {
-      navigate("/Canvas", {
-        state: { drawingStack: message.drawingStack },
-      });
-    } else {
-      console.log("not accepted");
-    }
-  });
+  useEffect(() => {
+    socket.on("event", (message) => {
+      socket.emit("event", message);
+    });
+    socket.on("permission-from-admin", (message) => {
+      if (message.allow) {
+        navigate("/Canvas", {
+          state: { drawingStack: message.drawingStack },
+        });
+      } else {
+        console.log("not accepted");
+      }
+    });
+    return () => {
+      socket.off("event");
+      socket.off("permission-from-admin");
+    };
+  }, []);
 
   socket.on("disconnect", () => {
     console.log("Socket disconnected");
