@@ -36,28 +36,23 @@ const Canvas = () => {
   const [popupUsername, setPopupUsername] = useState("");
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
-
   useEffect(() => {
     socket.on("draw-on-canvas", (data) => {
-      setDrawingStack((prevStack) => {
+      if (data && Array.isArray(data.drawingStack)) {
+        setDrawingStack(data.drawingStack);
         drawFromStack(data.drawingStack);
-        console.log("draw-on-canvas", data.drawingStack);
-        return data.drawingStack;
-      });
+      }
     });
 
     return () => {
       socket.off("draw-on-canvas");
     };
   }, []);
-
   useEffect(() => {
     // socket.on("draw-on-canvas", (drawingData) => {
     //   setDrawingStack((prevStack) => [...prevStack, drawingData]);
     // });
     socket.on("new-joiner-alert", (data) => {
-      console.log("new joiner hit");
-
       setPopupUsername(data.username);
       setClientID(data.clientID);
       setRoomID(data.roomID);
@@ -172,8 +167,7 @@ const Canvas = () => {
     const ctx = canvas.getContext("2d");
     return ctx;
   }, []);
-
-  const drawFromStack = (stack) => {
+  const drawFromStack = (stack = []) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -317,6 +311,7 @@ const Canvas = () => {
         const updatedStack = drawingStack.filter((_, index) => index !== id);
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
+        emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
       } else if (tool === "rect" || tool === "ellipse") {
         setIsDrawing(true);
 
@@ -335,7 +330,8 @@ const Canvas = () => {
   const handleMouseMove = useCallback(
     (event) => {
       if (!isDrawing) return;
-
+      let updatedStack;
+      let updatedRect;
       const ctx = getContext();
       const { offsetX, offsetY } = event;
       const canvas = canvasRef.current;
@@ -347,8 +343,8 @@ const Canvas = () => {
         canvas.style.cursor = cursor;
 
         if (resizeHandle) {
-          let updatedStack = [...drawingStack];
-          let updatedRect = { ...rect };
+          updatedStack = [...drawingStack];
+          updatedRect = { ...rect };
 
           if (resizeHandle === "bottom-right") {
             updatedRect.width = offsetX - rect.x;
@@ -382,8 +378,8 @@ const Canvas = () => {
           setDrawingStack(updatedStack);
           drawFromStack(updatedStack);
         } else {
-          let updatedStack = [...drawingStack];
-          let updatedRect = { ...rect };
+          updatedStack = [...drawingStack];
+          updatedRect = { ...rect };
           updatedRect.x += offsetX - mouseX;
           updatedRect.y += offsetY - mouseY;
           updatedStack[selectedId] = updatedRect;
@@ -428,6 +424,7 @@ const Canvas = () => {
         ctx.stroke();
         ctx.fill();
       }
+      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
     },
     [
       isDrawing,
@@ -546,7 +543,7 @@ const Canvas = () => {
       setIsDrawing(false);
       setSelectedId(null);
       setResizeHandle(null);
-      console.log("mouse up ", updatedStack);
+
       emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
     },
     [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
