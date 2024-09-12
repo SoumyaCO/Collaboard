@@ -312,16 +312,18 @@ nav {
 /* Canvas */
 .canvas {
   border: 2px solid #000;
-  /* Border for the canvas */
+
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.5);
-  /* Shadow effect */
   width: 89vw;
   height: 85vh;
   display: block;
   margin: 0 auto;
-  /* Center horizontally */
+  position: relative;
+  z-index: 1;
 }
-
+.canvas-container {
+  position: relative;
+}
 canvas {
   cursor: auto;
 }
@@ -536,29 +538,48 @@ canvas {
 }
 
 //popup//
-
 .popup {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  width: 500px;
-  height: 500px;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: white;
+  border: 2px solid #000;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
 }
 
-.popup.active {
-  display: flex;
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border: 1px solid black;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000; 
 }
 
 .popup-content {
-  background: white;
-  padding: 20px;
-  border-radius: 5px;
   text-align: center;
 }
 
-.popup-content button {
+#accept-btn,
+#deny-btn {
   margin: 5px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+#accept-btn {
+  background-color: #4caf50; 
+  color: white;
+}
+
+#deny-btn {
+  background-color: #f44336;
+  color: white;
 }

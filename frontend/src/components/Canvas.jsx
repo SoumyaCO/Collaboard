@@ -7,6 +7,7 @@ import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
 import { socket } from "./Create_hash";
+import { emitDrawing } from "../utils/Socket";
 
 const Canvas = () => {
   const canvasRef = useRef(null);
@@ -33,18 +34,16 @@ const Canvas = () => {
 
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupUsername, setPopupUsername] = useState("");
-  let clientID = "";
-  let roomID = "";
+  const [clientID, setClientID] = useState("");
+  const [roomID, setRoomID] = useState("");
+
+  socket.on("draw-on-canvas", (data) => {
+    setDrawingStack(data.drawingStack);
+    drawFromStack(data.drawingStack);
+    console.log("draw-on-canvas", data.drawingStack);
+  });
 
   useEffect(() => {
-    socket.on("user-requested-to-join", (username) => {
-      setPendingUser(username);
-      setPopupVisible(true);
-    });
-    socket.on("send-current-state", (username, callback) => {
-      callback({ data: drawingStack });
-    });
-
     socket.on("draw-on-canvas", (drawingData) => {
       setDrawingStack((prevStack) => [...prevStack, drawingData]);
     });
@@ -52,45 +51,41 @@ const Canvas = () => {
       console.log("new joiner hit");
 
       setPopupUsername(data.username);
-      clientID = data.clientID;
-      roomID = data.roomID;
+      setClientID(data.clientID);
+      setRoomID(data.roomID);
+
       setPopupVisible(true);
-    });
-
-    socket.on("user-accepted", (username) => {
-      setPopupVisible(false);
-    });
-
-    socket.on("user-denied", (username) => {
-      setPopupVisible(false);
     });
 
     return () => {
       socket.off("user-requested-to-join");
       socket.off("send-current-state");
       socket.off("draw-on-canvas");
-      socket.off("user-accepted");
-      socket.off("user-denied");
     };
-  }, [drawingStack]);
+  }, []);
+
   const handlePopupAccept = () => {
     console.log("admin accepted");
 
     socket.emit("permission", {
       clientID: clientID,
+      roomID: roomID,
       allow: true,
       message: "welcome friend",
       drawingStack: drawingStack,
     });
+    setPopupVisible(false);
   };
 
   const handlePopupDeny = () => {
     socket.emit("deny-user", {
       clientID: clientID,
+      roomID: roomID,
       allow: false,
       message: "get lost",
       drawingStack: [],
     });
+    setPopupVisible(false);
   };
 
   function calculateBuffer(width, height, gap) {
@@ -195,7 +190,6 @@ const Canvas = () => {
       if (index === selectedId) {
         highlight(ctx, index, stack);
       }
-      console.log("Stack", stack);
     });
   };
 
@@ -251,7 +245,6 @@ const Canvas = () => {
       const ctx = getContext();
       const { offsetX, offsetY } = event;
       const id = detectCollision({ offsetX, offsetY }, drawingStack);
-      console.log("collision id :", id);
 
       if (tool === "edit" && id !== -1) {
         setIsDrawing(true);
@@ -537,6 +530,8 @@ const Canvas = () => {
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
+        // emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
+
         setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
       }
 
@@ -576,6 +571,19 @@ const Canvas = () => {
 
   return (
     <div className="app">
+      {popupVisible && (
+        <div id="popup" className="popup">
+          <div className="popup-content">
+            <span id="name-popup">{popupUsername} wants to join the room.</span>
+            <button id="accept-btn" onClick={handlePopupAccept}>
+              Accept
+            </button>
+            <button id="deny-btn" onClick={handlePopupDeny}>
+              Deny
+            </button>
+          </div>
+        </div>
+      )}
       <div className="tools-and-colors-container">
         <div className="tools">
           <div
@@ -635,19 +643,6 @@ const Canvas = () => {
         height={740}
         style={{ border: "1px solid black" }}
       ></canvas>
-      {popupVisible && (
-        <div id="popup" className="popup">
-          <div className="popup-content">
-            <span id="name-popup">{popupUsername} wants to join the room.</span>
-            <button id="accept-btn" onClick={handlePopupAccept}>
-              Accept
-            </button>
-            <button id="deny-btn" onClick={handlePopupDeny}>
-              Deny
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
