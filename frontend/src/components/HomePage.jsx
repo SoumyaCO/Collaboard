@@ -45,19 +45,21 @@ function HomePage() {
       socket.emit("event", message);
     });
     socket.on("permission-from-admin", (message) => {
+      console.log("permission-from-admin", message);
+
       if (message.allow) {
         navigate("/Canvas", {
           state: { drawingStack: message.drawingStack },
         });
       } else {
-        console.log("not accepted");
+        console.log("Permission not granted.");
       }
     });
     return () => {
       socket.off("event");
       socket.off("permission-from-admin");
     };
-  }, []);
+  }, [socket]);
 
   socket.on("disconnect", () => {
     console.log("Socket disconnected");
