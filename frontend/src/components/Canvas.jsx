@@ -8,15 +8,17 @@ import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
 import { socket } from "./Create_hash";
 import { emitDrawing } from "../utils/Socket";
-
+import { useLocation } from "react-router-dom";
 const Canvas = () => {
   const canvasRef = useRef(null);
+  const location = useLocation();
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState("pen");
   const [selectedColor, setSelectedColor] = useState("red");
   const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
+
   const [selectedId, setSelectedId] = useState(null);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
@@ -31,6 +33,7 @@ const Canvas = () => {
     height: 0,
     strokeWidth: 2,
   });
+  console.log("accepted user stack", drawingStack);
 
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupUsername, setPopupUsername] = useState("");
@@ -61,14 +64,14 @@ const Canvas = () => {
     });
 
     return () => {
-      socket.off("user-requested-to-join");
-      socket.off("send-current-state");
+      socket.off("new-joiner-alert");
       socket.off("draw-on-canvas");
     };
   }, []);
 
   const handlePopupAccept = () => {
     console.log("admin accepted");
+    console.log("accept", drawingStack);
 
     socket.emit("permission", {
       clientID: clientID,
