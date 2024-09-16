@@ -21,7 +21,7 @@ const Canvas = () => {
   const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
-  
+
   const [mouseState, setMouseState] = useState("idle"); // Can be 'idle', 'mousedown', 'mouseup', or 'mousemove'
   const [mouseMoved, setMouseMoved] = useState(false);
   const [isCustomCursor, setIsCustomCursor] = useState(false);
@@ -300,7 +300,7 @@ const Canvas = () => {
         setMouseX(offsetX);
         setMouseY(offsetY);
 
-        const selectedDrawing = drawingStack.find((item) => item.id == id + 1); 
+        const selectedDrawing = drawingStack.find((item) => item.id == id + 1);
 
         if (selectedDrawing) {
           console.log(id);
@@ -396,8 +396,8 @@ const Canvas = () => {
         return;
       }
 
-      let updatedStack;
-      let updatedRect;
+      // let updatedStack;
+      // let updatedRect;
 
       const ctx = getContext();
       const { offsetX, offsetY } = event;
@@ -419,33 +419,33 @@ const Canvas = () => {
         updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((r, index) => {
-                if (index === selectedId) {
-                  return {
-                    ...r,
-                    x: drawingData.startX,
-                    y: drawingData.startY,
-                    width: width,
-                    height: height,
-                    color: drawingData.color,
-                  };
-                }
-                return r;
-              })
-            : [
-                ...drawingStack,
-                {
-                  id: drawingData.id,
-                  tool: drawingData.tool,
-                  color: drawingData.color,
+              if (index === selectedId) {
+                return {
+                  ...r,
                   x: drawingData.startX,
                   y: drawingData.startY,
                   width: width,
                   height: height,
-                  strokeWidth: drawingData.strokeWidth,
-                  isAlive: true,
-                  version: 1,
-                },
-              ];
+                  color: drawingData.color,
+                };
+              }
+              return r;
+            })
+            : [
+              ...drawingStack,
+              {
+                id: drawingData.id,
+                tool: drawingData.tool,
+                color: drawingData.color,
+                x: drawingData.startX,
+                y: drawingData.startY,
+                width: width,
+                height: height,
+                strokeWidth: drawingData.strokeWidth,
+                isAlive: true,
+                version: 1,
+              },
+            ];
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
@@ -463,33 +463,33 @@ const Canvas = () => {
         updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((e, index) => {
-                if (index === selectedId) {
-                  return {
-                    ...e,
-                    x: drawingData.startX,
-                    y: drawingData.startY,
-                    width: width,
-                    height: height,
-                    color: drawingData.color,
-                  };
-                }
-                return e;
-              })
-            : [
-                ...drawingStack,
-                {
-                  id: drawingData.id,
-                  tool: drawingData.tool,
-                  color: drawingData.color,
+              if (index === selectedId) {
+                return {
+                  ...e,
                   x: drawingData.startX,
                   y: drawingData.startY,
                   width: width,
                   height: height,
-                  strokeWidth: drawingData.strokeWidth,
-                  isAlive: true,
-                  version: 1,
-                },
-              ];
+                  color: drawingData.color,
+                };
+              }
+              return e;
+            })
+            : [
+              ...drawingStack,
+              {
+                id: drawingData.id,
+                tool: drawingData.tool,
+                color: drawingData.color,
+                x: drawingData.startX,
+                y: drawingData.startY,
+                width: width,
+                height: height,
+                strokeWidth: drawingData.strokeWidth,
+                isAlive: true,
+                version: 1,
+              },
+            ];
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
@@ -628,119 +628,10 @@ const Canvas = () => {
     ]
   );
 
-  const handleMouseUp = useCallback(
-    (event) => {
-      if (!isDrawing) return;
-
-      const ctx = getContext();
-      const { offsetX, offsetY } = event;
-      const width = offsetX - drawingData.startX;
-      const height = offsetY - drawingData.startY;
-
-      let updatedStack;
-
-      if (tool === "rect") {
-        if (width === 0 || height === 0) return;
-
-        let rect = new Rectangle(
-          [drawingData.startX, drawingData.startY],
-          [width, height],
-          drawingData.color
-        );
-
-        // Update the drawing stack
-        updatedStack =
-          tool === "edit" && selectedId !== null
-            ? drawingStack.map((r, index) => {
-                if (index === selectedId) {
-                  return {
-                    ...r,
-                    x: drawingData.startX,
-                    y: drawingData.startY,
-                    width: width,
-                    height: height,
-                    color: drawingData.color,
-                  };
-                }
-                return r;
-              })
-            : [
-                ...drawingStack,
-                {
-                  id: drawingData.id,
-                  tool: drawingData.tool,
-                  color: drawingData.color,
-                  x: drawingData.startX,
-                  y: drawingData.startY,
-                  width: width,
-                  height: height,
-                  strokeWidth: drawingData.strokeWidth,
-                  isAlive: true,
-                  version: 1,
-                },
-              ];
-
-        setDrawingStack(updatedStack);
-        drawFromStack(updatedStack);
-        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
-      } else if (tool === "ellipse") {
-        if (width === 0 || height === 0) return;
-
-        let ellipse = new Ellipse(
-          [drawingData.startX, drawingData.startY],
-          [width / 2, height / 2],
-          drawingData.color
-        );
-
-        // Update the drawing stack
-        updatedStack =
-          tool === "edit" && selectedId !== null
-            ? drawingStack.map((e, index) => {
-                if (index === selectedId) {
-                  return {
-                    ...e,
-                    x: drawingData.startX,
-                    y: drawingData.startY,
-                    width: width,
-                    height: height,
-                    color: drawingData.color,
-                  };
-                }
-                return e;
-              })
-            : [
-                ...drawingStack,
-                {
-                  id: drawingData.id,
-                  tool: drawingData.tool,
-                  color: drawingData.color,
-                  x: drawingData.startX,
-                  y: drawingData.startY,
-                  width: width,
-                  height: height,
-                  strokeWidth: drawingData.strokeWidth,
-                  isAlive: true,
-                  version: 1,
-                },
-              ];
-
-        setDrawingStack(updatedStack);
-        drawFromStack(updatedStack);
-        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
-      }
-
-      setIsDrawing(false);
-      setSelectedId(null);
-      setResizeHandle(null);
-
-      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
-    },
-    [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
-  );
-
-  useEffect(() => {
-    drawFromStack(drawingStack);
-  }, [drawingStack]);
+  useEffect(
+    () => {
+      drawFromStack(drawingStack);
+    }, [drawingStack]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -794,25 +685,22 @@ const Canvas = () => {
             <img src={pen} alt="pen" />
           </div>
           <div
-            className={`tool rectangle ${
-              tool === "rect" ? "active-button" : ""
-            }`}
+            className={`tool rectangle ${tool === "rect" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("rect")}
           >
             <img src={rectangle} alt="rectangle" />
           </div>
           <div
-            className={`tool ellipse ${
-              tool === "ellipse" ? "active-button" : ""
-            }`}
+            className={`tool ellipse ${tool === "ellipse" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("ellipse")}
           >
             <img src={ellipse} alt="ellipse" />
           </div>
           <div
-            className={`tool eraser ${
-              tool === "eraser" ? "active-button" : ""
-            }`}
+            className={`tool eraser ${tool === "eraser" ? "active-button" : ""
+              }`}
             onClick={() => selectTool("eraser")}
           >
             <img src={eraser} alt="eraser" />
@@ -828,9 +716,8 @@ const Canvas = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className={`color-border ${
-                selectedColor === color ? "color-border-active" : ""
-              }`}
+              className={`color-border ${selectedColor === color ? "color-border-active" : ""
+                }`}
               onClick={() => setSelectedColor(color)}
             >
               <div className="color" style={{ backgroundColor: color }}></div>
