@@ -6,6 +6,8 @@ import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
+import send from "../assets/send.png";
+
 import { socket } from "./Create_hash";
 import { emitDrawing } from "../utils/Socket";
 import { useLocation } from "react-router-dom";
@@ -18,6 +20,9 @@ const Canvas = () => {
   const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
+  const [mouseState, setMouseState] = useState("idle"); // Can be 'idle', 'mousedown', 'mouseup', or 'mousemove'
+  const [mouseMoved, setMouseMoved] = useState(false);
+  const [isCustomCursor, setIsCustomCursor] = useState(false);
 
   const [selectedId, setSelectedId] = useState(null);
   const [mouseX, setMouseX] = useState(0);
@@ -39,6 +44,11 @@ const Canvas = () => {
   const [popupUsername, setPopupUsername] = useState("");
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("members");
+  const [messages, setMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [users, setUsers] = useState([{ username: "", photo: "" }]);
   useEffect(() => {
     socket.on("draw-on-canvas", (data) => {
       if (data && Array.isArray(data.drawingStack)) {
@@ -52,9 +62,6 @@ const Canvas = () => {
     };
   }, []);
   useEffect(() => {
-    // socket.on("draw-on-canvas", (drawingData) => {
-    //   setDrawingStack((prevStack) => [...prevStack, drawingData]);
-    // });
     socket.on("new-joiner-alert", (data) => {
       setPopupUsername(data.username);
       setClientID(data.clientID);
@@ -94,6 +101,24 @@ const Canvas = () => {
     setPopupVisible(false);
   };
 
+  const handleMenuToggle = () => {
+    setMenuVisible((prev) => !prev);
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const handleChatInputChange = (event) => {
+    setChatInput(event.target.value);
+  };
+
+  const handleSendMessage = () => {
+    if (chatInput.trim()) {
+      socket.emit("chat-message", { text: chatInput });
+      setChatInput("");
+    }
+  };
   function calculateBuffer(width, height, gap) {
     let bufferX = gap;
     let bufferY = gap;
@@ -113,6 +138,7 @@ const Canvas = () => {
   const updateCursor = (offsetX, offsetY, rect) => {
     const handleSize = 8;
     let cursor = "auto";
+    let customCursor = false;
 
     if (
       offsetX >= rect.x + rect.width - handleSize &&
@@ -160,8 +186,9 @@ const Canvas = () => {
       offsetY <= rect.y + rect.height - handleSize
     ) {
       cursor = "ew-resize";
+      customCursor = true;
     }
-
+    setIsCustomCursor(customCursor);
     return cursor;
   };
 
@@ -222,6 +249,8 @@ const Canvas = () => {
       }
 
       if (ctx.isPointInPath(path, offsetX, offsetY)) {
+        console.log("id from detectColliction", i);
+
         return i;
       }
     }
@@ -251,16 +280,26 @@ const Canvas = () => {
       const { offsetX, offsetY } = event;
       const id = detectCollision({ offsetX, offsetY }, drawingStack);
 
+      setMouseState("mousedown");
+      setMouseMoved(false);
+
       if (tool === "edit" && id !== -1) {
         setIsDrawing(true);
         setSelectedId(id);
         setMouseX(offsetX);
         setMouseY(offsetY);
 
-        const rect = drawingStack[id];
+        const selectedDrawing = drawingStack.find((item) => item.id == id + 1); 
 
+        if (selectedDrawing) {
+          console.log(id);
+
+          highlight(ctx, id, drawingStack);
+        }
+        const rect = drawingStack[id];
         const handleSize = 6;
 
+        // Determine the resize handle
         if (
           offsetX >= rect.x + rect.width - handleSize &&
           offsetX <= rect.x + rect.width &&
@@ -310,6 +349,9 @@ const Canvas = () => {
         } else {
           setResizeHandle(null);
         }
+        if (!isCustomCursor) {
+          canvasRef.current.style.cursor = "auto";
+        }
       } else if (tool === "eraser" && id !== -1) {
         const updatedStack = drawingStack.filter((_, index) => index !== id);
         setDrawingStack(updatedStack);
@@ -317,7 +359,7 @@ const Canvas = () => {
         emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
       } else if (tool === "rect" || tool === "ellipse") {
         setIsDrawing(true);
-
+        setMouseMoved(true);
         setDrawingData((prevData) => ({
           ...prevData,
           startX: offsetX,
@@ -330,121 +372,18 @@ const Canvas = () => {
     [getContext, drawingStack, tool, selectedColor]
   );
 
-  const handleMouseMove = useCallback(
-    (event) => {
-      if (!isDrawing) return;
-      let updatedStack;
-      let updatedRect;
-      const ctx = getContext();
-      const { offsetX, offsetY } = event;
-      const canvas = canvasRef.current;
-
-      if (tool === "edit" && selectedId !== null) {
-        const rect = drawingStack[selectedId];
-        const cursor = updateCursor(offsetX, offsetY, rect);
-
-        canvas.style.cursor = cursor;
-
-        if (resizeHandle) {
-          updatedStack = [...drawingStack];
-          updatedRect = { ...rect };
-
-          if (resizeHandle === "bottom-right") {
-            updatedRect.width = offsetX - rect.x;
-            updatedRect.height = offsetY - rect.y;
-          } else if (resizeHandle === "top-left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.x = offsetX;
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "top-right") {
-            updatedRect.width = offsetX - rect.x;
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "bottom-left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.height = offsetY - rect.y;
-            updatedRect.x = offsetX;
-          } else if (resizeHandle === "top") {
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "bottom") {
-            updatedRect.height = offsetY - rect.y;
-          } else if (resizeHandle === "left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.x = offsetX;
-          } else if (resizeHandle === "right") {
-            updatedRect.width = offsetX - rect.x;
-          }
-
-          updatedStack[selectedId] = updatedRect;
-          setDrawingStack(updatedStack);
-          drawFromStack(updatedStack);
-        } else {
-          updatedStack = [...drawingStack];
-          updatedRect = { ...rect };
-          updatedRect.x += offsetX - mouseX;
-          updatedRect.y += offsetY - mouseY;
-          updatedStack[selectedId] = updatedRect;
-          setDrawingStack(updatedStack);
-          setMouseX(offsetX);
-          setMouseY(offsetY);
-          drawFromStack(updatedStack);
-        }
-      } else if (tool === "rect") {
-        const width = offsetX - drawingData.startX;
-        const height = offsetY - drawingData.startY;
-
-        setDrawingData((prevData) => ({ ...prevData, width, height }));
-
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        drawFromStack(drawingStack);
-        ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(drawingData.startX, drawingData.startY, width, height);
-      } else if (tool === "ellipse") {
-        const width = offsetX - drawingData.startX;
-        const height = offsetY - drawingData.startY;
-
-        setDrawingData((prevData) => ({ ...prevData, width, height }));
-
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        drawFromStack(drawingStack);
-        ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(
-          drawingData.startX + width / 2,
-          drawingData.startY + height / 2,
-          Math.abs(width) / 2,
-          Math.abs(height) / 2,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.stroke();
-        ctx.fill();
-      }
-      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
-    },
-    [
-      isDrawing,
-      drawingData,
-      tool,
-      getContext,
-      drawingStack,
-      selectedId,
-      mouseX,
-      mouseY,
-      resizeHandle,
-    ]
-  );
-
   const handleMouseUp = useCallback(
     (event) => {
+      if (mouseState !== "mousedown") return;
+      setMouseState("mouseup");
       if (!isDrawing) return;
+      if (!mouseMoved) {
+        // If mouse didn't move, reset drawing
+        setIsDrawing(false);
+        setMouseState("idle");
+        canvasRef.current.style.cursor = "auto";
+        return;
+      }
 
       const ctx = getContext();
       const { offsetX, offsetY } = event;
@@ -548,8 +487,131 @@ const Canvas = () => {
       setResizeHandle(null);
 
       emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
+      canvasRef.current.style.cursor = "auto";
     },
-    [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
+    [
+      isDrawing,
+      mouseMoved,
+      drawingData,
+      tool,
+      getContext,
+      drawingStack,
+      selectedId,
+      mouseState,
+    ]
+  );
+
+  const handleMouseMove = useCallback(
+    (event) => {
+      if (mouseState !== "mousedown") return;
+      let updatedStack;
+      let updatedRect;
+      const ctx = getContext();
+      const { offsetX, offsetY } = event;
+      const canvas = canvasRef.current;
+
+      if (tool === "edit" && selectedId !== null) {
+        const rect = drawingStack[selectedId];
+        const cursor = updateCursor(offsetX, offsetY, rect);
+
+        canvas.style.cursor = cursor;
+
+        if (resizeHandle) {
+          updatedStack = [...drawingStack];
+          updatedRect = { ...rect };
+
+          if (resizeHandle === "bottom-right") {
+            updatedRect.width = offsetX - rect.x;
+            updatedRect.height = offsetY - rect.y;
+          } else if (resizeHandle === "top-left") {
+            updatedRect.width = rect.width + (rect.x - offsetX);
+            updatedRect.height = rect.height + (rect.y - offsetY);
+            updatedRect.x = offsetX;
+            updatedRect.y = offsetY;
+          } else if (resizeHandle === "top-right") {
+            updatedRect.width = offsetX - rect.x;
+            updatedRect.height = rect.height + (rect.y - offsetY);
+            updatedRect.y = offsetY;
+          } else if (resizeHandle === "bottom-left") {
+            updatedRect.width = rect.width + (rect.x - offsetX);
+            updatedRect.height = offsetY - rect.y;
+            updatedRect.x = offsetX;
+          } else if (resizeHandle === "top") {
+            updatedRect.height = rect.height + (rect.y - offsetY);
+            updatedRect.y = offsetY;
+          } else if (resizeHandle === "bottom") {
+            updatedRect.height = offsetY - rect.y;
+          } else if (resizeHandle === "left") {
+            updatedRect.width = rect.width + (rect.x - offsetX);
+            updatedRect.x = offsetX;
+          } else if (resizeHandle === "right") {
+            updatedRect.width = offsetX - rect.x;
+          }
+
+          updatedStack[selectedId] = updatedRect;
+          setDrawingStack(updatedStack);
+          drawFromStack(updatedStack);
+        } else {
+          updatedStack = [...drawingStack];
+          updatedRect = { ...rect };
+          updatedRect.x += offsetX - mouseX;
+          updatedRect.y += offsetY - mouseY;
+          updatedStack[selectedId] = updatedRect;
+          setDrawingStack(updatedStack);
+          setMouseX(offsetX);
+          setMouseY(offsetY);
+          drawFromStack(updatedStack);
+        }
+      } else if (tool === "rect") {
+        const width = offsetX - drawingData.startX;
+        const height = offsetY - drawingData.startY;
+
+        setDrawingData((prevData) => ({ ...prevData, width, height }));
+
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        drawFromStack(drawingStack);
+        ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
+        ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(drawingData.startX, drawingData.startY, width, height);
+      } else if (tool === "ellipse") {
+        const width = offsetX - drawingData.startX;
+        const height = offsetY - drawingData.startY;
+
+        setDrawingData((prevData) => ({ ...prevData, width, height }));
+
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        drawFromStack(drawingStack);
+
+        ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
+        ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(
+          drawingData.startX + width / 2,
+          drawingData.startY + height / 2,
+          Math.abs(width) / 2,
+          Math.abs(height) / 2,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+        ctx.fill();
+      }
+      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
+    },
+    [
+      isDrawing,
+      drawingData,
+      tool,
+      getContext,
+      drawingStack,
+      selectedId,
+      mouseX,
+      mouseY,
+      resizeHandle,
+    ]
   );
 
   useEffect(() => {
@@ -561,13 +623,19 @@ const Canvas = () => {
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
-    canvas.addEventListener("mouseout", () => setIsDrawing(false));
+    canvas.addEventListener("mouseout", () => {
+      setIsDrawing(false);
+      setMouseState("idle");
+    });
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("mouseout", () => setIsDrawing(false));
+      canvas.removeEventListener("mouseout", () => {
+        setIsDrawing(false);
+        setMouseState("idle");
+      });
     };
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
@@ -644,6 +712,68 @@ const Canvas = () => {
               <div className="color" style={{ backgroundColor: color }}></div>
             </div>
           ))}
+        </div>
+        {/* Hamburger Menu */}
+        <div className="hamburger-container">
+          <button className="hamburger-btn" onClick={handleMenuToggle}>
+            ☰
+          </button>
+        </div>
+        <div className={`hamburger-menu ${menuVisible ? "visible" : ""}`}>
+          <button className="hamburger-btn" onClick={handleMenuToggle}>
+            ⬅
+          </button>
+          <div className="menu-content">
+            <div className="tabs">
+              <button
+                className={`tab ${activeTab === "members" ? "active" : ""}`}
+                onClick={() => handleTabChange("members")}
+              >
+                Members
+              </button>
+              <button
+                className={`tab ${activeTab === "chat" ? "active" : ""}`}
+                onClick={() => handleTabChange("chat")}
+              >
+                Chat
+              </button>
+            </div>
+            {activeTab === "members" && (
+              <div className="members-tab">
+                {users.map((user) => (
+                  <div key={user.username} className="member">
+                    <img src="" alt="username" className="member-photo" />
+                    <span>{user.username}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {activeTab === "chat" && (
+              <div className="chat-tab">
+                <div className="messages">
+                  {messages.map((message, index) => (
+                    <div key={index} className="message">
+                      {message.text}
+                    </div>
+                  ))}
+                </div>
+                <div className="chat-input">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={handleChatInputChange}
+                    placeholder="Type a message..."
+                  />
+                  <img
+                    className="send-button"
+                    onClick={handleSendMessage}
+                    src={send}
+                    alt="Send"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <canvas

@@ -26,6 +26,7 @@ nav {
 .profile_img {
   margin-right: 40px;
   width: 30px;
+  height: 30px;
   cursor: pointer;
   transition: 0.1s;
 }
@@ -218,8 +219,6 @@ nav {
   box-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
 }
 
-/* canvas  ******* */
-
 /* Tools and colors container */
 .tools-and-colors-container {
   display: flex;
@@ -310,6 +309,7 @@ nav {
 }
 
 /* Canvas */
+
 .canvas {
   border: 2px solid #000;
 
@@ -559,7 +559,7 @@ canvas {
   border: 1px solid black;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000; 
+  z-index: 1000;
 }
 
 .popup-content {
@@ -575,11 +575,108 @@ canvas {
 }
 
 #accept-btn {
-  background-color: #4caf50; 
+  background-color: #4caf50;
   color: white;
 }
 
 #deny-btn {
   background-color: #f44336;
   color: white;
+}
+
+/* hamburger */
+
+.hamburger-container {
+  position: absolute;
+  margin-right: 1.5rem;
+  margin-top: 3rem;
+
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+.hamburger-btn {
+  font-size: 27px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 33px;
+}
+
+.hamburger-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background-color: #f5eded;
+  border-left: 1px solid #ddd;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.hamburger-menu.visible {
+  transform: translateX(0);
+}
+
+.menu-content {
+  padding: 20px;
+  height: calc(100% - 40px);
+  overflow-y: auto;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tab {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.tab.active {
+  font-weight: bold;
+  border-bottom: 3px solid #000;
+}
+
+.members-tab,
+.chat-tab {
+  margin-top: 20px;
+}
+
+.messages {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.message {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.chat-input {
+  display: flex;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.chat-input button {
+  padding: 10px;
+}
+
+.send-button,
+img {
+  cursor: pointer;
+
+  margin-top: 3px;
+  height: 30px;
+  /* width: 30px; */
 }
