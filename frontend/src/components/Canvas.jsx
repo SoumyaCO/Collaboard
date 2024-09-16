@@ -6,6 +6,7 @@ import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
+
 import send from "../assets/send.png";
 
 import { socket } from "./Create_hash";
@@ -20,9 +21,11 @@ const Canvas = () => {
   const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
+  
   const [mouseState, setMouseState] = useState("idle"); // Can be 'idle', 'mousedown', 'mouseup', or 'mousemove'
   const [mouseMoved, setMouseMoved] = useState(false);
   const [isCustomCursor, setIsCustomCursor] = useState(false);
+
 
   const [selectedId, setSelectedId] = useState(null);
   const [mouseX, setMouseX] = useState(0);
@@ -44,11 +47,13 @@ const Canvas = () => {
   const [popupUsername, setPopupUsername] = useState("");
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
+
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("members");
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [users, setUsers] = useState([{ username: "", photo: "" }]);
+
   useEffect(() => {
     socket.on("draw-on-canvas", (data) => {
       if (data && Array.isArray(data.drawingStack)) {
@@ -62,6 +67,11 @@ const Canvas = () => {
     };
   }, []);
   useEffect(() => {
+
+    // socket.on("draw-on-canvas", (drawingData) => {
+    //   setDrawingStack((prevStack) => [...prevStack, drawingData]);
+    // });
+
     socket.on("new-joiner-alert", (data) => {
       setPopupUsername(data.username);
       setClientID(data.clientID);
@@ -283,6 +293,7 @@ const Canvas = () => {
       setMouseState("mousedown");
       setMouseMoved(false);
 
+
       if (tool === "edit" && id !== -1) {
         setIsDrawing(true);
         setSelectedId(id);
@@ -384,6 +395,9 @@ const Canvas = () => {
         canvasRef.current.style.cursor = "auto";
         return;
       }
+
+      let updatedStack;
+      let updatedRect;
 
       const ctx = getContext();
       const { offsetX, offsetY } = event;
@@ -612,6 +626,116 @@ const Canvas = () => {
       mouseY,
       resizeHandle,
     ]
+  );
+
+  const handleMouseUp = useCallback(
+    (event) => {
+      if (!isDrawing) return;
+
+      const ctx = getContext();
+      const { offsetX, offsetY } = event;
+      const width = offsetX - drawingData.startX;
+      const height = offsetY - drawingData.startY;
+
+      let updatedStack;
+
+      if (tool === "rect") {
+        if (width === 0 || height === 0) return;
+
+        let rect = new Rectangle(
+          [drawingData.startX, drawingData.startY],
+          [width, height],
+          drawingData.color
+        );
+
+        // Update the drawing stack
+        updatedStack =
+          tool === "edit" && selectedId !== null
+            ? drawingStack.map((r, index) => {
+                if (index === selectedId) {
+                  return {
+                    ...r,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return r;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
+                  x: drawingData.startX,
+                  y: drawingData.startY,
+                  width: width,
+                  height: height,
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
+
+        setDrawingStack(updatedStack);
+        drawFromStack(updatedStack);
+        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
+      } else if (tool === "ellipse") {
+        if (width === 0 || height === 0) return;
+
+        let ellipse = new Ellipse(
+          [drawingData.startX, drawingData.startY],
+          [width / 2, height / 2],
+          drawingData.color
+        );
+
+        // Update the drawing stack
+        updatedStack =
+          tool === "edit" && selectedId !== null
+            ? drawingStack.map((e, index) => {
+                if (index === selectedId) {
+                  return {
+                    ...e,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return e;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
+                  x: drawingData.startX,
+                  y: drawingData.startY,
+                  width: width,
+                  height: height,
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
+
+        setDrawingStack(updatedStack);
+        drawFromStack(updatedStack);
+        setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }));
+      }
+
+      setIsDrawing(false);
+      setSelectedId(null);
+      setResizeHandle(null);
+
+      emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
+    },
+    [isDrawing, drawingData, tool, getContext, drawingStack, selectedId]
   );
 
   useEffect(() => {
