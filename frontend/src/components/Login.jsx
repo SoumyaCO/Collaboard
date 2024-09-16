@@ -25,10 +25,10 @@ const Login = () => {
       )
       .then((response) => {
         if (response.status === 200) {
-          // Cookies.set("authToken", response.data.token);
           dispatch({ type: "USER", payload: true });
           alert("Login successful!");
           navigate("/");
+          window.location.reload();
         } else {
           alert("Login failed: " + response.data.message);
         }
