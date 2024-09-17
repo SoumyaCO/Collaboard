@@ -6,15 +6,15 @@ import jwt from "jsonwebtoken";
 import { ExtendedError } from "socket.io/dist/namespace";
 
 export interface RoomData {
-  id: string;
+	id: string;
 }
 
 export interface Message {
-  clientID?: string;
-  roomID?: string;
-  message: string;
-  allow?: boolean;
-  drawingStack?: JSON[];
+	clientID?: string;
+	roomID?: string;
+	message: string;
+	allow?: boolean;
+	drawingStack?: JSON[];
 }
 
 /**
@@ -24,16 +24,16 @@ export interface Message {
  */
 
 export async function createRoom(client: Socket, data: any) {
-  client.join(data.id);
-  console.log(
-    `[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`
-  );
+	client.join(data.id);
+	console.log(
+		`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
+	);
 
-  await RoomModel.create({
-    roomId: data.id,
-    adminId: client.id,
-    members: [client.handshake.auth.username],
-  });
+	await RoomModel.create({
+		roomId: data.id,
+		adminId: client.id,
+		members: [client.handshake.auth.username],
+	});
 }
 
 /**
@@ -43,19 +43,19 @@ export async function createRoom(client: Socket, data: any) {
  */
 
 async function joinRoom(client: Socket, roomID: string) {
-  let isExist = await RoomModel.findOne({ roomId: roomID });
-  if (!isExist) {
-    console.log("room does not exists");
-  } else {
-    await RoomModel.updateOne(
-      { roomId: roomID },
-      { $push: { members: client.handshake.auth.username } }
-    );
-    client.join(roomID);
-    console.log(
-      `[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${roomID}`
-    );
-  }
+	let isExist = await RoomModel.findOne({ roomId: roomID });
+	if (!isExist) {
+		console.log("room does not exists");
+	} else {
+		await RoomModel.updateOne(
+			{ roomId: roomID },
+			{ $push: { members: client.handshake.auth.username } },
+		);
+		client.join(roomID);
+		console.log(
+			`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${roomID}`,
+		);
+	}
 }
 
 /**
@@ -64,14 +64,14 @@ async function joinRoom(client: Socket, roomID: string) {
  * @return {Promise<Room>} adminSocketId - socket id of the admin (socket.io)
  */
 async function getAdmin(roomId: string): Promise<string> {
-  try {
-    const room = await RoomModel.findOne({ roomId: roomId });
+	try {
+		const room = await RoomModel.findOne({ roomId: roomId });
 
-    return room?.adminId ?? "not found";
-  } catch (error) {
-    console.error("Error fetching admin: ", error);
-    throw new Error("Failed to fetch admin ID");
-  }
+		return room?.adminId ?? "not found";
+	} catch (error) {
+		console.error("Error fetching admin: ", error);
+		throw new Error("Failed to fetch admin ID");
+	}
 }
 
 /* Socket event handlers */
@@ -83,7 +83,7 @@ async function getAdmin(roomId: string): Promise<string> {
  * @param {Message} message - payload coming from client
  */
 function onDrawingHandler(socket: Socket, roomID: string, message: Message) {
-  socket.broadcast.to(roomID).emit("draw-on-canvas", message);
+	socket.broadcast.to(roomID).emit("draw-on-canvas", message);
 }
 
 /**
@@ -92,22 +92,22 @@ function onDrawingHandler(socket: Socket, roomID: string, message: Message) {
  * @param {Socket} client - socket
  */
 export function onPermissionHandler(message: Message, client: Socket) {
-  if (message.allow) {
-    try {
-      joinRoom(client, message.roomID as string);
-      io.to(client.id).emit("permission-from-admin", message);
-    } catch (error) {
-      console.log("Error while permission handling: ", error);
-    }
-  } else {
-    try {
-      // disconnect if it's joined
-      client.disconnect();
-      io.to(client.id as string).emit("permission-from-admin", message);
-    } catch (error) {
-      console.log("Error while permission handling: ", error);
-    }
-  }
+	if (message.allow) {
+		try {
+			joinRoom(client, message.roomID as string);
+			io.to(client.id).emit("permission-from-admin", message);
+		} catch (error) {
+			console.log("Error while permission handling: ", error);
+		}
+	} else {
+		try {
+			// disconnect if it's joined
+			client.disconnect();
+			io.to(client.id as string).emit("permission-from-admin", message);
+		} catch (error) {
+			console.log("Error while permission handling: ", error);
+		}
+	}
 }
 
 /**
@@ -116,14 +116,20 @@ export function onPermissionHandler(message: Message, client: Socket) {
  * @param {RoomData} data - room data
  */
 export function createRoomHandler(socket: Socket, data: RoomData) {
-  createRoom(socket, data);
-  socket.on("on-drawing", (message: Message) => {
-    onDrawingHandler(socket, data.id, message);
-  });
+	createRoom(socket, data);
+	socket.on("on-drawing", (message: Message) => {
+		onDrawingHandler(socket, data.id, message);
+	});
 
-  socket.on("permission", (message: Message) => {
-    io.to(message.clientID as string).emit("event", message);
-  });
+	socket.on("permission", (message: Message) => {
+		io.to(message.clientID as string).emit("event", message);
+	});
+
+	socket.on("chat-message", (message: Message) => {
+		console.log("HIT chat message");
+		console.log("Message: ", message);
+		socket.broadcast.to(message.roomID as string).emit("send-message", message);
+	});
 }
 
 /**
@@ -136,23 +142,30 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
  * @param {Socket} client - socket
  */
 export async function joinRoomHandler(client: Socket, data: RoomData) {
-  // get the admin id of the room
-  let adminID = await getAdmin(data.id);
+	// get the admin id of the room
+	let adminID = await getAdmin(data.id);
 
-  // passing the socket object as a data
-  io.to(adminID as string).emit("new-joiner-alert", {
-    username: client.handshake.auth.username,
-    roomID: data.id,
-    clientID: client.id,
-  });
+	// passing the socket object as a data
+	io.to(adminID as string).emit("new-joiner-alert", {
+		username: client.handshake.auth.username,
+		roomID: data.id,
+		clientID: client.id,
+	});
 
-  client.on("event", (message) => {
-    onPermissionHandler(message, client);
-  });
+	client.on("event", (message) => {
+		onPermissionHandler(message, client);
+	});
 
-  client.on("on-drawing", (message: Message) => {
-    onDrawingHandler(client, data.id, message);
-  });
+	client.on("on-drawing", (message: Message) => {
+		onDrawingHandler(client, data.id, message);
+	});
+
+	/* Send the roomID and also the client who sent it */
+	client.on("chat-message", (message: Message) => {
+		console.log("HIT chat message");
+		console.log("Message: ", message);
+		client.broadcast.to(message.roomID as string).emit("send-message", message);
+	});
 }
 
 /* Socket Middleware */
@@ -164,8 +177,8 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
  *
  */
 function isvalidToken(token: string) {
-  const verified = jwt.verify(token, process.env.JWT_PASS as string) as User;
-  return verified;
+	const verified = jwt.verify(token, process.env.JWT_PASS as string) as User;
+	return verified;
 }
 
 /**
@@ -177,22 +190,22 @@ function isvalidToken(token: string) {
  * @tutorial https://socket.io/docs/v4/middlewares/
  */
 export function socketAuthMiddleware(
-  socket: Socket,
-  next: (err?: ExtendedError | Error) => void
+	socket: Socket,
+	next: (err?: ExtendedError | Error) => void,
 ) {
-  try {
-    let token = socket.handshake.auth.token;
-    console.log("token from backend ", socket.handshake.auth.token);
+	try {
+		let token = socket.handshake.auth.token;
+		console.log("token from backend ", socket.handshake.auth.token);
 
-    if (!token) {
-      throw new Error("Missing Token");
-    }
-    if (!isvalidToken(token)) {
-      throw new Error("Invalid Token");
-    }
-    next();
-  } catch (error) {
-    console.error("Authentication error", error);
-    next(new Error("Authentication error"));
-  }
+		if (!token) {
+			throw new Error("Missing Token");
+		}
+		if (!isvalidToken(token)) {
+			throw new Error("Invalid Token");
+		}
+		next();
+	} catch (error) {
+		console.error("Authentication error", error);
+		next(new Error("Authentication error"));
+	}
 }
