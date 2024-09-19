@@ -30,6 +30,7 @@ function HomePage() {
 
     try {
       socket.connect();
+      sessionStorage.setItem("sessionHash", roomHash);
 
       socket.emit("join-room", { id: roomHash });
     } catch (err) {

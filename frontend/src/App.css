@@ -608,7 +608,7 @@ canvas {
   position: fixed;
   top: 0;
   right: 0;
-  width: 300px;
+  width: 340px;
   height: 100%;
   background-color: #f5eded;
   border-left: 1px solid #ddd;
@@ -645,19 +645,44 @@ canvas {
 
 .members-tab,
 .chat-tab {
-  margin-top: 20px;
-}
-
-.messages {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.message {
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #ddd;
+  max-width: 600px;
+  margin: auto;
+}
+.username {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.message {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 5px;
 }
 
+.message-sent {
+  background-color: #86d293;
+  align-items: flex-end;
+  padding-top: 20px;
+}
+.message-received {
+  padding-top: 20px;
+
+  background-color: #697565;
+
+  align-items: flex-start;
+}
+.username {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.message-text {
+  padding: 5px 10px;
+  border-radius: 5px;
+}
 .chat-input {
   display: flex;
 }
