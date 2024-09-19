@@ -26,7 +26,6 @@ const Canvas = () => {
   const [mouseMoved, setMouseMoved] = useState(false);
   const [isCustomCursor, setIsCustomCursor] = useState(false);
 
-
   const [selectedId, setSelectedId] = useState(null);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
@@ -53,7 +52,9 @@ const Canvas = () => {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [users, setUsers] = useState([{ username: "", photo: "" }]);
-
+  const [currentUserId, setCurrentUserId] = useState(
+    localStorage.getItem("username") || "unknown"
+  );
   useEffect(() => {
     socket.on("draw-on-canvas", (data) => {
       if (data && Array.isArray(data.drawingStack)) {
@@ -67,11 +68,6 @@ const Canvas = () => {
     };
   }, []);
   useEffect(() => {
-
-    // socket.on("draw-on-canvas", (drawingData) => {
-    //   setDrawingStack((prevStack) => [...prevStack, drawingData]);
-    // });
-
     socket.on("new-joiner-alert", (data) => {
       setPopupUsername(data.username);
       setClientID(data.clientID);
@@ -101,7 +97,7 @@ const Canvas = () => {
   };
 
   const handlePopupDeny = () => {
-    socket.emit("deny-user", {
+    socket.emit("permission", {
       clientID: clientID,
       roomID: roomID,
       allow: false,
@@ -122,10 +118,26 @@ const Canvas = () => {
   const handleChatInputChange = (event) => {
     setChatInput(event.target.value);
   };
-
+  useEffect(() => {
+    socket.on("send-message", (msg) => {
+      setMessages((prevMessages) => [...prevMessages, msg]);
+    });
+    return () => {
+      socket.off("send-message");
+    };
+  }, []);
   const handleSendMessage = () => {
+    let id = sessionStorage.getItem("sessionHash") || roomID;
     if (chatInput.trim()) {
-      socket.emit("chat-message", { text: chatInput });
+      const message = {
+        text: chatInput,
+        senderId: currentUserId,
+        username: currentUserId,
+        roomID: id,
+      };
+
+      socket.emit("chat-message", message);
+      setMessages((prevMessages) => [...prevMessages, message]);
       setChatInput("");
     }
   };
@@ -293,7 +305,6 @@ const Canvas = () => {
       setMouseState("mousedown");
       setMouseMoved(false);
 
-
       if (tool === "edit" && id !== -1) {
         setIsDrawing(true);
         setSelectedId(id);
@@ -419,33 +430,33 @@ const Canvas = () => {
         updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((r, index) => {
-              if (index === selectedId) {
-                return {
-                  ...r,
+                if (index === selectedId) {
+                  return {
+                    ...r,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return r;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
                   x: drawingData.startX,
                   y: drawingData.startY,
                   width: width,
                   height: height,
-                  color: drawingData.color,
-                };
-              }
-              return r;
-            })
-            : [
-              ...drawingStack,
-              {
-                id: drawingData.id,
-                tool: drawingData.tool,
-                color: drawingData.color,
-                x: drawingData.startX,
-                y: drawingData.startY,
-                width: width,
-                height: height,
-                strokeWidth: drawingData.strokeWidth,
-                isAlive: true,
-                version: 1,
-              },
-            ];
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
@@ -463,33 +474,33 @@ const Canvas = () => {
         updatedStack =
           tool === "edit" && selectedId !== null
             ? drawingStack.map((e, index) => {
-              if (index === selectedId) {
-                return {
-                  ...e,
+                if (index === selectedId) {
+                  return {
+                    ...e,
+                    x: drawingData.startX,
+                    y: drawingData.startY,
+                    width: width,
+                    height: height,
+                    color: drawingData.color,
+                  };
+                }
+                return e;
+              })
+            : [
+                ...drawingStack,
+                {
+                  id: drawingData.id,
+                  tool: drawingData.tool,
+                  color: drawingData.color,
                   x: drawingData.startX,
                   y: drawingData.startY,
                   width: width,
                   height: height,
-                  color: drawingData.color,
-                };
-              }
-              return e;
-            })
-            : [
-              ...drawingStack,
-              {
-                id: drawingData.id,
-                tool: drawingData.tool,
-                color: drawingData.color,
-                x: drawingData.startX,
-                y: drawingData.startY,
-                width: width,
-                height: height,
-                strokeWidth: drawingData.strokeWidth,
-                isAlive: true,
-                version: 1,
-              },
-            ];
+                  strokeWidth: drawingData.strokeWidth,
+                  isAlive: true,
+                  version: 1,
+                },
+              ];
 
         setDrawingStack(updatedStack);
         drawFromStack(updatedStack);
@@ -628,10 +639,9 @@ const Canvas = () => {
     ]
   );
 
-  useEffect(
-    () => {
-      drawFromStack(drawingStack);
-    }, [drawingStack]);
+  useEffect(() => {
+    drawFromStack(drawingStack);
+  }, [drawingStack]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -685,22 +695,25 @@ const Canvas = () => {
             <img src={pen} alt="pen" />
           </div>
           <div
-            className={`tool rectangle ${tool === "rect" ? "active-button" : ""
-              }`}
+            className={`tool rectangle ${
+              tool === "rect" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("rect")}
           >
             <img src={rectangle} alt="rectangle" />
           </div>
           <div
-            className={`tool ellipse ${tool === "ellipse" ? "active-button" : ""
-              }`}
+            className={`tool ellipse ${
+              tool === "ellipse" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("ellipse")}
           >
             <img src={ellipse} alt="ellipse" />
           </div>
           <div
-            className={`tool eraser ${tool === "eraser" ? "active-button" : ""
-              }`}
+            className={`tool eraser ${
+              tool === "eraser" ? "active-button" : ""
+            }`}
             onClick={() => selectTool("eraser")}
           >
             <img src={eraser} alt="eraser" />
@@ -716,8 +729,9 @@ const Canvas = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className={`color-border ${selectedColor === color ? "color-border-active" : ""
-                }`}
+              className={`color-border ${
+                selectedColor === color ? "color-border-active" : ""
+              }`}
               onClick={() => setSelectedColor(color)}
             >
               <div className="color" style={{ backgroundColor: color }}></div>
@@ -762,9 +776,21 @@ const Canvas = () => {
             {activeTab === "chat" && (
               <div className="chat-tab">
                 <div className="messages">
-                  {messages.map((message, index) => (
-                    <div key={index} className="message">
-                      {message.text}
+                  {messages.map((message) => (
+                    <div
+                      key={message.id || message.timestamp}
+                      className={`message ${
+                        message.senderId === currentUserId
+                          ? "message-sent"
+                          : "message-received"
+                      }`}
+                    >
+                      <div className="username">
+                        {message.senderId === currentUserId
+                          ? "You"
+                          : message.username}
+                      </div>
+                      <div className="message">{message.text}</div>
                     </div>
                   ))}
                 </div>
