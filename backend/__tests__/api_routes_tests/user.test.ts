@@ -3,7 +3,6 @@ import request from "supertest";
 
 import { httpServer } from "../../src/index";
 import { randomUser } from "../test_utils/random";
-import { random } from "colors";
 
 /* Connecting to the databas before each test. */
 beforeEach(async () => {

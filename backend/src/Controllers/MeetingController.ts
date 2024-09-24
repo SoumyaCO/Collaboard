@@ -1,11 +1,18 @@
 import { MeetingModel, Meeting } from "../Models/Meeting";
-import { Room } from "../Models/Room";
-import RoomModel from "../Models/Room";
-import { User } from "../Models/User";
+import jwt from "jsonwebtoken";
 
-export const createMeeting = async (
+interface DecodedToken {
+	_id: string;
+}
+
+/**
+ * Creates a new Meeting in DB
+ * @param meeting - meeting object
+ * @returns Promise<boolean> - is successful or not
+ */
+export async function createMeeting(
 	meeting: Partial<Meeting>,
-): Promise<boolean> => {
+): Promise<boolean> {
 	const meet = new MeetingModel(meeting);
 	await meet
 		.save()
@@ -18,9 +25,37 @@ export const createMeeting = async (
 		});
 
 	return true;
-};
+}
 
-export const deleteMeeting = async (meetingID: string): Promise<boolean> => {
+/**
+ * Gets all the Meetings under a person(user)
+ * @param authToken - cookie (for verification, and userId)
+ * @returns Promise<Meeting[]> - list of meetings under that username
+ */
+export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
+	try {
+		// verification for the user, also getting the userid to query for meeting under his/her name
+		let verified: DecodedToken = jwt.verify(
+			authToken,
+			process.env.JWT_PASS as string,
+		) as DecodedToken;
+
+		let id = verified._id;
+
+		let meetings = await MeetingModel.find({ _id: id });
+		return meetings;
+	} catch (error) {
+		console.log("Error getting meetings", error);
+		return [];
+	}
+}
+
+/**
+ * Deletes a new Meeting in DB
+ * @param meetingID - meetingID
+ * @returns Promise<boolean> - is successful or not
+ */
+export async function deleteMeeting(meetingID: string): Promise<boolean> {
 	try {
 		await MeetingModel.deleteOne({ meetingID });
 	} catch (error) {
@@ -28,12 +63,18 @@ export const deleteMeeting = async (meetingID: string): Promise<boolean> => {
 		return false;
 	}
 	return true;
-};
+}
 
-export const updateMeeting = async (
+/**
+ * Updates a new Meeting in DB
+ * @param meetingID - meetingID
+ * @param updateData - data
+ * @returns Promise<boolean> - is successful or not
+ */
+export async function updateMeeting(
 	meetingID: string,
 	updateData: Partial<Meeting>,
-): Promise<boolean> => {
+): Promise<boolean> {
 	await MeetingModel.findOneAndUpdate({ meetingID }, updateData, {
 		new: true,
 	})
@@ -45,4 +86,4 @@ export const updateMeeting = async (
 			return false;
 		});
 	return true;
-};
+}
