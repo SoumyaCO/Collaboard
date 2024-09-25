@@ -8,6 +8,7 @@ import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
 
 import send from "../assets/send.png";
+import { useNavigate } from "react-router-dom";
 
 import { socket } from "./Create_hash";
 import { emitDrawing } from "../utils/Socket";
@@ -22,7 +23,7 @@ const Canvas = () => {
     location.state?.drawingStack || []
   );
 
-  const [mouseState, setMouseState] = useState("idle"); // Can be 'idle', 'mousedown', 'mouseup', or 'mousemove'
+  const [mouseState, setMouseState] = useState("idle"); // idle', 'mousedown', 'mouseup', or 'mousemove'
   const [mouseMoved, setMouseMoved] = useState(false);
   const [isCustomCursor, setIsCustomCursor] = useState(false);
 
@@ -40,7 +41,6 @@ const Canvas = () => {
     height: 0,
     strokeWidth: 2,
   });
-  console.log("accepted user stack", drawingStack);
 
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupUsername, setPopupUsername] = useState("");
@@ -55,6 +55,22 @@ const Canvas = () => {
   const [currentUserId, setCurrentUserId] = useState(
     localStorage.getItem("username") || "unknown"
   );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isPageRefreshed = sessionStorage.getItem("isPageRefreshed");
+
+    if (isPageRefreshed) {
+      sessionStorage.removeItem("isPageRefreshed");
+      navigate("/");
+    } else {
+      sessionStorage.setItem("isPageRefreshed", "true");
+    }
+
+    return () => {
+      sessionStorage.removeItem("isPageRefreshed");
+    };
+  }, [navigate]);
   useEffect(() => {
     socket.on("draw-on-canvas", (data) => {
       if (data && Array.isArray(data.drawingStack)) {
@@ -790,7 +806,7 @@ const Canvas = () => {
                           ? "You"
                           : message.username}
                       </div>
-                      <div className="message">{message.text}</div>
+                      <div className="message-text">{message.text}</div>
                     </div>
                   ))}
                 </div>
@@ -816,7 +832,7 @@ const Canvas = () => {
       <canvas
         ref={canvasRef}
         width={1680}
-        height={740}
+        height={640}
         style={{ border: "1px solid black" }}
       ></canvas>
     </div>

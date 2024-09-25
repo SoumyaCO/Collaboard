@@ -40,8 +40,6 @@ const Navbar = () => {
       setUser(data);
 
       localStorage.setItem("username", data.username);
-
-      console.log("Fetched user data:", data);
     } catch (err) {
       console.error(err);
     }
