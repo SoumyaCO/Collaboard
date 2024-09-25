@@ -13,16 +13,14 @@ interface DecodedToken {
 export async function createMeeting(
 	meeting: Partial<Meeting>,
 ): Promise<boolean> {
-	const meet = new MeetingModel(meeting);
-	await meet
-		.save()
-		.then(() => {
-			console.log("Meeting Created");
-		})
-		.catch((err) => {
-			console.log(err);
-			return false;
-		});
+	try {
+		const meet = new MeetingModel(meeting);
+		await meet.save();
+		console.log("meeting [created]".green.italic);
+	} catch (err) {
+		console.log(`Error: ${err}`.red.bold);
+		return false;
+	}
 
 	return true;
 }
@@ -57,12 +55,20 @@ export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
  */
 export async function deleteMeeting(meetingID: string): Promise<boolean> {
 	try {
-		await MeetingModel.deleteOne({ meetingID });
+		let res = await MeetingModel.deleteOne({ meetingID });
+		// I know that's rare (as we'll handle the deletion of meetings from a strict interface,
+		// But just making sure, to have errors in the places of errors for future debugging helps)
+		if (res.deletedCount != 0) {
+			console.log("meeting [deleted]".red.italic);
+			return true;
+		} else {
+			console.log("Error deleting the meeting (maybe meeting doesent exist)");
+			return false;
+		}
 	} catch (error) {
 		console.log("Error deleting Meeting: ", error);
 		return false;
 	}
-	return true;
 }
 
 /**
@@ -75,15 +81,17 @@ export async function updateMeeting(
 	meetingID: string,
 	updateData: Partial<Meeting>,
 ): Promise<boolean> {
-	await MeetingModel.findOneAndUpdate({ meetingID }, updateData, {
-		new: true,
-	})
-		.then(() => {
-			console.log("meeting deleted");
-		})
-		.catch((error) => {
-			console.log("Error updating meeting: ", error);
+	try {
+		let res = await MeetingModel.findOneAndUpdate({ meetingID }, updateData);
+		if (res) {
+			console.log("meeting [updated]".yellow.italic);
+			return true;
+		} else {
+			console.log("Error updating meeting (maybe meeting doesent exist)");
 			return false;
-		});
+		}
+	} catch (error) {
+		console.log("Error updating meeting: ", error);
+	}
 	return true;
 }
