@@ -29,10 +29,13 @@ const Routing = () => {
 };
 
 function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, initialState); // used dispatch to send actions to the reducer.
   return (
     <Router>
       <UserContext.Provider value={{ state, dispatch }}>
+        {/*Provider component makes the state and 
+        dispatch available to any nested components that need them. 
+        for managing global state  */}
         <Navbar />
         <Routing />
       </UserContext.Provider>

@@ -603,7 +603,6 @@ canvas {
   cursor: pointer;
   padding: 33px;
 }
-
 .hamburger-menu {
   position: fixed;
   top: 0;
@@ -650,16 +649,25 @@ canvas {
   max-width: 600px;
   margin: auto;
 }
+
+.chat-tab {
+  position: relative;
+  padding-bottom: 70px;
+  min-height: 550px;
+  border: none;
+}
+
 .username {
   font-weight: bold;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
 }
+
 .message {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  padding: 5px;
-  border-radius: 5px;
+  padding: 3px;
+  border-radius: 9px;
 }
 
 .message-sent {
@@ -667,30 +675,33 @@ canvas {
   align-items: flex-end;
   padding-top: 20px;
 }
+
 .message-received {
   padding-top: 20px;
-
   background-color: #697565;
-
   align-items: flex-start;
-}
-.username {
-  font-weight: bold;
-  margin-bottom: 5px;
 }
 
 .message-text {
-  padding: 5px 10px;
+  padding: 1px 10px;
   border-radius: 5px;
 }
+
 .chat-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
+  padding: 10px;
 }
 
 .chat-input input {
   flex: 1;
   padding: 10px;
   border-radius: 10px;
+  border: 1px solid #697565;
+  background-color: #dee5d4;
 }
 
 .chat-input button {
@@ -700,8 +711,6 @@ canvas {
 .send-button,
 img {
   cursor: pointer;
-
   margin-top: 3px;
   height: 30px;
-  /* width: 30px; */
 }
