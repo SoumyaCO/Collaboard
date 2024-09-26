@@ -1,6 +1,4 @@
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Backend Tests
 
 on:
   push:
@@ -9,13 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+# ----------------------------- [Test (start)] ----------------------------
+  test:       
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        mongodb-version: ['6.0', '7.0', '8.0']
+        node-version: [18.x]
+        mongodb-version: ['6.0']
 
     steps:
     - name:
@@ -23,28 +22,35 @@ jobs:
 
     - name: Create .env file
       run: |
+           cd backend
            touch .env
            echo "${{secrets.ALL_SECRETS}}" >> .env
 
     - name: Test printing your secret 
       run: |
+           cd backend
            cat .env
 
-
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
 
     - name: Start MongoDB
       uses: supercharge/mongodb-github-action@1.11.0
       with:
         mongodb-version: ${{ matrix.mongodb-version }}
 
-    - run: npm install
+    - name: Install Dependencies
+      run: |
+           cd backend
+           npm install
 
-    - run: npm test
-      env:
-        CI: true
-
+    - name: Run tests
+      run: |
+           cd backend
+           npm test
+# ------------------------------ [TEST (end)] -----------------------------
