@@ -6,13 +6,15 @@ import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
 import edit from "../assets/edit.png";
-
 import send from "../assets/send.png";
 import { useNavigate } from "react-router-dom";
-
 import { socket } from "./Create_hash";
 import { emitDrawing } from "../utils/Socket";
 import { useLocation } from "react-router-dom";
+import { calculateBuffer } from "../utils/gap";
+import { updateCursor } from "../utils/cursor";
+import { highlightRect } from "../utils/highlight";
+
 const Canvas = () => {
   const canvasRef = useRef(null);
   const location = useLocation();
@@ -22,15 +24,14 @@ const Canvas = () => {
   const [drawingStack, setDrawingStack] = useState(
     location.state?.drawingStack || []
   );
-
   const [mouseState, setMouseState] = useState("idle"); // idle', 'mousedown', 'mouseup', or 'mousemove'
   const [mouseMoved, setMouseMoved] = useState(false);
   const [isCustomCursor, setIsCustomCursor] = useState(false);
-
   const [selectedId, setSelectedId] = useState(null);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
   const [resizeHandle, setResizeHandle] = useState(null);
+  const [highlightobj, setHighlightobj] = useState(new highlightRect());
   const [drawingData, setDrawingData] = useState({
     id: 1,
     tool: "pen",
@@ -46,7 +47,6 @@ const Canvas = () => {
   const [popupUsername, setPopupUsername] = useState("");
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
-
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("members");
   const [messages, setMessages] = useState([]);
@@ -157,78 +157,6 @@ const Canvas = () => {
       setChatInput("");
     }
   };
-  function calculateBuffer(width, height, gap) {
-    let bufferX = gap;
-    let bufferY = gap;
-    if (width < 0) {
-      bufferX = -gap;
-    } else {
-      bufferX = gap;
-    }
-    if (height < 0) {
-      bufferY = -gap;
-    } else {
-      bufferY = gap;
-    }
-    return [bufferX, bufferY];
-  }
-
-  const updateCursor = (offsetX, offsetY, rect) => {
-    const handleSize = 8;
-    let cursor = "auto";
-    let customCursor = false;
-
-    if (
-      offsetX >= rect.x + rect.width - handleSize &&
-      offsetX <= rect.x + rect.width &&
-      offsetY >= rect.y + rect.height - handleSize &&
-      offsetY <= rect.y + rect.height
-    ) {
-      cursor = "nwse-resize";
-    } else if (
-      offsetX <= rect.x + handleSize &&
-      offsetY <= rect.y + handleSize
-    ) {
-      cursor = "nesw-resize";
-    } else if (
-      offsetX >= rect.x + rect.width - handleSize &&
-      offsetY <= rect.y + handleSize
-    ) {
-      cursor = "nesw-resize";
-    } else if (
-      offsetX <= rect.x + handleSize &&
-      offsetY >= rect.y + rect.height - handleSize
-    ) {
-      cursor = "nwse-resize";
-    } else if (
-      offsetX >= rect.x + handleSize &&
-      offsetX <= rect.x + rect.width - handleSize &&
-      offsetY <= rect.y + handleSize
-    ) {
-      cursor = "ns-resize";
-    } else if (
-      offsetX >= rect.x + handleSize &&
-      offsetX <= rect.x + rect.width - handleSize &&
-      offsetY >= rect.y + rect.height - handleSize
-    ) {
-      cursor = "ns-resize";
-    } else if (
-      offsetX <= rect.x + handleSize &&
-      offsetY >= rect.y + handleSize &&
-      offsetY <= rect.y + rect.height - handleSize
-    ) {
-      cursor = "ew-resize";
-    } else if (
-      offsetX >= rect.x + rect.width - handleSize &&
-      offsetY >= rect.y + handleSize &&
-      offsetY <= rect.y + rect.height - handleSize
-    ) {
-      cursor = "ew-resize";
-      customCursor = true;
-    }
-    setIsCustomCursor(customCursor);
-    return cursor;
-  };
 
   const getContext = useCallback(() => {
     const canvas = canvasRef.current;
@@ -258,7 +186,15 @@ const Canvas = () => {
       }
 
       if (index === selectedId) {
-        highlight(ctx, index, stack);
+        const highlight = new highlightRect(
+          ctx,
+          shape.x,
+          shape.y,
+          shape.height,
+          shape.width,
+          10
+        );
+        highlight.highlightDraw();
       }
     });
   };
@@ -287,8 +223,6 @@ const Canvas = () => {
       }
 
       if (ctx.isPointInPath(path, offsetX, offsetY)) {
-        console.log("id from detectColliction", i);
-
         return i;
       }
     }
@@ -296,21 +230,27 @@ const Canvas = () => {
     return -1;
   };
 
-  const highlight = (ctx, id, stack) => {
-    const gap = 7;
-    ctx.strokeStyle = "#0018F9";
-    ctx.lineWidth = 3;
+  // const highlight = (ctx, id, stack) => {
+  //   const gap = 9;
+  //   ctx.strokeStyle = "#0018F9";
+  //   ctx.lineWidth = 3;
 
-    let rect = stack[id];
-    let [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap);
+  //   let rect = stack[id];
+  //   let [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap);
 
-    const x = rect.x - bufferX;
-    const y = rect.y - bufferY;
-    const width = rect.width + bufferX * 2;
-    const height = rect.height + bufferY * 2;
+  //   const x = rect.x - bufferX;
+  //   const y = rect.y - bufferY;
+  //   const width = rect.width + bufferX * 2;
+  //   const height = rect.height + bufferY * 2;
 
-    ctx.strokeRect(x, y, width, height);
-  };
+  //   const highlightPath = new Path2D();
+  //   highlightPath.rect(x, y, width, height);
+
+  //   // Draw the highlighted border
+  //   ctx.stroke(highlightPath);
+
+  //   return highlightPath;
+  // };
 
   const handleMouseDown = useCallback(
     (event) => {
@@ -327,13 +267,21 @@ const Canvas = () => {
         setMouseX(offsetX);
         setMouseY(offsetY);
 
-        const selectedDrawing = drawingStack.find((item) => item.id == id + 1);
+        const selectedDrawing = drawingStack.find((item) => item.id === id + 1);
 
         if (selectedDrawing) {
-          console.log(id);
-
-          highlight(ctx, id, drawingStack);
+          // Drawn highlight
+          highlightobj.resizeHighlight(
+            ctx,
+            selectedDrawing.x,
+            selectedDrawing.y,
+            selectedDrawing.height,
+            selectedDrawing.width,
+            10
+          );
+          highlightobj.highlightDraw(ctx);
         }
+
         const rect = drawingStack[id];
         const handleSize = 6;
 
@@ -387,6 +335,7 @@ const Canvas = () => {
         } else {
           setResizeHandle(null);
         }
+
         if (!isCustomCursor) {
           canvasRef.current.style.cursor = "auto";
         }
@@ -422,9 +371,6 @@ const Canvas = () => {
         canvasRef.current.style.cursor = "auto";
         return;
       }
-
-      // let updatedStack;
-      // let updatedRect;
 
       const ctx = getContext();
       const { offsetX, offsetY } = event;
@@ -549,14 +495,12 @@ const Canvas = () => {
       let updatedRect;
       const ctx = getContext();
       const { offsetX, offsetY } = event;
-      const canvas = canvasRef.current;
 
       if (tool === "edit" && selectedId !== null) {
         const rect = drawingStack[selectedId];
-        const cursor = updateCursor(offsetX, offsetY, rect);
-
-        canvas.style.cursor = cursor;
-
+        if (highlightobj) {
+          highlightobj.changeCurser(ctx, offsetX, offsetY, setIsCustomCursor);
+        }
         if (resizeHandle) {
           updatedStack = [...drawingStack];
           updatedRect = { ...rect };
@@ -643,6 +587,7 @@ const Canvas = () => {
       emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
     },
     [
+      highlightobj,
       isDrawing,
       drawingData,
       tool,
@@ -661,8 +606,23 @@ const Canvas = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    const handleMouseMoveWithCursorChange = (event) => {
+      console.log("handleMouseMoveWithCursorChange");
+
+      handleMouseMove(event);
+      if (highlightobj) {
+        highlightobj.changeCurser(
+          ctx,
+          event.offsetX,
+          event.offsetY,
+          setIsCustomCursor
+        );
+      }
+    };
     canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mousemove", handleMouseMoveWithCursorChange);
     canvas.addEventListener("mouseup", handleMouseUp);
     canvas.addEventListener("mouseout", () => {
       setIsDrawing(false);
@@ -671,7 +631,7 @@ const Canvas = () => {
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mousemove", handleMouseMoveWithCursorChange);
       canvas.removeEventListener("mouseup", handleMouseUp);
       canvas.removeEventListener("mouseout", () => {
         setIsDrawing(false);

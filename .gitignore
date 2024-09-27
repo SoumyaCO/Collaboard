@@ -2,6 +2,7 @@
 frontend/node_modules
 frontend/src/components/canvas_exp_2.jsx
 frontend/src/components/canvas_exp.jsx
+frontend/src/components/CanvasBorder.jsx
 
 
 # backend directories
