@@ -46,22 +46,16 @@ function cc(offsetX, offsetY, x, y, width, height, setIsCustomCursor) {
   return cursor;
 }
 export class highlightRect {
-  constructor(ctx, x, y, h, w, gap) {
+  constructor(ctx) {
     this.ctx = ctx;
-    this.path = new Path2D();
-    this.x = x;
-    this.y = y;
-    this.h = h;
-    this.w = w;
-    this.gap = gap;
   }
 
-  highlightDraw(ctx) {
-    ctx.strokeStyle = "#0018F9";
-    ctx.lineWidth = 3;
-    let [bufferX, buffery] = calculateBuffer(this.w, this.h, this.gap);
-    this.path.rect(this.x, this.y, this.w, this.h);
-    ctx.stroke(this.path);
+  highlightDraw(x, y, height, width, borderWidth) {
+    this.ctx.save();
+    this.ctx.strokeStyle = "rgba(255, 215, 0, 0.7)";
+    this.ctx.lineWidth = borderWidth;
+    this.ctx.strokeRect(x, y, width, height);
+    this.ctx.restore();
   }
   resizeHighlight(ctx, x, y, h, w, gap) {
     this.path = new Path2D();
@@ -73,6 +67,7 @@ export class highlightRect {
   }
   changeCurser(ctx, x, y, setIsCustomCursor) {
     const isInside = ctx.isPointInStroke(x, y);
+    console.log("cc");
     setIsCustomCursor(
       isInside
         ? cc(

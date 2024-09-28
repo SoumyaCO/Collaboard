@@ -31,7 +31,8 @@ const Canvas = () => {
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
   const [resizeHandle, setResizeHandle] = useState(null);
-  const [highlightobj, setHighlightobj] = useState(new highlightRect());
+  const [highlightobj, setHighlightobj] = useState(null);
+
   const [drawingData, setDrawingData] = useState({
     id: 1,
     tool: "pen",
@@ -163,6 +164,11 @@ const Canvas = () => {
     const ctx = canvas.getContext("2d");
     return ctx;
   }, []);
+  useEffect(() => {
+    const ctx = canvasRef.current.getContext("2d");
+    setHighlightobj(new highlightRect(ctx));
+  }, []);
+
   const drawFromStack = (stack = []) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -186,15 +192,13 @@ const Canvas = () => {
       }
 
       if (index === selectedId) {
-        const highlight = new highlightRect(
-          ctx,
-          shape.x,
-          shape.y,
-          shape.height,
-          shape.width,
-          10
+        highlightobj.highlightDraw(
+          shape.x - 10,
+          shape.y - 10,
+          shape.height + 19,
+          shape.width + 19,
+          6
         );
-        highlight.highlightDraw();
       }
     });
   };
@@ -255,6 +259,7 @@ const Canvas = () => {
   const handleMouseDown = useCallback(
     (event) => {
       const ctx = getContext();
+
       const { offsetX, offsetY } = event;
       const id = detectCollision({ offsetX, offsetY }, drawingStack);
 
@@ -267,74 +272,61 @@ const Canvas = () => {
         setMouseX(offsetX);
         setMouseY(offsetY);
 
-        const selectedDrawing = drawingStack.find((item) => item.id === id + 1);
+        const selectedDrawing = drawingStack[id];
 
         if (selectedDrawing) {
-          // Drawn highlight
+          // Draw highlight
           highlightobj.resizeHighlight(
             ctx,
-            selectedDrawing.x,
-            selectedDrawing.y,
-            selectedDrawing.height,
-            selectedDrawing.width,
+            selectedDrawing.x - 5, // Adjust for gap
+            selectedDrawing.y - 5, // Adjust for gap
+            selectedDrawing.height + 10, // Adjust for gap
+            selectedDrawing.width + 10, // Adjust for gap
             10
           );
           highlightobj.highlightDraw(ctx);
         }
 
-        const rect = drawingStack[id];
         const handleSize = 6;
 
         // Determine the resize handle
-        if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetX <= rect.x + rect.width &&
-          offsetY >= rect.y + rect.height - handleSize &&
-          offsetY <= rect.y + rect.height
-        ) {
-          setResizeHandle("bottom-right");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top-left");
-        } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top-right");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("bottom-left");
-        } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top");
-        } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("bottom");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("left");
-        } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("right");
-        } else {
-          setResizeHandle(null);
-        }
+        const isInResizeHandle = (x, y) => {
+          return (
+            (x >= selectedDrawing.x + selectedDrawing.width - handleSize &&
+              x <= selectedDrawing.x + selectedDrawing.width &&
+              y >= selectedDrawing.y + selectedDrawing.height - handleSize &&
+              y <= selectedDrawing.y + selectedDrawing.height &&
+              "bottom-right") ||
+            (x <= selectedDrawing.x + handleSize &&
+              y <= selectedDrawing.y + handleSize &&
+              "top-left") ||
+            (x >= selectedDrawing.x + selectedDrawing.width - handleSize &&
+              y <= selectedDrawing.y + handleSize &&
+              "top-right") ||
+            (x <= selectedDrawing.x + handleSize &&
+              y >= selectedDrawing.y + selectedDrawing.height - handleSize &&
+              "bottom-left") ||
+            (x >= selectedDrawing.x + handleSize &&
+              x <= selectedDrawing.x + selectedDrawing.width - handleSize &&
+              y <= selectedDrawing.y + handleSize &&
+              "top") ||
+            (x >= selectedDrawing.x + handleSize &&
+              x <= selectedDrawing.x + selectedDrawing.width - handleSize &&
+              y >= selectedDrawing.y + selectedDrawing.height - handleSize &&
+              "bottom") ||
+            (x <= selectedDrawing.x + handleSize &&
+              y >= selectedDrawing.y + handleSize &&
+              y <= selectedDrawing.y + selectedDrawing.height - handleSize &&
+              "left") ||
+            (x >= selectedDrawing.x + selectedDrawing.width - handleSize &&
+              y >= selectedDrawing.y + handleSize &&
+              y <= selectedDrawing.y + selectedDrawing.height - handleSize &&
+              "right")
+          );
+        };
+
+        const resizeHandle = isInResizeHandle(offsetX, offsetY);
+        setResizeHandle(resizeHandle || null);
 
         if (!isCustomCursor) {
           canvasRef.current.style.cursor = "auto";
@@ -356,7 +348,7 @@ const Canvas = () => {
         }));
       }
     },
-    [getContext, drawingStack, tool, selectedColor]
+    [getContext, drawingStack, tool, selectedColor, isCustomCursor]
   );
 
   const handleMouseUp = useCallback(
@@ -487,79 +479,85 @@ const Canvas = () => {
       mouseState,
     ]
   );
-
   const handleMouseMove = useCallback(
     (event) => {
       if (mouseState !== "mousedown") return;
-      let updatedStack;
-      let updatedRect;
+
       const ctx = getContext();
+      if (!ctx) return; // Ensure context is available
+
       const { offsetX, offsetY } = event;
+      let updatedStack = [...drawingStack];
+      const rect = selectedId !== null ? drawingStack[selectedId] : null;
 
       if (tool === "edit" && selectedId !== null) {
-        const rect = drawingStack[selectedId];
         if (highlightobj) {
-          highlightobj.changeCurser(ctx, offsetX, offsetY, setIsCustomCursor);
+          highlightobj.changeCurser(
+            ctx,
+            offsetX,
+            offsetY,
+            setIsCustomCursor,
+            5
+          );
         }
-        if (resizeHandle) {
-          updatedStack = [...drawingStack];
-          updatedRect = { ...rect };
 
-          if (resizeHandle === "bottom-right") {
-            updatedRect.width = offsetX - rect.x;
-            updatedRect.height = offsetY - rect.y;
-          } else if (resizeHandle === "top-left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.x = offsetX;
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "top-right") {
-            updatedRect.width = offsetX - rect.x;
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "bottom-left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.height = offsetY - rect.y;
-            updatedRect.x = offsetX;
-          } else if (resizeHandle === "top") {
-            updatedRect.height = rect.height + (rect.y - offsetY);
-            updatedRect.y = offsetY;
-          } else if (resizeHandle === "bottom") {
-            updatedRect.height = offsetY - rect.y;
-          } else if (resizeHandle === "left") {
-            updatedRect.width = rect.width + (rect.x - offsetX);
-            updatedRect.x = offsetX;
-          } else if (resizeHandle === "right") {
-            updatedRect.width = offsetX - rect.x;
+        if (resizeHandle) {
+          const updatedRect = { ...rect };
+
+          // Update dimensions based on the resize handle
+          switch (resizeHandle) {
+            case "bottom-right":
+              updatedRect.width = offsetX - rect.x;
+              updatedRect.height = offsetY - rect.y;
+              break;
+            case "top-left":
+              updatedRect.width = rect.width + (rect.x - offsetX);
+              updatedRect.height = rect.height + (rect.y - offsetY);
+              updatedRect.x = offsetX;
+              updatedRect.y = offsetY;
+              break;
+            case "top-right":
+              updatedRect.width = offsetX - rect.x;
+              updatedRect.height = rect.height + (rect.y - offsetY);
+              updatedRect.y = offsetY;
+              break;
+            case "bottom-left":
+              updatedRect.width = rect.width + (rect.x - offsetX);
+              updatedRect.height = offsetY - rect.y;
+              updatedRect.x = offsetX;
+              break;
+            case "top":
+              updatedRect.height = rect.height + (rect.y - offsetY);
+              updatedRect.y = offsetY;
+              break;
+            case "bottom":
+              updatedRect.height = offsetY - rect.y;
+              break;
+            case "left":
+              updatedRect.width = rect.width + (rect.x - offsetX);
+              updatedRect.x = offsetX;
+              break;
+            case "right":
+              updatedRect.width = offsetX - rect.x;
+              break;
+            default:
+              break;
           }
 
           updatedStack[selectedId] = updatedRect;
-          setDrawingStack(updatedStack);
-          drawFromStack(updatedStack);
         } else {
-          updatedStack = [...drawingStack];
-          updatedRect = { ...rect };
+          // Move the selected shape
+          const updatedRect = { ...rect };
           updatedRect.x += offsetX - mouseX;
           updatedRect.y += offsetY - mouseY;
           updatedStack[selectedId] = updatedRect;
-          setDrawingStack(updatedStack);
           setMouseX(offsetX);
           setMouseY(offsetY);
-          drawFromStack(updatedStack);
         }
-      } else if (tool === "rect") {
-        const width = offsetX - drawingData.startX;
-        const height = offsetY - drawingData.startY;
 
-        setDrawingData((prevData) => ({ ...prevData, width, height }));
-
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        drawFromStack(drawingStack);
-        ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(drawingData.startX, drawingData.startY, width, height);
-      } else if (tool === "ellipse") {
+        setDrawingStack(updatedStack);
+        drawFromStack(updatedStack);
+      } else if (tool === "rect" || tool === "ellipse") {
         const width = offsetX - drawingData.startX;
         const height = offsetY - drawingData.startY;
 
@@ -571,24 +569,29 @@ const Canvas = () => {
         ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
         ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
         ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(
-          drawingData.startX + width / 2,
-          drawingData.startY + height / 2,
-          Math.abs(width) / 2,
-          Math.abs(height) / 2,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.stroke();
-        ctx.fill();
+
+        if (tool === "rect") {
+          ctx.strokeRect(drawingData.startX, drawingData.startY, width, height);
+        } else if (tool === "ellipse") {
+          ctx.beginPath();
+          ctx.ellipse(
+            drawingData.startX + width / 2,
+            drawingData.startY + height / 2,
+            Math.abs(width) / 2,
+            Math.abs(height) / 2,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+          ctx.fill();
+        }
       }
+
       emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
     },
     [
       highlightobj,
-      isDrawing,
       drawingData,
       tool,
       getContext,
@@ -608,21 +611,8 @@ const Canvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    const handleMouseMoveWithCursorChange = (event) => {
-      console.log("handleMouseMoveWithCursorChange");
-
-      handleMouseMove(event);
-      if (highlightobj) {
-        highlightobj.changeCurser(
-          ctx,
-          event.offsetX,
-          event.offsetY,
-          setIsCustomCursor
-        );
-      }
-    };
     canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMoveWithCursorChange);
+    canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
     canvas.addEventListener("mouseout", () => {
       setIsDrawing(false);
@@ -631,7 +621,7 @@ const Canvas = () => {
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMoveWithCursorChange);
+      canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
       canvas.removeEventListener("mouseout", () => {
         setIsDrawing(false);
