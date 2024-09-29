@@ -731,8 +731,8 @@ const Canvas = () => {
     const extendedRect = {
       x: rect.x - buffer,
       y: rect.y - buffer,
-      width: rect.width + 5 * buffer,
-      height: rect.height + 5 * buffer,
+      width: rect.width + 2 * buffer,
+      height: rect.height + 2 * buffer,
     };
 
     const isHoveringTop =
