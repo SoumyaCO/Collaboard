@@ -389,12 +389,64 @@ const Canvas = () => {
         setMouseX(offsetX);
         setMouseY(offsetY);
 
-        const rect = drawingStack[id];
+        const selectedDrawing = drawingStack.find((item) => item.id == id + 1);
+        if (selectedDrawing) {
+          console.log(id);
 
-        // Draw a border around the selected rectangle
-        ctx.strokeStyle = "rgba(0, 0, 255, 0.5)"; // Highlight color
-        ctx.lineWidth = 2; // Border width
-        ctx.strokeRect(rect.x, rect.y, rect.width, rect.height); // Draw the highlighted border
+          highlight(ctx, id, drawingStack);
+        }
+        const rect = drawingStack[id];
+        const handleSize = 6;
+
+        if (
+          offsetX >= rect.x + rect.width - handleSize &&
+          offsetX <= rect.x + rect.width &&
+          offsetY >= rect.y + rect.height - handleSize &&
+          offsetY <= rect.y + rect.height
+        ) {
+          setResizeHandle("bottom-right");
+        } else if (
+          offsetX <= rect.x + handleSize &&
+          offsetY <= rect.y + handleSize
+        ) {
+          setResizeHandle("top-left");
+        } else if (
+          offsetX >= rect.x + rect.width - handleSize &&
+          offsetY <= rect.y + handleSize
+        ) {
+          setResizeHandle("top-right");
+        } else if (
+          offsetX <= rect.x + handleSize &&
+          offsetY >= rect.y + rect.height - handleSize
+        ) {
+          setResizeHandle("bottom-left");
+        } else if (
+          offsetX >= rect.x + handleSize &&
+          offsetX <= rect.x + rect.width - handleSize &&
+          offsetY <= rect.y + handleSize
+        ) {
+          setResizeHandle("top");
+        } else if (
+          offsetX >= rect.x + handleSize &&
+          offsetX <= rect.x + rect.width - handleSize &&
+          offsetY >= rect.y + rect.height - handleSize
+        ) {
+          setResizeHandle("bottom");
+        } else if (
+          offsetX <= rect.x + handleSize &&
+          offsetY >= rect.y + handleSize &&
+          offsetY <= rect.y + rect.height - handleSize
+        ) {
+          setResizeHandle("left");
+        } else if (
+          offsetX >= rect.x + rect.width - handleSize &&
+          offsetY >= rect.y + handleSize &&
+          offsetY <= rect.y + rect.height - handleSize
+        ) {
+          setResizeHandle("right");
+        } else {
+          setResizeHandle(null);
+        }
       } else if (tool === "eraser" && id !== -1) {
         const updatedStack = drawingStack.filter((_, index) => index !== id);
         setDrawingStack(updatedStack);
@@ -548,14 +600,124 @@ const Canvas = () => {
   );
   const handleMouseMove = useCallback(
     (event) => {
+      const { offsetX, offsetY } = event;
+      const canvas = canvasRef.current;
+      const ctx = getContext();
+
+      handleCanvasMouseMove(event); // Always call to update cursor and hover state
+
       if (mouseState === "mousedown") {
-        handleCanvasMouseMove(event);
-      } else {
-        // Call to update cursor when not drawing
-        handleCanvasMouseMove(event);
+        if (tool === "edit" && selectedId !== null) {
+          const rect = drawingStack[selectedId];
+
+          let updatedStack = [...drawingStack];
+          let updatedRect = { ...rect };
+
+          if (resizeHandle) {
+            // Handle resizing logic
+            switch (resizeHandle) {
+              case "bottom-right":
+                updatedRect.width = offsetX - rect.x;
+                updatedRect.height = offsetY - rect.y;
+                break;
+              case "top-left":
+                updatedRect.width = rect.width + (rect.x - offsetX);
+                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.x = offsetX;
+                updatedRect.y = offsetY;
+                break;
+              case "top-right":
+                updatedRect.width = offsetX - rect.x;
+                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.y = offsetY;
+                break;
+              case "bottom-left":
+                updatedRect.width = rect.width + (rect.x - offsetX);
+                updatedRect.height = offsetY - rect.y;
+                updatedRect.x = offsetX;
+                break;
+              case "top":
+                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.y = offsetY;
+                break;
+              case "bottom":
+                updatedRect.height = offsetY - rect.y;
+                break;
+              case "left":
+                updatedRect.width = rect.width + (rect.x - offsetX);
+                updatedRect.x = offsetX;
+                break;
+              case "right":
+                updatedRect.width = offsetX - rect.x;
+                break;
+              default:
+                break;
+            }
+            updatedStack[selectedId] = updatedRect;
+            setDrawingStack(updatedStack);
+            drawFromStack(updatedStack);
+          } else {
+            // Handle moving the rectangle
+            updatedRect.x += offsetX - mouseX;
+            updatedRect.y += offsetY - mouseY;
+            updatedStack[selectedId] = updatedRect;
+            setDrawingStack(updatedStack);
+            setMouseX(offsetX);
+            setMouseY(offsetY);
+            drawFromStack(updatedStack);
+          }
+        } else if (tool === "rect" || tool === "ellipse") {
+          const width = offsetX - drawingData.startX;
+          const height = offsetY - drawingData.startY;
+
+          setDrawingData((prevData) => ({ ...prevData, width, height }));
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawFromStack(drawingStack);
+
+          ctx.strokeStyle = "rgba(0, 120, 215, 0.3)";
+          ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
+          ctx.lineWidth = 1;
+
+          if (tool === "rect") {
+            ctx.strokeRect(
+              drawingData.startX,
+              drawingData.startY,
+              width,
+              height
+            );
+          } else if (tool === "ellipse") {
+            ctx.beginPath();
+            ctx.ellipse(
+              drawingData.startX + width / 2,
+              drawingData.startY + height / 2,
+              Math.abs(width) / 2,
+              Math.abs(height) / 2,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.stroke();
+            ctx.fill();
+          }
+        }
+
+        // Emit drawing updates to the server
+        emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
       }
     },
-    [mouseState, handleCanvasMouseMove]
+    [
+      mouseState,
+      drawingData,
+      tool,
+      getContext,
+      drawingStack,
+      selectedId,
+      mouseX,
+      mouseY,
+      resizeHandle,
+      handleCanvasMouseMove,
+    ]
   );
 
   const isMouseOverBorderWithGap = (
@@ -569,8 +731,8 @@ const Canvas = () => {
     const extendedRect = {
       x: rect.x - buffer,
       y: rect.y - buffer,
-      width: rect.width + 2 * buffer,
-      height: rect.height + 2 * buffer,
+      width: rect.width + 5 * buffer,
+      height: rect.height + 5 * buffer,
     };
 
     const isHoveringTop =
