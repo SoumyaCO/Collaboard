@@ -736,28 +736,28 @@ const Canvas = () => {
     };
 
     const isHoveringTop =
-      offsetY >= extendedRect.y - borderWidth - gap &&
-      offsetY < extendedRect.y + borderWidth &&
+      offsetY >= extendedRect.y - borderWidth - gap - 7 && // Adjusted
+      offsetY < extendedRect.y + borderWidth + 7 && // Adjusted
       offsetX >= extendedRect.x - gap &&
-      offsetX <= extendedRect.x + extendedRect.width + gap;
+      offsetX <= extendedRect.x + extendedRect.width + 7 + gap;
 
     const isHoveringBottom =
-      offsetY >= extendedRect.y + extendedRect.height &&
-      offsetY < extendedRect.y + extendedRect.height + borderWidth + gap &&
+      offsetY >= extendedRect.y + extendedRect.height + 7 &&
+      offsetY < extendedRect.y + extendedRect.height + 7 + borderWidth + gap &&
       offsetX >= extendedRect.x - gap &&
-      offsetX <= extendedRect.x + extendedRect.width + gap;
+      offsetX <= extendedRect.x + extendedRect.width + 7 + gap;
 
     const isHoveringLeft =
-      offsetX >= extendedRect.x - borderWidth - gap &&
+      offsetX >= extendedRect.x - borderWidth - gap - 7 && // Adjusted
       offsetX < extendedRect.x + borderWidth &&
       offsetY >= extendedRect.y - gap &&
-      offsetY <= extendedRect.y + extendedRect.height + gap;
+      offsetY <= extendedRect.y + extendedRect.height + 7 + gap;
 
     const isHoveringRight =
-      offsetX >= extendedRect.x + extendedRect.width &&
-      offsetX < extendedRect.x + extendedRect.width + borderWidth + gap &&
+      offsetX >= extendedRect.x + extendedRect.width + 7 &&
+      offsetX < extendedRect.x + extendedRect.width + 7 + borderWidth + gap &&
       offsetY >= extendedRect.y - gap &&
-      offsetY <= extendedRect.y + extendedRect.height + gap;
+      offsetY <= extendedRect.y + extendedRect.height + 7 + gap;
 
     return (
       isHoveringTop || isHoveringBottom || isHoveringLeft || isHoveringRight
