@@ -176,6 +176,8 @@ const Canvas = () => {
     const gap = 10;
     ctx.strokeStyle = "#0018F9";
     ctx.lineWidth = 3;
+    const borderRadius = 10; // Set your desired corner radius here
+    const smallRectSize = 6; // Size of the small rectangles
 
     let rect = stack[id];
     let [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap);
@@ -185,68 +187,102 @@ const Canvas = () => {
     const width = rect.width + bufferX * 2;
     const height = rect.height + bufferY * 2;
 
-    ctx.beginPath();
-    ctx.rect(x, y, width, height);
-    ctx.stroke(); // Draw the border
-    ctx.closePath(); // Close the path for later checks
+    // Draw the main highlighted border with rounded corners
+    drawRoundedRect(ctx, x, y, width, height, borderRadius);
+
+    // Draw small rounded rectangles at corners and midpoints
+    const halfSmallRectSize = smallRectSize / 2;
+
+    // Corners
+    drawSmallRoundedRect(
+      ctx,
+      x - halfSmallRectSize,
+      y - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Top-left
+    drawSmallRoundedRect(
+      ctx,
+      x + width - halfSmallRectSize,
+      y - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Top-right
+    drawSmallRoundedRect(
+      ctx,
+      x - halfSmallRectSize,
+      y + height - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Bottom-left
+    drawSmallRoundedRect(
+      ctx,
+      x + width - halfSmallRectSize,
+      y + height - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Bottom-right
+
+    // Midpoints
+    drawSmallRoundedRect(
+      ctx,
+      x + width / 2 - halfSmallRectSize,
+      y - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Top-middle
+    drawSmallRoundedRect(
+      ctx,
+      x + width / 2 - halfSmallRectSize,
+      y + height - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Bottom-middle
+    drawSmallRoundedRect(
+      ctx,
+      x - halfSmallRectSize,
+      y + height / 2 - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Left-middle
+    drawSmallRoundedRect(
+      ctx,
+      x + width - halfSmallRectSize,
+      y + height / 2 - halfSmallRectSize,
+      smallRectSize,
+      borderRadius
+    ); // Right-middle
   };
 
-  // const updateCursor = (offsetX, offsetY, rect) => {
-  //   const handleSize = 8;
-  //   let cursor = "auto";
-  //   let customCursor = false;
+  const drawRoundedRect = (ctx, x, y, width, height, radius) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.stroke();
+  };
 
-  //   if (
-  //     offsetX >= rect.x + rect.width - handleSize &&
-  //     offsetX <= rect.x + rect.width &&
-  //     offsetY >= rect.y + rect.height - handleSize &&
-  //     offsetY <= rect.y + rect.height
-  //   ) {
-  //     cursor = "nwse-resize";
-  //   } else if (
-  //     offsetX <= rect.x + handleSize &&
-  //     offsetY <= rect.y + handleSize
-  //   ) {
-  //     cursor = "nesw-resize";
-  //   } else if (
-  //     offsetX >= rect.x + rect.width - handleSize &&
-  //     offsetY <= rect.y + handleSize
-  //   ) {
-  //     cursor = "nesw-resize";
-  //   } else if (
-  //     offsetX <= rect.x + handleSize &&
-  //     offsetY >= rect.y + rect.height - handleSize
-  //   ) {
-  //     cursor = "nwse-resize";
-  //   } else if (
-  //     offsetX >= rect.x + handleSize &&
-  //     offsetX <= rect.x + rect.width - handleSize &&
-  //     offsetY <= rect.y + handleSize
-  //   ) {
-  //     cursor = "ns-resize";
-  //   } else if (
-  //     offsetX >= rect.x + handleSize &&
-  //     offsetX <= rect.x + rect.width - handleSize &&
-  //     offsetY >= rect.y + rect.height - handleSize
-  //   ) {
-  //     cursor = "ns-resize";
-  //   } else if (
-  //     offsetX <= rect.x + handleSize &&
-  //     offsetY >= rect.y + handleSize &&
-  //     offsetY <= rect.y + rect.height - handleSize
-  //   ) {
-  //     cursor = "ew-resize";
-  //   } else if (
-  //     offsetX >= rect.x + rect.width - handleSize &&
-  //     offsetY >= rect.y + handleSize &&
-  //     offsetY <= rect.y + rect.height - handleSize
-  //   ) {
-  //     cursor = "ew-resize";
-  //     customCursor = true;
-  //   }
-  //   setIsCustomCursor(customCursor);
-  //   return cursor;
-  // };
+  const drawSmallRoundedRect = (ctx, x, y, size, radius) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + size - radius, y);
+    ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
+    ctx.lineTo(x + size, y + size - radius);
+    ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+    ctx.lineTo(x + radius, y + size);
+    ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.stroke();
+  };
 
   const getContext = useCallback(() => {
     const canvas = canvasRef.current;
@@ -615,44 +651,47 @@ const Canvas = () => {
 
           if (resizeHandle) {
             // Handle resizing logic
+            const gap = 7; // Gap value to account for
+
             switch (resizeHandle) {
               case "bottom-right":
-                updatedRect.width = offsetX - rect.x;
-                updatedRect.height = offsetY - rect.y;
+                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
+                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
                 break;
               case "top-left":
-                updatedRect.width = rect.width + (rect.x - offsetX);
-                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
+                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
                 updatedRect.x = offsetX;
                 updatedRect.y = offsetY;
                 break;
               case "top-right":
-                updatedRect.width = offsetX - rect.x;
-                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
+                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
                 updatedRect.y = offsetY;
                 break;
               case "bottom-left":
-                updatedRect.width = rect.width + (rect.x - offsetX);
-                updatedRect.height = offsetY - rect.y;
+                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
+                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
                 updatedRect.x = offsetX;
                 break;
               case "top":
-                updatedRect.height = rect.height + (rect.y - offsetY);
+                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
                 updatedRect.y = offsetY;
                 break;
               case "bottom":
-                updatedRect.height = offsetY - rect.y;
+                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
                 break;
               case "left":
-                updatedRect.width = rect.width + (rect.x - offsetX);
+                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
                 updatedRect.x = offsetX;
                 break;
               case "right":
-                updatedRect.width = offsetX - rect.x;
+                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
                 break;
               default:
                 break;
             }
+
             updatedStack[selectedId] = updatedRect;
             setDrawingStack(updatedStack);
             drawFromStack(updatedStack);
@@ -725,39 +764,31 @@ const Canvas = () => {
     offsetY,
     rect,
     borderWidth,
-    gap,
-    buffer = 0 // Buffer for negative dragging
+    gap
   ) => {
-    const extendedRect = {
-      x: rect.x - buffer,
-      y: rect.y - buffer,
-      width: rect.width + 2 * buffer,
-      height: rect.height + 2 * buffer,
-    };
-
     const isHoveringTop =
-      offsetY >= extendedRect.y - borderWidth - gap - 7 && // Adjusted
-      offsetY < extendedRect.y + borderWidth + 7 && // Adjusted
-      offsetX >= extendedRect.x - gap &&
-      offsetX <= extendedRect.x + extendedRect.width + 7 + gap;
+      offsetY >= rect.y - borderWidth - gap - 7 && // Adjusted
+      offsetY < rect.y + borderWidth + 7 && // Adjusted
+      offsetX >= rect.x - gap &&
+      offsetX <= rect.x + rect.width + 7 + gap;
 
     const isHoveringBottom =
-      offsetY >= extendedRect.y + extendedRect.height + 7 &&
-      offsetY < extendedRect.y + extendedRect.height + 7 + borderWidth + gap &&
-      offsetX >= extendedRect.x - gap &&
-      offsetX <= extendedRect.x + extendedRect.width + 7 + gap;
+      offsetY >= rect.y + rect.height + 7 &&
+      offsetY < rect.y + rect.height + 7 + borderWidth + gap &&
+      offsetX >= rect.x - gap &&
+      offsetX <= rect.x + rect.width + 7 + gap;
 
     const isHoveringLeft =
-      offsetX >= extendedRect.x - borderWidth - gap - 7 && // Adjusted
-      offsetX < extendedRect.x + borderWidth &&
-      offsetY >= extendedRect.y - gap &&
-      offsetY <= extendedRect.y + extendedRect.height + 7 + gap;
+      offsetX >= rect.x - borderWidth - gap - 7 && // Adjusted
+      offsetX < rect.x + borderWidth &&
+      offsetY >= rect.y - gap &&
+      offsetY <= rect.y + rect.height + 7 + gap;
 
     const isHoveringRight =
-      offsetX >= extendedRect.x + extendedRect.width + 7 &&
-      offsetX < extendedRect.x + extendedRect.width + 7 + borderWidth + gap &&
-      offsetY >= extendedRect.y - gap &&
-      offsetY <= extendedRect.y + extendedRect.height + 7 + gap;
+      offsetX >= rect.x + rect.width + 7 &&
+      offsetX < rect.x + rect.width + 7 + borderWidth + gap &&
+      offsetY >= rect.y - gap &&
+      offsetY <= rect.y + rect.height + 7 + gap;
 
     return (
       isHoveringTop || isHoveringBottom || isHoveringLeft || isHoveringRight
@@ -943,7 +974,7 @@ const Canvas = () => {
       <canvas
         ref={canvasRef}
         width={1680}
-        height={640}
+        height={710}
         style={{ border: "1px solid black" }}
       ></canvas>
     </div>
