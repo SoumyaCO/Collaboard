@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BannerBackground from "../assets/background_r_img.png";
 import { socket } from "./Create_hash";
+import LoadingSpinner from "./LoadingSpinner";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -31,12 +32,10 @@ function HomePage() {
     try {
       socket.connect();
       sessionStorage.setItem("sessionHash", roomHash);
-
       socket.emit("join-room", { id: roomHash });
     } catch (err) {
       console.error("Error occurred while joining the room:", err);
       setError("Error occurred while joining the room");
-    } finally {
       setLoading(false);
     }
   };
@@ -45,8 +44,10 @@ function HomePage() {
     socket.on("event", (message) => {
       socket.emit("event", message);
     });
+
     socket.on("permission-from-admin", (message) => {
       console.log("permission-from-admin", message);
+      setLoading(false); // Stop loading when permission is received
 
       if (message.allow) {
         navigate("/Canvas", {
@@ -56,15 +57,19 @@ function HomePage() {
         console.log("Permission not granted.");
       }
     });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+      setLoading(false); // Stop loading on disconnect
+    });
+
     return () => {
       socket.off("event");
       socket.off("permission-from-admin");
+      socket.off("disconnect");
     };
-  }, [socket]);
+  }, [socket, navigate]);
 
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected");
-  });
   return (
     <div className="home_contain">
       <div className="home-banner-container">
@@ -98,6 +103,7 @@ function HomePage() {
             collaborative whiteboard.
           </p>
         </div>
+        {loading && <LoadingSpinner />}
         <div className="home-bannerImage-container">
           <img src={BannerBackground} alt="Banner Background" />
         </div>

@@ -65,7 +65,7 @@
 .input-field input:valid~label {
   font-size: 0.9rem;
   top: 10px;
-  transform: translateY(-120%);
+  transform: translateY(-150%);
 }
   
   .forget {

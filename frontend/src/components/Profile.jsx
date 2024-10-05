@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import editIcon from "../assets/edit.png";
+import { showAlert } from "../utils/alert.js";
 
 export default function Profile() {
   const [user, setUser] = useState(null); //Holds the user profile data retrieved from the backend
@@ -27,10 +28,10 @@ export default function Profile() {
       }
       const data = await res.json();
       setUser(data);
-      localStorage.setItem("username",data.username);
+      localStorage.setItem("username", data.username);
 
       setOriginalUser(data);
-      setEditedUser(data); // Initialize editedUser with user data
+      setEditedUser(data);
     } catch (err) {
       navigate("/Login");
     } finally {
@@ -49,7 +50,7 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
-    if (!user) return; //  user is loaded before attempting to save
+    if (!user) return;
     try {
       const res = await fetch(`http://localhost:8080/user/${user.username}`, {
         method: "PUT",
@@ -68,9 +69,10 @@ export default function Profile() {
       setUser(data.data); // Adjust to handle the structure of response data
       setOriginalUser(data.data);
       setEditedUser(data.data);
+      showAlert(user.username + "'s profile edited successfully!");
       setIsEditing(false);
     } catch (err) {
-      console.error(err);
+      showAlert("An error occurred: " + err.message);
     }
   };
 
