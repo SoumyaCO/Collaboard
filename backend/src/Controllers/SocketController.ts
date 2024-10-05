@@ -4,6 +4,7 @@ import { User } from "../Models/User";
 import { io } from "../index";
 import jwt from "jsonwebtoken";
 import { ExtendedError } from "socket.io/dist/namespace";
+import { redisClient, connectRedis } from "../db/redis";
 
 export interface RoomData {
 	id: string;
@@ -25,15 +26,34 @@ export interface Message {
 
 export async function createRoom(client: Socket, data: any) {
 	client.join(data.id);
-	console.log(
-		`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
-	);
+	// console.log(
+	// 	`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
+	// );
 
-	await RoomModel.create({
-		roomId: data.id,
-		adminId: client.id,
-		members: [client.handshake.auth.username],
-	});
+	// await RoomModel.create({
+	// 	roomId: data.id,
+	// 	adminId: client.id,
+	// 	members: [client.handshake.auth.username],
+	// });
+
+	// redis -----------------------------
+	await connectRedis(redisClient);
+	const meeting_key = `meeting:${data.id}`;
+	const members_key = `${data.id}:members`;
+	const meeting_info = {
+		ownerSocketID: client.id,
+		ownerUserName: client.handshake.auth.username,
+		createdAt: Date.now(),
+	};
+	const new_member = {
+		username: client.handshake.auth.username,
+		dp_url: "hey",
+		full_name: "full name",
+	};
+
+	await redisClient.hSet(meeting_key, meeting_info);
+	await redisClient.sAdd(members_key, JSON.stringify(new_member));
+	console.log(`${new_member.username}[admin] added to the meeting`);
 }
 
 /**
@@ -43,17 +63,28 @@ export async function createRoom(client: Socket, data: any) {
  */
 
 async function joinRoom(client: Socket, roomID: string) {
-	let isExist = await RoomModel.findOne({ roomId: roomID });
-	if (!isExist) {
-		console.log("room does not exists");
-	} else {
-		await RoomModel.updateOne(
-			{ roomId: roomID },
-			{ $push: { members: client.handshake.auth.username } },
-		);
-		client.join(roomID);
+	// redis --------------------------------
+	const meeting_key = `meeting:${roomID}`;
+	const members_key = `${roomID}:members`;
+	const new_member = {
+		username: client.handshake.auth.username,
+		dp_url: "hey",
+		full_name: "full name",
+	};
+
+	await redisClient.exists(meeting_key);
+	try {
+		const reply = await redisClient.exists(meeting_key);
+		if (reply == 1) {
+			await redisClient.sAdd(members_key, JSON.stringify(new_member));
+			console.log(`${new_member.username}[member] added to the meeting`);
+		} else {
+			console.log(`[error] room id ${roomID} does not exist`);
+		}
+	} catch (error) {
 		console.log(
-			`[MEMBER JOINED] ${client.handshake.auth.username} joined the room: ${roomID}`,
+			`error fetching existance of roomID ${roomID} from redis`,
+			error,
 		);
 	}
 }
@@ -65,13 +96,19 @@ async function joinRoom(client: Socket, roomID: string) {
  */
 async function getAdmin(roomId: string): Promise<string> {
 	try {
-		const room = await RoomModel.findOne({ roomId: roomId });
-
-		return room?.adminId ?? "not found";
+		const meeting_key = `meeting:${roomId}`;
+		const adminSocketID = redisClient.hGet(meeting_key, "ownerSocketID");
+		if (!adminSocketID) {
+			console.log("admin not found");
+		} else {
+			return adminSocketID as unknown as string;
+		}
 	} catch (error) {
 		console.error("Error fetching admin: ", error);
-		throw new Error("Failed to fetch admin ID");
 	}
+
+	console.error("can't find the admin, maybe not yet joined");
+	return "can't find the admin";
 }
 
 /* Socket event handlers */
@@ -125,6 +162,10 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 		io.to(message.clientID as string).emit("event", message);
 	});
 
+	socket.on("disconnect", function () {
+		console.log(`[disconnect] ${socket.handshake.auth.username} disconnected`);
+	});
+
 	socket.on("chat-message", (message: Message) => {
 		console.log("HIT chat message");
 		console.log("Message: ", message);
@@ -158,6 +199,18 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 
 	client.on("on-drawing", (message: Message) => {
 		onDrawingHandler(client, data.id, message);
+	});
+
+	client.on("disconnect", function () {
+		console.log(`[disconnect] ${client.handshake.auth.username} disconnected`);
+		redisClient.sRem(
+			`${data.id}:members`,
+			JSON.stringify({
+				username: client.handshake.auth.username,
+				dp_url: "hey",
+				full_name: "full name",
+			}),
+		);
 	});
 
 	/* Send the roomID and also the client who sent it */
