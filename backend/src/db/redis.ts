@@ -1,11 +1,12 @@
 import { createClient, RedisClientType } from "redis";
 
+const isLocalEnv: boolean = process.env.NODE_ENVIRONMENT === "local";
 const port = process.env.REDIS_PORT as unknown;
 export const redisClient: RedisClientType = createClient({
-	password: process.env.REDIS_PASSWORD,
+	password: isLocalEnv ? undefined : (process.env.REDIS_PASSWORD as string),
 	socket: {
-		host: process.env.REDIS_CONN_STR as string,
-		port: port as number,
+		host: isLocalEnv ? "127.0.0.1" : (process.env.REDIS_CONN_STR as string),
+		port: isLocalEnv ? 6379 : (port as number),
 	},
 });
 

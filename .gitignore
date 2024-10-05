@@ -8,6 +8,7 @@ frontend/src/components/canvas_exp.jsx
 backend/node_modules
 backend/.env
 backend/data
+backend/redis_data
 
 # backend build directory
 backend/dist
