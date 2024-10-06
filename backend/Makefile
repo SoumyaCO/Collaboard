@@ -1,8 +1,7 @@
 # using docker container (from cli): no `comnpose.yml` file required
 # 1. mongodb-create: for creating the container from the image (1st time)
 mongodb-create:
-	export MONGODB_VERSION=6.0-ubi8 && \
-	docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION 
+	docker run --name mongodb -d -p 27017:27017 -v /data/db:/data mongodb/mongodb-community-server:6.0-ubi8 
 
 # 2. mongodb-start: strating a stopped container (provided: you have to have a container: mongodb)
 mongodb-start:

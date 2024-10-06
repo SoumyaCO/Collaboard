@@ -2,7 +2,7 @@ services:
   mongodb:
     image: mongodb/mongodb-community-server:6.0-ubi8
     ports:
-      - 27017:27017
+      - '27017:27017'
     volumes:
       - type: bind
         source: ./data
@@ -11,10 +11,9 @@ services:
   redis:
     image: redis/redis-stack-server:7.2.0-v6
     ports:
-      - 6379:6379
+      - '6379:6379'
     volumes:
       - type: bind
         source: ./redis_data
         target: /data
-
 

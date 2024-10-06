@@ -15,9 +15,9 @@ export const createSocket = () => {
     auth: {
       token: token,
       username: username,
+      fullname: fullname,
+      dp_url: dp_url,
     },
-    fullname:fullname,
-    dp_url:dp_url,
   });
 };
 
