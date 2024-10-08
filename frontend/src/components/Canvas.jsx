@@ -5,6 +5,8 @@ import pen from "../assets/pen.png";
 import eraser from "../assets/eraser.png";
 import rectangle from "../assets/rectangle.png";
 import ellipse from "../assets/ellipse.png";
+import textfield from "../assets/text-field.png";
+
 import edit from "../assets/edit.png";
 
 import send from "../assets/send.png";
@@ -46,6 +48,8 @@ const Canvas = () => {
   const [popupUsername, setPopupUsername] = useState("");
   const [clientID, setClientID] = useState("");
   const [roomID, setRoomID] = useState("");
+  const [textInput, setTextInput] = useState("");
+  const [textPosition, setTextPosition] = useState(null); // Position where the text will be drawn
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("members");
@@ -55,6 +59,9 @@ const Canvas = () => {
   const [currentUserId, setCurrentUserId] = useState(
     localStorage.getItem("username") || "unknown"
   );
+  const handlePathsRef = useRef([]);
+  const handlesRef = useRef([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -172,14 +179,18 @@ const Canvas = () => {
     }
     return [bufferX, bufferY];
   }
+
   const highlight = (ctx, id, stack) => {
-    const gap = 10;
+    const gap = 15;
+    const handleGap = 2;
     ctx.strokeStyle = "#0018F9";
     ctx.lineWidth = 3;
-    const borderRadius = 10; // Set your desired corner radius here
-    const smallRectSize = 6; // Size of the small rectangles
+    const borderRadius = 10;
+    const smallRectSize = 4;
 
     let rect = stack[id];
+    if (!rect) return;
+
     let [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap);
 
     const x = rect.x - bufferX;
@@ -190,70 +201,84 @@ const Canvas = () => {
     // Draw the main highlighted border with rounded corners
     drawRoundedRect(ctx, x, y, width, height, borderRadius);
 
-    // Draw small rounded rectangles at corners and midpoints
     const halfSmallRectSize = smallRectSize / 2;
 
-    // Corners
-    drawSmallRoundedRect(
-      ctx,
-      x - halfSmallRectSize,
-      y - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Top-left
-    drawSmallRoundedRect(
-      ctx,
-      x + width - halfSmallRectSize,
-      y - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Top-right
-    drawSmallRoundedRect(
-      ctx,
-      x - halfSmallRectSize,
-      y + height - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Bottom-left
-    drawSmallRoundedRect(
-      ctx,
-      x + width - halfSmallRectSize,
-      y + height - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Bottom-right
+    const handles = {
+      topLeft: createHandlePath(
+        x - handleGap,
+        y - handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      topRight: createHandlePath(
+        x + width - smallRectSize + handleGap,
+        y - handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      bottomLeft: createHandlePath(
+        x - handleGap,
+        y + height - smallRectSize + handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      bottomRight: createHandlePath(
+        x + width - smallRectSize + handleGap,
+        y + height - smallRectSize + handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      topMiddle: createHandlePath(
+        x + width / 2 - halfSmallRectSize,
+        y - handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      bottomMiddle: createHandlePath(
+        x + width / 2 - halfSmallRectSize,
+        y + height - smallRectSize + handleGap,
+        smallRectSize,
+        borderRadius
+      ),
+      leftMiddle: createHandlePath(
+        x - handleGap,
+        y + height / 2 - halfSmallRectSize,
+        smallRectSize,
+        borderRadius
+      ),
+      rightMiddle: createHandlePath(
+        x + width - smallRectSize + handleGap,
+        y + height / 2 - halfSmallRectSize,
+        smallRectSize,
+        borderRadius
+      ),
+    };
 
-    // Midpoints
-    drawSmallRoundedRect(
-      ctx,
-      x + width / 2 - halfSmallRectSize,
-      y - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Top-middle
-    drawSmallRoundedRect(
-      ctx,
-      x + width / 2 - halfSmallRectSize,
-      y + height - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Bottom-middle
-    drawSmallRoundedRect(
-      ctx,
-      x - halfSmallRectSize,
-      y + height / 2 - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Left-middle
-    drawSmallRoundedRect(
-      ctx,
-      x + width - halfSmallRectSize,
-      y + height / 2 - halfSmallRectSize,
-      smallRectSize,
-      borderRadius
-    ); // Right-middle
+    const handlePaths = Object.values(handles).map((handle) => {
+      ctx.stroke(handle);
+      return handle;
+    });
+    console.log("selectedId in highlighted ", selectedId);
+    return { handlePaths, handles, selectedId: id };
   };
 
+  // Function to create a handle Path2D object
+  function createHandlePath(x, y, size, radius) {
+    const path = new Path2D();
+    path.moveTo(x + radius, y);
+    path.lineTo(x + size - radius, y);
+    path.quadraticCurveTo(x + size, y, x + size, y + radius);
+    path.lineTo(x + size, y + size - radius);
+    path.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+    path.lineTo(x + radius, y + size);
+    path.quadraticCurveTo(x, y + size, x, y + size - radius);
+    path.lineTo(x, y + radius);
+    path.quadraticCurveTo(x, y, x + radius, y);
+    path.closePath();
+    return path;
+  }
+
+  // Draw a rounded rectangle
   const drawRoundedRect = (ctx, x, y, width, height, radius) => {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -263,21 +288,6 @@ const Canvas = () => {
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + radius, y + height);
     ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    ctx.stroke();
-  };
-
-  const drawSmallRoundedRect = (ctx, x, y, size, radius) => {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + size - radius, y);
-    ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
-    ctx.lineTo(x + size, y + size - radius);
-    ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
-    ctx.lineTo(x + radius, y + size);
-    ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
     ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
@@ -295,6 +305,7 @@ const Canvas = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     stack.forEach((shape, index) => {
+      // Draw rectangles
       if (shape.tool === "rect" && shape.isAlive) {
         const rectangle = new Rectangle(
           [shape.x, shape.y],
@@ -302,13 +313,20 @@ const Canvas = () => {
           shape.color
         );
         rectangle.drawRectangle(ctx);
-      } else if (shape.tool === "ellipse" && shape.isAlive) {
+      }
+      // Draw ellipses
+      else if (shape.tool === "ellipse" && shape.isAlive) {
         const ellipse = new Ellipse(
           [shape.x, shape.y],
           [shape.width / 2, shape.height / 2],
           shape.color
         );
         ellipse.drawEllipseFill(ctx);
+      }
+
+      // Draw text if it exists
+      if (shape.text && shape.textPosition) {
+        drawText(ctx, shape.text, shape.textPosition.x, shape.textPosition.y);
       }
     });
   };
@@ -337,8 +355,6 @@ const Canvas = () => {
       }
 
       if (ctx.isPointInPath(path, offsetX, offsetY)) {
-        console.log("id from detectColliction", i);
-
         return i;
       }
     }
@@ -351,64 +367,52 @@ const Canvas = () => {
       const { offsetX, offsetY } = event;
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-      let cursor = "auto"; // Default cursor
+      let cursor = "auto";
 
-      // Clear the canvas before redrawing
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawFromStack(drawingStack); // Redraw all shapes
+      drawFromStack(drawingStack);
 
-      drawingStack.forEach((rect, id) => {
-        // Highlight the selected rectangle if in edit mode
-        if (tool === "edit" && id !== -1) {
-          highlight(ctx, id, drawingStack); // Highlight the selected rectangle
+      // Highlight only the selected drawing if there is one
+      if (selectedId !== null && selectedId !== undefined) {
+        const rect = drawingStack[selectedId];
 
-          // Check if the mouse is over the border of the rectangle
-          const gap = 10; // Adjust as needed
-          const borderWidth = 3; // Width of the highlight border
+        if (rect) {
+          const { handlePaths, handles } = highlight(
+            ctx,
+            selectedId,
+            drawingStack
+          );
+          handlePathsRef.current = handlePaths; // Store handlePaths
+          handlesRef.current = handles;
 
-          // Check if mouse is over the border or corners
-          if (
-            isMouseOverBorderWithGap(offsetX, offsetY, rect, borderWidth, gap)
-          ) {
-            // Set the cursor style based on border position
-            const position = {
-              bottomRight:
-                offsetX >= rect.x + rect.width - 7 &&
-                offsetY >= rect.y + rect.height - 7,
-              topLeft: offsetX <= rect.x + 7 && offsetY <= rect.y + 7,
-              topRight:
-                offsetX >= rect.x + rect.width - 7 && offsetY <= rect.y + 7,
-              bottomLeft:
-                offsetX <= rect.x + 7 && offsetY >= rect.y + rect.height - 7,
-              top: offsetY <= rect.y + 7,
-              bottom: offsetY >= rect.y + rect.height - 7,
-              left: offsetX <= rect.x + 7,
-              right: offsetX >= rect.x + rect.width - 7,
-            };
-
-            switch (true) {
-              case position.bottomRight || position.topLeft:
-                cursor = "nwse-resize"; // Diagonal resize
-                break;
-              case position.topRight || position.bottomLeft:
-                cursor = "nesw-resize"; // Opposite diagonal resize
-                break;
-              case position.top || position.bottom:
-                cursor = "ns-resize"; // Vertical resize
-                break;
-              case position.left || position.right:
-                cursor = "ew-resize"; // Horizontal resize
-                break;
+          // Check if the mouse is over any of the small rectangles (handles)
+          handlePaths.forEach((path) => {
+            if (ctx.isPointInPath(path, offsetX, offsetY)) {
+              //  which handle was hovered
+              if (path === handles.topLeft) cursor = "nwse-resize";
+              else if (path === handles.topRight) cursor = "nesw-resize";
+              else if (path === handles.bottomLeft) cursor = "nwse-resize";
+              else if (path === handles.bottomRight) cursor = "nesw-resize";
+              else if (path === handles.topMiddle) cursor = "ns-resize";
+              else if (path === handles.bottomMiddle) cursor = "ns-resize";
+              else if (path === handles.leftMiddle) cursor = "ew-resize";
+              else if (path === handles.rightMiddle) cursor = "ew-resize";
             }
-          }
+          });
         }
-      });
+      }
 
       // Update the canvas cursor style
       canvas.style.cursor = cursor;
     },
-    [drawingStack, tool]
+    [drawingStack, selectedId]
   );
+
+  const drawText = (ctx, text, x, y) => {
+    ctx.fillStyle = "black";
+    ctx.font = "16px Arial";
+    ctx.fillText(text, x, y);
+  };
 
   const handleMouseDown = useCallback(
     (event) => {
@@ -419,69 +423,71 @@ const Canvas = () => {
       setMouseState("mousedown");
       setMouseMoved(false);
 
-      if (tool === "edit" && id !== -1) {
-        setIsDrawing(true);
-        setSelectedId(id);
-        setMouseX(offsetX);
-        setMouseY(offsetY);
-
-        const selectedDrawing = drawingStack.find((item) => item.id == id + 1);
-        if (selectedDrawing) {
-          console.log(id);
-
+      if (tool === "edit") {
+        if (id !== selectedId) {
+          setSelectedId(id);
+          ctx.clearRect(
+            0,
+            0,
+            canvasRef.current.width,
+            canvasRef.current.height
+          );
+          drawFromStack(drawingStack);
           highlight(ctx, id, drawingStack);
         }
-        const rect = drawingStack[id];
-        const handleSize = 6;
+        const handlePaths = handlePathsRef.current;
+        const handles = handlesRef.current;
+        let handleHit = false;
 
-        if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetX <= rect.x + rect.width &&
-          offsetY >= rect.y + rect.height - handleSize &&
-          offsetY <= rect.y + rect.height
-        ) {
-          setResizeHandle("bottom-right");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top-left");
-        } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top-right");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("bottom-left");
-        } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
-        ) {
-          setResizeHandle("top");
-        } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("bottom");
-        } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("left");
-        } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
-        ) {
-          setResizeHandle("right");
-        } else {
-          setResizeHandle(null);
+        handlePaths.forEach((path) => {
+          if (ctx.isPointInPath(path, offsetX, offsetY)) {
+            handleHit = true;
+            setSelectedId(id);
+
+            // Set resize handle based on which handle was clicked
+            if (path === handles.topLeft) {
+              setResizeHandle("top-left");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.topRight) {
+              setResizeHandle("top-right");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.bottomLeft) {
+              setResizeHandle("bottom-left");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.bottomRight) {
+              setResizeHandle("bottom-right");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.topMiddle) {
+              setResizeHandle("top");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.bottomMiddle) {
+              setResizeHandle("bottom");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.leftMiddle) {
+              setResizeHandle("left");
+              setSelectedId(id);
+              console.log(selectedId);
+            } else if (path === handles.rightMiddle) {
+              setResizeHandle("right");
+              setSelectedId(id);
+              console.log(selectedId);
+            }
+          }
+        });
+
+        if (!handleHit) {
+          if (id !== -1) {
+            setSelectedId(id);
+            setResizeHandle(null);
+          } else {
+            setSelectedId(null);
+          }
         }
       } else if (tool === "eraser" && id !== -1) {
         const updatedStack = drawingStack.filter((_, index) => index !== id);
@@ -500,7 +506,7 @@ const Canvas = () => {
         }));
       }
     },
-    [getContext, drawingStack, tool, selectedColor]
+    [getContext, drawingStack, tool, selectedId]
   );
 
   const handleMouseUp = useCallback(
@@ -634,76 +640,90 @@ const Canvas = () => {
       mouseState,
     ]
   );
+
   const handleMouseMove = useCallback(
     (event) => {
       const { offsetX, offsetY } = event;
       const canvas = canvasRef.current;
       const ctx = getContext();
 
-      handleCanvasMouseMove(event); // Always call to update cursor and hover state
+      handleCanvasMouseMove(event);
 
       if (mouseState === "mousedown") {
         if (tool === "edit" && selectedId !== null) {
+          const id = selectedId
           const rect = drawingStack[selectedId];
+          highlight(ctx, id, drawingStack);
 
-          let updatedStack = [...drawingStack];
-          let updatedRect = { ...rect };
+          console.log(resizeHandle);
+          console.log(rect);
 
           if (resizeHandle) {
-            // Handle resizing logic
-            const gap = 7; // Gap value to account for
-
+            // Handle resizing logic based on the selected resizeHandle
             switch (resizeHandle) {
               case "bottom-right":
-                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
-                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
+                console.log("bottom-right in mouse move ");
+
+                drawingStack[selectedId].width = offsetX - rect.x;
+                drawingStack[selectedId].height = offsetY - rect.y;
                 break;
               case "top-left":
-                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
-                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
-                updatedRect.x = offsetX;
-                updatedRect.y = offsetY;
+                const deltaXTopLeft = rect.x - offsetX;
+                const deltaYTopLeft = rect.y - offsetY;
+
+                drawingStack[selectedId].width = rect.width + deltaXTopLeft;
+                drawingStack[selectedId].height = rect.height + deltaYTopLeft;
+                drawingStack[selectedId].x = offsetX;
+                drawingStack[selectedId].y = offsetY;
                 break;
               case "top-right":
-                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
-                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
-                updatedRect.y = offsetY;
+                drawingStack[selectedId].width = offsetX - rect.x;
+                drawingStack[selectedId].height =
+                  rect.height + (rect.y - offsetY);
+                drawingStack[selectedId].y = offsetY;
                 break;
               case "bottom-left":
-                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
-                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
-                updatedRect.x = offsetX;
+                drawingStack[selectedId].width =
+                  rect.width + (rect.x - offsetX);
+                drawingStack[selectedId].height = offsetY - rect.y;
+                drawingStack[selectedId].x = offsetX;
                 break;
               case "top":
-                updatedRect.height = rect.height + (rect.y - offsetY) + gap; // Adjusted for gap
-                updatedRect.y = offsetY;
+                drawingStack[selectedId].height =
+                  rect.height + (rect.y - offsetY);
+                drawingStack[selectedId].y = offsetY;
                 break;
               case "bottom":
-                updatedRect.height = offsetY - rect.y + gap; // Adjusted for gap
+                drawingStack[selectedId].height = offsetY - rect.y;
                 break;
               case "left":
-                updatedRect.width = rect.width + (rect.x - offsetX) + gap; // Adjusted for gap
-                updatedRect.x = offsetX;
+                drawingStack[selectedId].width =
+                  rect.width + (rect.x - offsetX);
+                drawingStack[selectedId].x = offsetX;
                 break;
               case "right":
-                updatedRect.width = offsetX - rect.x + gap; // Adjusted for gap
+                drawingStack[selectedId].width = offsetX - rect.x;
                 break;
               default:
                 break;
             }
+            console.log(
+              "mouse move id w , h",
+              drawingStack[selectedId].height,
+              drawingStack[selectedId].width
+            );
 
-            updatedStack[selectedId] = updatedRect;
-            setDrawingStack(updatedStack);
-            drawFromStack(updatedStack);
+            // Update the stack with the modified rectangle
+            setDrawingStack(drawingStack);
+            drawFromStack(drawingStack); // Redraw the canvas with updated shapes
           } else {
-            // Handle moving the rectangle
-            updatedRect.x += offsetX - mouseX;
-            updatedRect.y += offsetY - mouseY;
-            updatedStack[selectedId] = updatedRect;
-            setDrawingStack(updatedStack);
+            // Handle moving the rectangle if no resizeHandle is active
+            drawingStack[selectedId].x += offsetX - mouseX;
+            drawingStack[selectedId].y += offsetY - mouseY;
+            setDrawingStack(drawingStack);
             setMouseX(offsetX);
             setMouseY(offsetY);
-            drawFromStack(updatedStack);
+            drawFromStack(drawingStack);
           }
         } else if (tool === "rect" || tool === "ellipse") {
           const width = offsetX - drawingData.startX;
@@ -740,9 +760,6 @@ const Canvas = () => {
             ctx.fill();
           }
         }
-
-        // Emit drawing updates to the server
-        emitDrawing(socket, { drawingStack: updatedStack, message: "hi" });
       }
     },
     [
@@ -758,44 +775,6 @@ const Canvas = () => {
       handleCanvasMouseMove,
     ]
   );
-
-  const isMouseOverBorderWithGap = (
-    offsetX,
-    offsetY,
-    rect,
-    borderWidth,
-    gap
-  ) => {
-    const isHoveringTop =
-      offsetY >= rect.y - borderWidth - gap - 7 && // Adjusted
-      offsetY < rect.y + borderWidth + 7 && // Adjusted
-      offsetX >= rect.x - gap &&
-      offsetX <= rect.x + rect.width + 7 + gap;
-
-    const isHoveringBottom =
-      offsetY >= rect.y + rect.height + 7 &&
-      offsetY < rect.y + rect.height + 7 + borderWidth + gap &&
-      offsetX >= rect.x - gap &&
-      offsetX <= rect.x + rect.width + 7 + gap;
-
-    const isHoveringLeft =
-      offsetX >= rect.x - borderWidth - gap - 7 && // Adjusted
-      offsetX < rect.x + borderWidth &&
-      offsetY >= rect.y - gap &&
-      offsetY <= rect.y + rect.height + 7 + gap;
-
-    const isHoveringRight =
-      offsetX >= rect.x + rect.width + 7 &&
-      offsetX < rect.x + rect.width + 7 + borderWidth + gap &&
-      offsetY >= rect.y - gap &&
-      offsetY <= rect.y + rect.height + 7 + gap;
-
-    return (
-      isHoveringTop || isHoveringBottom || isHoveringLeft || isHoveringRight
-    );
-  };
-
-  // Custom cursor based on corner and edge positions
 
   useEffect(() => {
     drawFromStack(drawingStack);
@@ -876,6 +855,13 @@ const Canvas = () => {
           >
             <img src={eraser} alt="eraser" />
           </div>
+          <div
+            className={`tool text ${tool === "text" ? "active-button" : ""}`}
+            onClick={() => selectTool("text")}
+          >
+            <img src={textfield} alt="text" />
+          </div>
+
           <div
             className={`tool edit ${tool === "edit" ? "active-button" : ""}`}
             onClick={() => selectTool("edit")}
