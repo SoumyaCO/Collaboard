@@ -29,7 +29,7 @@ export async function createMeeting(
  * Gets all the Meetings under a person(user)
  * @param authToken - cookie (for verification, and userId)
  * @returns Promise<Meeting[]> - list of meetings under that username
- */
+ 	*/
 export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
 	try {
 		// verification for the user, also getting the userid to query for meeting under his/her name
@@ -38,6 +38,7 @@ export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
 			process.env.JWT_PASS as string,
 		) as DecodedToken;
 
+		
 		let id = verified._id;
 
 		let meetings = await MeetingModel.find({ _id: id });
