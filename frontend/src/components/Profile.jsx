@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import editIcon from "../assets/edit.png";
+import { makeid } from "../utils/MakeId";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -15,6 +16,7 @@ export default function Profile() {
     title: "",
     date: "",
     ownerUsername: "",
+    meetingID: "",
   });
   const navigate = useNavigate();
 
@@ -38,6 +40,7 @@ export default function Profile() {
       localStorage.setItem("username", data.username);
       setEditedUser(data);
     } catch (err) {
+      console.error(err);
       navigate("/Login");
     } finally {
       setLoading(false);
@@ -132,17 +135,20 @@ export default function Profile() {
     setSelectedMeetingIndex(selectedMeetingIndex === index ? null : index);
   };
 
-  //  input changes for new meeting
+  // Handle input changes for new meeting
   const handleNewMeetingChange = (e) => {
     const { name, value } = e.target;
-    setNewMeeting((prev) => ({ ...prev, [name]: value }));
+    setNewMeeting((prev) => ({
+      ...prev,
+      [name]: value,
+      ownerUsername: user.username,
+      meetingID: "",
+    }));
   };
 
-  //  saving the new meeting
+  // Save the new meeting
   const handleCreateMeeting = async () => {
-    console.log("Saving meeting:", newMeeting);
-    console.log(user.username);
-
+    let meetingID = makeid(10); // Generate meeting ID
     try {
       const res = await fetch("http://localhost:8080/meeting/createMeeting", {
         method: "POST",
@@ -151,18 +157,22 @@ export default function Profile() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(newMeeting),
+        body: JSON.stringify({ ...newMeeting, meetingID }), // Spread newMeeting and add meetingID
       });
 
       if (!res.ok) {
         throw new Error("Failed to create meeting");
       }
 
-      // fetch meetings to get the updated list
+      // Fetch meetings to get the updated list
       await fetchMeetings();
       setIsAddingMeeting(false);
-
-      setNewMeeting({ title: "", date: "", ownerUsername: data.username });
+      setNewMeeting({
+        title: "",
+        date: "",
+        ownerUsername: user.username,
+        meetingID: "",
+      });
     } catch (err) {
       console.error("Error saving meeting:", err);
     }
@@ -239,7 +249,7 @@ export default function Profile() {
           {meetings.length > 0 ? (
             meetings.map((meeting, index) => (
               <li
-                key={index}
+                key={meeting.meetingID} // Use meetingID as the key
                 className={`meeting-item ${
                   selectedMeetingIndex === index ? "selected" : ""
                 }`}
