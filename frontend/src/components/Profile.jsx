@@ -141,6 +141,8 @@ export default function Profile() {
   //  saving the new meeting
   const handleCreateMeeting = async () => {
     console.log("Saving meeting:", newMeeting);
+    console.log(user.username);
+
     try {
       const res = await fetch("http://localhost:8080/meeting/createMeeting", {
         method: "POST",
@@ -159,6 +161,7 @@ export default function Profile() {
       // fetch meetings to get the updated list
       await fetchMeetings();
       setIsAddingMeeting(false);
+
       setNewMeeting({ title: "", date: "", ownerUsername: data.username });
     } catch (err) {
       console.error("Error saving meeting:", err);
