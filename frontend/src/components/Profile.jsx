@@ -1,31 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import editIcon from "../assets/edit.png";
-import { showAlert } from "../utils/alert.js";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({});
-  const [meetingFormVisible, setMeetingFormVisible] = useState(false);
-  const [currentMeeting, setCurrentMeeting] = useState(null);
-  const [meetingDetails, setMeetingDetails] = useState({
+  const [meetings, setMeetings] = useState([]);
+  const [editingMeetingIndex, setEditingMeetingIndex] = useState(null);
+  const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null);
+  const [isAddingMeeting, setIsAddingMeeting] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({
     title: "",
     date: "",
+    ownerUsername: "",
   });
-  const [meetings, setMeetings] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProfileAndMeetings = async () => {
-      await callProfilePage();
-      await fetchMeetings();
-    };
-
-    fetchProfileAndMeetings();
-  }, []);
-
+  // Fetch user profile
   const callProfilePage = async () => {
     try {
       const res = await fetch("http://localhost:8080/auth/profile", {
@@ -37,9 +30,12 @@ export default function Profile() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch user profile");
+      if (!res.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
       const data = await res.json();
       setUser(data);
+      localStorage.setItem("username", data.username);
       setEditedUser(data);
     } catch (err) {
       navigate("/Login");
@@ -48,6 +44,7 @@ export default function Profile() {
     }
   };
 
+  // Fetch meetings
   const fetchMeetings = async () => {
     try {
       const res = await fetch("http://localhost:8080/meeting/getAllMeeting", {
@@ -59,26 +56,37 @@ export default function Profile() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch meetings");
-      const data = await res.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (!res.ok) {
+        throw new Error("Failed to fetch meetings");
       }
 
-      setMeetings(data.data);
+      const data = await res.json();
+      if (Array.isArray(data.data)) {
+        setMeetings(data.data);
+      } else {
+        console.error("Unexpected format:", data);
+        setMeetings([]);
+      }
     } catch (err) {
-      showAlert("An error occurred while fetching meetings.");
+      console.error("Error fetching meetings:", err);
+      setMeetings([]);
     }
   };
 
+  useEffect(() => {
+    callProfilePage();
+    fetchMeetings();
+  }, []);
+
+  // Handle user edit input changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditedUser((prev) => ({ ...prev, [name]: value }));
-    setIsEditingProfile(true);
+    setIsEditing(true);
   };
 
-  const handleSaveProfile = async () => {
+  // Save edited user information
+  const handleSaveUser = async () => {
     if (!user) return;
     try {
       const res = await fetch(`http://localhost:8080/user/${user.username}`, {
@@ -91,97 +99,78 @@ export default function Profile() {
         body: JSON.stringify(editedUser),
       });
 
-      if (!res.ok) throw new Error("Failed to save user profile");
+      if (!res.ok) {
+        throw new Error("Failed to save user profile");
+      }
       const data = await res.json();
       setUser(data.data);
       setEditedUser(data.data);
-      showAlert(`${user.username}'s profile edited successfully!`);
-      setIsEditingProfile(false);
+      setIsEditing(false);
     } catch (err) {
-      showAlert("An error occurred: " + err.message);
+      console.error(err);
     }
   };
 
-  const handleMeetingChange = (e) => {
+  // Handle meeting edit input changes
+  const handleMeetingEditChange = (index, e) => {
     const { name, value } = e.target;
-    setMeetingDetails((prev) => ({ ...prev, [name]: value }));
+    setMeetings((prev) => {
+      const updatedMeetings = [...prev];
+      updatedMeetings[index] = { ...updatedMeetings[index], [name]: value };
+      return updatedMeetings;
+    });
   };
 
-  const handleMeetingSave = async () => {
-    try {
-      const url = "http://localhost:8080/meeting/createMeeting";
+  // Toggle meeting edit mode
+  const toggleMeetingEdit = (index) => {
+    setEditingMeetingIndex(editingMeetingIndex === index ? null : index);
+    handleSelectMeeting(index);
+  };
 
-      const res = await fetch(url, {
+  // Select a meeting
+  const handleSelectMeeting = (index) => {
+    setSelectedMeetingIndex(selectedMeetingIndex === index ? null : index);
+  };
+
+  //  input changes for new meeting
+  const handleNewMeetingChange = (e) => {
+    const { name, value } = e.target;
+    setNewMeeting((prev) => ({ ...prev, [name]: value }));
+  };
+
+  //  saving the new meeting
+  const handleCreateMeeting = async () => {
+    console.log("Saving meeting:", newMeeting);
+    try {
+      const res = await fetch("http://localhost:8080/meeting/createMeeting", {
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(meetingDetails),
+        body: JSON.stringify(newMeeting),
       });
 
-      if (!res.ok) throw new Error("Failed to save meeting");
-
-      const data = await res.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (!res.ok) {
+        throw new Error("Failed to create meeting");
       }
 
-      setMeetings((prev) => [...prev, meetingDetails]);
-
-      showAlert("Meeting created successfully!");
+      // fetch meetings to get the updated list
+      await fetchMeetings();
+      setIsAddingMeeting(false);
+      setNewMeeting({ title: "", date: "", ownerUsername: data.username });
     } catch (err) {
-      showAlert("An error occurred: " + err.message);
-    } finally {
-      setMeetingFormVisible(false);
-      setCurrentMeeting(null);
-      setMeetingDetails({ title: "", date: "" });
+      console.error("Error saving meeting:", err);
     }
   };
 
-  const MeetingForm = ({ onCancel }) => {
-    useEffect(() => {
-      if (currentMeeting) {
-        setMeetingDetails({
-          title: currentMeeting.title,
-          date: currentMeeting.date,
-        });
-      } else {
-        setMeetingDetails({ title: "", date: "" });
-      }
-    }, [currentMeeting]);
-
-    return (
-      <div className="meeting-form">
-        <h2>{currentMeeting ? "Edit Meeting" : "Create Meeting"}</h2>
-        <input
-          type="text"
-          name="title"
-          placeholder="Meeting Title"
-          value={meetingDetails.title}
-          onChange={handleMeetingChange}
-          required
-        />
-        <input
-          type="date"
-          name="date"
-          value={meetingDetails.date}
-          onChange={handleMeetingChange}
-          required
-        />
-        <div className="meeting-form-buttons">
-          <button onClick={handleMeetingSave}>Save</button>
-          <button onClick={onCancel}>Cancel</button>
-        </div>
-      </div>
-    );
-  };
-
-  if (loading) return <div className="profile-container">wait Loading...</div>;
-  if (!user)
+  if (loading) {
+    return <div className="profile-container">Loading...</div>;
+  }
+  if (!user) {
     return <div className="profile-container">No user data available</div>;
+  }
 
   return (
     <div className="profile-page-grid">
@@ -191,21 +180,19 @@ export default function Profile() {
       <div className="profile-info">
         <h1 className="profile-username">{user.username}</h1>
         <h2 className="profile-name">
-          {isEditingProfile ? (
+          {isEditing ? (
             <>
               <input
                 type="text"
                 name="firstName"
                 value={editedUser.firstName || ""}
                 onChange={handleEditChange}
-                placeholder="First Name"
               />
               <input
                 type="text"
                 name="lastName"
                 value={editedUser.lastName || ""}
                 onChange={handleEditChange}
-                placeholder="Last Name"
               />
             </>
           ) : user.firstName && user.lastName ? (
@@ -215,13 +202,12 @@ export default function Profile() {
           )}
         </h2>
         <h3 className="profile-email">
-          {isEditingProfile ? (
+          {isEditing ? (
             <input
               type="email"
               name="email"
               value={editedUser.email || ""}
               onChange={handleEditChange}
-              placeholder="Email"
             />
           ) : (
             user.email
@@ -231,55 +217,105 @@ export default function Profile() {
       <div className="profile-buttons">
         <button
           className="edit-profile-icon"
-          onClick={() => setIsEditingProfile((prev) => !prev)}
+          onClick={() => setIsEditing((prev) => !prev)}
         >
-          {isEditingProfile ? "CANCEL" : "EDIT"}
+          {isEditing ? "CANCEL" : "EDIT"}
         </button>
-        {isEditingProfile && (
-          <button className="save-profile-icon" onClick={handleSaveProfile}>
+        {isEditing && (
+          <button className="save-profile-icon" onClick={handleSaveUser}>
             SAVE
           </button>
         )}
       </div>
-
       <div className="meetings">
         <div className="meeting-heading">
           <h1>Meetings</h1>
-          <button
-            onClick={() => {
-              setMeetingFormVisible(true);
-              setCurrentMeeting(null);
-            }}
-          >
-            Add Meeting
-          </button>
+          <button onClick={() => setIsAddingMeeting(true)}>Add Meeting</button>
         </div>
-
-        {meetingFormVisible && (
-          <MeetingForm onCancel={() => setMeetingFormVisible(false)} />
-        )}
-
         <ul>
-          {meetings.map((meeting) => (
-            <li key={meeting.id}>
-              <div>
-                <div className="meeting-title">{meeting.title}</div>
-                <div className="meeting-date">{meeting.date}</div>
-                <button className="meeting-join-icon">Join</button>
-                <button
-                  className="meeting-edit-icon"
-                  onClick={() => {
-                    setMeetingFormVisible(true);
-                    setCurrentMeeting(meeting);
-                  }}
-                >
-                  <img src={editIcon} alt="edit" />
-                </button>
-                <button className="meeting-invite">Invite</button>
-              </div>
-            </li>
-          ))}
+          {meetings.length > 0 ? (
+            meetings.map((meeting, index) => (
+              <li
+                key={index}
+                className={`meeting-item ${
+                  selectedMeetingIndex === index ? "selected" : ""
+                }`}
+              >
+                <div onClick={() => handleSelectMeeting(index)}>
+                  {editingMeetingIndex === index ? (
+                    <>
+                      <input
+                        type="text"
+                        name="title"
+                        value={meeting.title}
+                        onChange={(e) => handleMeetingEditChange(index, e)}
+                      />
+                      <input
+                        type="date"
+                        name="date"
+                        value={meeting.date}
+                        onChange={(e) => handleMeetingEditChange(index, e)}
+                      />
+                      <button onClick={() => setEditingMeetingIndex(null)}>
+                        SAVE
+                      </button>
+                      <button onClick={() => setEditingMeetingIndex(null)}>
+                        CANCEL
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="meeting-title">{meeting.title}</div>
+                      <div className="meeting-date">{meeting.date}</div>
+                      <button className="meeting-join-icon">Join</button>
+                      <button
+                        className="meeting-edit-icon"
+                        onClick={() => toggleMeetingEdit(index)}
+                      >
+                        <img src={editIcon} alt="edit" />
+                      </button>
+                      <button className="meeting-invite">Invite</button>
+                    </>
+                  )}
+                </div>
+              </li>
+            ))
+          ) : (
+            <li>No meetings available</li>
+          )}
         </ul>
+
+        {/* Add Meeting Form */}
+        {isAddingMeeting && (
+          <>
+            <div
+              className="overlay"
+              onClick={() => setIsAddingMeeting(false)}
+            ></div>
+            <div className="add-meeting-form">
+              <h2>Add New Meeting</h2>
+              <input
+                type="text"
+                name="title"
+                placeholder="Meeting Title"
+                value={newMeeting.title}
+                onChange={handleNewMeetingChange}
+              />
+              <input
+                type="date"
+                name="date"
+                value={newMeeting.date}
+                onChange={handleNewMeetingChange}
+              />
+              <div className="meeting-form-buttons">
+                <button onClick={handleCreateMeeting}>SAVE</button>
+                <button onClick={() => setIsAddingMeeting(false)}>
+                  CANCEL
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
