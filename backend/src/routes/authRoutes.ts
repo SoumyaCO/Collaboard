@@ -1,15 +1,17 @@
 require("dotenv").config();
 
 import express, { Request, Response } from "express";
-import UserModel, { User } from "../Models/User";
-import { createUser } from "../Controllers/userController";
-import Authenticate from "../Middleware/Authenticate";
-
-import { registerValidation, loginValidation } from "../Controllers/validation";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer, { Transporter } from "nodemailer";
+
+import UserModel, { User } from "../Models/User";
+import { createUser } from "../Controllers/userController";
+import Authenticate from "../Middleware/Authenticate";
+import { registerValidation, loginValidation } from "../Controllers/validation";
+import { upload } from "../Middleware/multer.middleware";
+import { uploadOnCloudinary } from "../Middleware/cloudinary.service";
 
 const router = express.Router();
 
@@ -23,7 +25,28 @@ declare global {
 
 const secret = process.env.JWT_PASS;
 
-router.post("/register", async (req: Request, res: Response) => {
+/* -- Note for frontend --
+  Make sure the form has 'enctype' attribute set to 'multipart/form-data'  
+  Make the 'name' attribute of the profile picture upload field set to 'avatar'
+*/
+
+router.post("/register", upload.fields([{ name: 'avatar', maxCount: 1 }]), async (req: Request, res: Response) => {
+   // Optional image upload logic
+   let imageUrl: string | undefined;
+   if (req.files && (req.files as { photo?: Express.Multer.File[] }).photo) {
+     try {
+      const localFilePath = (req.files as { photo: Express.Multer.File[] }).photo[0].path;
+       console.log("file path from server: ", localFilePath);
+       imageUrl = await uploadOnCloudinary(localFilePath);
+       console.log('File uploaded successfully!');
+     } catch (err) {
+       return res.status(500).json({
+         msg: 'File upload failed.',
+         error: err
+       });
+     }
+   }
+  
   // validate data before creating user
   const { error, value } = registerValidation(req.body);
   if (error)
