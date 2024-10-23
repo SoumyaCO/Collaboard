@@ -124,7 +124,7 @@ export default function Profile() {
     });
   };
 
-  // Toggle meeting edit mode
+  // Toggle meeting
   const toggleMeetingEdit = (index) => {
     setEditingMeetingIndex(editingMeetingIndex === index ? null : index);
     handleSelectMeeting(index);
@@ -157,7 +157,7 @@ export default function Profile() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ ...newMeeting, meetingID }), // Spread newMeeting and add meetingID
+        body: JSON.stringify({ ...newMeeting, meetingID }),
       });
 
       if (!res.ok) {

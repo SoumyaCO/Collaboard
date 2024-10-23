@@ -40,9 +40,9 @@ export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
     ) as DecodedToken;
 
     let id = verified._id;
-    let user = (await UserModel.find({ _id: id })) as unknown as User;
+    let user = (await UserModel.find({ _id: id })) as unknown as [User];
     let meetings = await MeetingModel.find({
-      ownerUsername: user.username as unknown as User,
+      ownerUsername: user[0].username as unknown as [User],
     });
     console.log("fun getAllMeeting", meetings);
 
