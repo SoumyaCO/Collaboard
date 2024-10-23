@@ -89,7 +89,6 @@ io.use((socket, next) => socketAuthMiddleware(socket, next));
 
 // ------------------------------------------------------------ socket logics starts here
 io.sockets.on("connection", (socket: Socket) => {
-	console.log("Hello sir, it's socket connection");
 	console.log(`Connected user: ${socket.handshake.auth.username}`);
 
 	socket.on("create-room", async (data, callback) => {
@@ -101,12 +100,6 @@ io.sockets.on("connection", (socket: Socket) => {
 		}
 	});
 	socket.on("join-room", async (data) => joinRoomHandler(socket, data));
-});
-
-io.sockets.on("disconnect", (socket) => {
-	console.log(
-		`${socket.auth.username} has disconnected from the socket.io server`,
-	);
 });
 // ------------------------------------------------------------- socket logics ends here
 

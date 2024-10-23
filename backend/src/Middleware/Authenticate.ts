@@ -16,30 +16,30 @@ const Authenticate = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const token = req.cookies.authToken;
+	try {
+		const token = req.cookies.authToken;
 
-    if (!token) {
-      return res.status(401).send("Unauthorized: No token provided");
-    }
+		if (!token) {
+			return res.status(401).send("Unauthorized: No token provided");
+		}
 
-    const verifyToken = jwt.verify(token, secret) as DecodedToken;
+		const verifyToken = jwt.verify(token, secret) as DecodedToken;
 
-    // find the user with the token
-    const rootUser = await UserModel.findOne({
-      _id: verifyToken._id,
-    });
+		// find the user with the token
+		const rootUser = await UserModel.findOne({
+			_id: verifyToken._id,
+		});
 
-    if (!rootUser) {
-      throw new Error("User not found");
-    }
+		if (!rootUser) {
+			throw new Error("User not found");
+		}
 
-    // user info to request object
-    req.user = rootUser;
-    next();
-  } catch (err) {
-    res.status(401).send("Unauthorized: Token verification failed");
-  }
+		// user info to request object
+		req.user = rootUser;
+		next();
+	} catch (err) {
+		res.status(401).send("Unauthorized: Token verification failed");
+	}
 };
 
 export default Authenticate;

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../Login_Register.css";
 import axios from "axios";
 import { UserContext } from "../App.jsx";
+import { showAlert } from "../utils/alert.js";
 
 const Login = () => {
   const { dispatch } = useContext(UserContext);
@@ -26,15 +27,17 @@ const Login = () => {
       .then((response) => {
         if (response.status === 200) {
           dispatch({ type: "USER", payload: true });
-          alert("Login successful!");
-          navigate("/");
-          window.location.reload();
+          showAlert("Login successful!");
+          setTimeout(() => {
+            navigate("/");
+            window.location.reload();
+          }, 2000);
         } else {
-          alert("Login failed: " + response.data.message);
+          showAlert("Login failed: " + response.data.message);
         }
       })
       .catch((error) => {
-        alert("An error occurred: " + error.message);
+        showAlert("An error occurred: " + error.message);
       });
   };
 

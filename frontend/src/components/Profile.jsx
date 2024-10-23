@@ -38,6 +38,8 @@ export default function Profile() {
       const data = await res.json();
       setUser(data);
       localStorage.setItem("username", data.username);
+
+      setOriginalUser(data);
       setEditedUser(data);
     } catch (err) {
       console.error(err);
@@ -108,9 +110,10 @@ export default function Profile() {
       const data = await res.json();
       setUser(data.data);
       setEditedUser(data.data);
+      showAlert(user.username + "'s profile edited successfully!");
       setIsEditing(false);
     } catch (err) {
-      console.error(err);
+      showAlert("An error occurred: " + err.message);
     }
   };
 

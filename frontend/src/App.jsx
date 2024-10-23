@@ -1,5 +1,10 @@
 import React, { useReducer, createContext } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Home from "./components/HomePage";
@@ -28,6 +33,19 @@ const Routing = () => {
   );
 };
 
+const AppContent = () => {
+  const location = useLocation(); // Get the current location
+
+  // check if the current path is not "/Canvas"
+  const notshowNavbar = location.pathname !== "/Canvas";
+
+  return (
+    <>
+      {notshowNavbar && <Navbar />} {/* Conditiona for  render Navbar */}
+      <Routing />
+    </>
+  );
+};
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState); // used dispatch to send actions to the reducer.
   return (
@@ -36,8 +54,7 @@ function App() {
         {/*Provider component makes the state and 
         dispatch available to any nested components that need them. 
         for managing global state  */}
-        <Navbar />
-        <Routing />
+        <AppContent />
       </UserContext.Provider>
     </Router>
   );

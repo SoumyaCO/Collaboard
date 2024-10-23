@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSocket } from "../utils/Socket";
 import { makeid } from "../utils/MakeId.js";
-
+import { showAlert } from "../utils/alert.js";
 const generateRandomHash = () => makeid(30);
 export const socket = createSocket();
 
@@ -26,10 +26,10 @@ const SmallScreenComponent = () => {
     navigator.clipboard
       .writeText(hash)
       .then(() => {
-        alert("Hash copied to clipboard!");
+        showAlert("Hash copied to clipboard!");
       })
       .catch((err) => {
-        console.error("Failed to copy hash: ", err);
+        showAlert("Failed to copy hash: " + err);
       });
   };
 

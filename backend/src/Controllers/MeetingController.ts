@@ -6,6 +6,21 @@ interface DecodedToken {
   _id: string;
 }
 
+interface meetingInfo {
+	title: string;
+	meeting_id: string;
+	expiry_date: Date;
+	owner_username: string;
+}
+
+async function jwtEncr(info: meetingInfo): Promise<string> {
+	const encr_url = jwt.sign(
+		info,
+		process.env.MEETING_ENCR_PASS as string,
+	) as string;
+	return encr_url;
+}
+
 /**
  * Creates a new Meeting in DB
  * @param meeting - meeting object

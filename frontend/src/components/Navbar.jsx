@@ -40,6 +40,8 @@ const Navbar = () => {
       setUser(data);
 
       localStorage.setItem("username", data.username);
+      localStorage.setItem("fullname", `${data.firstName} ${data.lastName}`);
+      localStorage.setItem("dp_url", data.avatar);
     } catch (err) {
       console.error(err);
     }
