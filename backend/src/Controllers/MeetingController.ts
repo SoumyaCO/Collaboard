@@ -1,8 +1,9 @@
 import { MeetingModel, Meeting } from "../Models/Meeting";
 import jwt from "jsonwebtoken";
+import UserModel, { User } from "../Models/User";
 
 interface DecodedToken {
-	_id: string;
+  _id: string;
 }
 
 interface meetingInfo {
@@ -26,18 +27,18 @@ async function jwtEncr(info: meetingInfo): Promise<string> {
  * @returns Promise<boolean> - is successful or not
  */
 export async function createMeeting(
-	meeting: Partial<Meeting>,
+  meeting: Partial<Meeting>
 ): Promise<boolean> {
-	try {
-		const meet = new MeetingModel(meeting);
-		await meet.save();
-		console.log("meeting [created]".green.italic);
-	} catch (err) {
-		console.log(`Error: ${err}`.red.bold);
-		return false;
-	}
+  try {
+    const meet = new MeetingModel(meeting);
+    await meet.save();
+    console.log("meeting [created]".green.italic);
+  } catch (err) {
+    console.log(`Error: ${err}`.red.bold);
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
 /**
@@ -46,21 +47,25 @@ export async function createMeeting(
  * @returns Promise<Meeting[]> - list of meetings under that username
  */
 export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
-	try {
-		// verification for the user, also getting the userid to query for meeting under his/her name
-		let verified: DecodedToken = jwt.verify(
-			authToken,
-			process.env.JWT_PASS as string,
-		) as DecodedToken;
+  try {
+    // verification for the user, also getting the userid to query for meeting under his/her name
+    let verified: DecodedToken = jwt.verify(
+      authToken,
+      process.env.JWT_PASS as string
+    ) as DecodedToken;
 
-		let id = verified._id;
+    let id = verified._id;
+    let user = (await UserModel.find({ _id: id })) as unknown as [User];
+    let meetings = await MeetingModel.find({
+      ownerUsername: user[0].username as unknown as [User],
+    });
+    console.log("fun getAllMeeting", meetings);
 
-		let meetings = await MeetingModel.find({ _id: id });
-		return meetings;
-	} catch (error) {
-		console.log("Error getting meetings", error);
-		return [];
-	}
+    return meetings;
+  } catch (error) {
+    console.log("Error getting meetings", error);
+    return [];
+  }
 }
 
 /**
@@ -69,21 +74,21 @@ export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
  * @returns Promise<boolean> - is successful or not
  */
 export async function deleteMeeting(meetingID: string): Promise<boolean> {
-	try {
-		let res = await MeetingModel.deleteOne({ meetingID });
-		// I know that's rare (as we'll handle the deletion of meetings from a strict interface,
-		// But just making sure, to have errors in the places of errors for future debugging helps)
-		if (res.deletedCount != 0) {
-			console.log("meeting [deleted]".red.italic);
-			return true;
-		} else {
-			console.log("Error deleting the meeting (maybe meeting doesent exist)");
-			return false;
-		}
-	} catch (error) {
-		console.log("Error deleting Meeting: ", error);
-		return false;
-	}
+  try {
+    let res = await MeetingModel.deleteOne({ meetingID });
+    // I know that's rare (as we'll handle the deletion of meetings from a strict interface,
+    // But just making sure, to have errors in the places of errors for future debugging helps)
+    if (res.deletedCount != 0) {
+      console.log("meeting [deleted]".red.italic);
+      return true;
+    } else {
+      console.log("Error deleting the meeting (maybe meeting doesent exist)");
+      return false;
+    }
+  } catch (error) {
+    console.log("Error deleting Meeting: ", error);
+    return false;
+  }
 }
 
 /**
@@ -93,20 +98,20 @@ export async function deleteMeeting(meetingID: string): Promise<boolean> {
  * @returns Promise<boolean> - is successful or not
  */
 export async function updateMeeting(
-	meetingID: string,
-	updateData: Partial<Meeting>,
+  meetingID: string,
+  updateData: Partial<Meeting>
 ): Promise<boolean> {
-	try {
-		let res = await MeetingModel.findOneAndUpdate({ meetingID }, updateData);
-		if (res) {
-			console.log("meeting [updated]".yellow.italic);
-			return true;
-		} else {
-			console.log("Error updating meeting (maybe meeting doesent exist)");
-			return false;
-		}
-	} catch (error) {
-		console.log("Error updating meeting: ", error);
-	}
-	return true;
+  try {
+    let res = await MeetingModel.findOneAndUpdate({ meetingID }, updateData);
+    if (res) {
+      console.log("meeting [updated]".yellow.italic);
+      return true;
+    } else {
+      console.log("Error updating meeting (maybe meeting doesent exist)");
+      return false;
+    }
+  } catch (error) {
+    console.log("Error updating meeting: ", error);
+  }
+  return true;
 }

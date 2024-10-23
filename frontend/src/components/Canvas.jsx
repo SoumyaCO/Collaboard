@@ -433,51 +433,52 @@ const Canvas = () => {
         }
         const rect = drawingStack[id];
         const handleSize = 6;
+        const gap = 7;
 
         if (
-          offsetX >= rect.x + rect.width - handleSize &&
+          offsetX >= rect.x + rect.width - handleSize - gap &&
           offsetX <= rect.x + rect.width &&
-          offsetY >= rect.y + rect.height - handleSize &&
+          offsetY >= rect.y + rect.height - handleSize - gap &&
           offsetY <= rect.y + rect.height
         ) {
           setResizeHandle("bottom-right");
         } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY <= rect.y + handleSize
+          offsetX <= rect.x + handleSize + gap &&
+          offsetY <= rect.y + handleSize + gap
         ) {
           setResizeHandle("top-left");
         } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
+          offsetX >= rect.x + rect.width - handleSize - gap &&
+          offsetY <= rect.y + handleSize + gap
         ) {
           setResizeHandle("top-right");
         } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
+          offsetX <= rect.x + handleSize + gap &&
+          offsetY >= rect.y + rect.height - handleSize - gap
         ) {
           setResizeHandle("bottom-left");
         } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY <= rect.y + handleSize
+          offsetX >= rect.x + handleSize + gap &&
+          offsetX <= rect.x + rect.width - handleSize - gap &&
+          offsetY <= rect.y + handleSize + gap
         ) {
           setResizeHandle("top");
         } else if (
-          offsetX >= rect.x + handleSize &&
-          offsetX <= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + rect.height - handleSize
+          offsetX >= rect.x + handleSize + gap &&
+          offsetX <= rect.x + rect.width - handleSize - gap &&
+          offsetY >= rect.y + rect.height - handleSize - gap
         ) {
           setResizeHandle("bottom");
         } else if (
-          offsetX <= rect.x + handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
+          offsetX <= rect.x + handleSize + gap &&
+          offsetY >= rect.y + handleSize + gap &&
+          offsetY <= rect.y + rect.height - handleSize - gap
         ) {
           setResizeHandle("left");
         } else if (
-          offsetX >= rect.x + rect.width - handleSize &&
-          offsetY >= rect.y + handleSize &&
-          offsetY <= rect.y + rect.height - handleSize
+          offsetX >= rect.x + rect.width - handleSize - gap &&
+          offsetY >= rect.y + handleSize + gap &&
+          offsetY <= rect.y + rect.height - handleSize - gap
         ) {
           setResizeHandle("right");
         } else {

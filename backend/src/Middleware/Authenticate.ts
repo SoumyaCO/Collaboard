@@ -8,13 +8,13 @@ const secret = process.env.JWT_PASS ?? "mfkdjpoefjefoefjecdcgcdgtisscyvhctyif";
 
 // }
 interface DecodedToken {
-	_id: string;
+  _id: string;
 }
 
 const Authenticate = async (
-	req: Request,
-	res: Response,
-	next: NextFunction,
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
 	try {
 		const token = req.cookies.authToken;

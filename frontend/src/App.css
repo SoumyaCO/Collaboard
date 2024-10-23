@@ -568,6 +568,74 @@ canvas {
   grid-column: 5;
   margin-right: 0px;
 }
+.meeting-item.selected {
+  border: 2px solid blue;
+  background-color: rgba(173, 216, 230, 0.5);
+}
+
+.meeting-form .save-button:hover {
+  background-color: #218838;
+}
+
+.meeting-form .cancel-button:hover {
+  background-color: #c82333;
+}
+.add-meeting-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  border-radius: 8px;
+  width: 300px;
+}
+
+/* Overlay background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.add-meeting-form input[type="text"],
+.add-meeting-form input[type="date"] {
+  width: 90%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.meeting-form-buttons button {
+  background-color: #ff6500;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.meeting-form-buttons button:hover {
+  background-color: #1e3e62;
+}
+
+.meeting-form-buttons button:last-child {
+  background-color: #dc3545;
+}
+
+.meeting-form-buttons button:last-child:hover {
+  background-color: #c82333;
+}
 
 //popup//
 .popup {
