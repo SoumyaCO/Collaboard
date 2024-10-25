@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 
 import { httpServer } from "../../src/index";
-import { randomUser, randomUserName } from "../test_utils/random";
+import { randomUserName } from "../test_utils/random";
 
 /* Connecting to the databas before each test. */
 beforeEach(async () => {

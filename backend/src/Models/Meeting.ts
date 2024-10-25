@@ -5,6 +5,7 @@ export interface Meeting {
 	title: string;
 	date: Date;
 	meetingID: string;
+	link: string;
 }
 
 const meetingSchema = new mongoose.Schema<Meeting>({
@@ -12,6 +13,7 @@ const meetingSchema = new mongoose.Schema<Meeting>({
 	title: { type: String },
 	date: { type: Date },
 	meetingID: { type: String, unique: true },
+	link: { type: String, unique: true },
 });
 
 export const MeetingModel = mongoose.model<Meeting>("Meeting", meetingSchema);

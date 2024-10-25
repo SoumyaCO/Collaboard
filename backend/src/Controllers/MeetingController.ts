@@ -1,19 +1,29 @@
 import { MeetingModel, Meeting } from "../Models/Meeting";
 import jwt from "jsonwebtoken";
+import { redisClient } from "../db/redis";
 import UserModel, { User } from "../Models/User";
 
 interface DecodedToken {
   _id: string;
 }
 
-interface meetingInfo {
-	title: string;
-	meeting_id: string;
-	expiry_date: Date;
-	owner_username: string;
+// TODO: for now, we don't need this
+//interface meetingInfo {
+//	title: string;
+//	meeting_id: string;
+//	expiry_date: Date;
+//	owner_username: string;
+//}
+
+/**
+ * Link response interface
+ */
+export interface LinkResponse {
+	valid: boolean;
+	admin: boolean;
 }
 
-async function jwtEncr(info: meetingInfo): Promise<string> {
+async function jwtEncr(info: Partial<Meeting>): Promise<string> {
 	const encr_url = jwt.sign(
 		info,
 		process.env.MEETING_ENCR_PASS as string,
@@ -29,14 +39,21 @@ async function jwtEncr(info: meetingInfo): Promise<string> {
 export async function createMeeting(
   meeting: Partial<Meeting>
 ): Promise<boolean> {
-  try {
-    const meet = new MeetingModel(meeting);
-    await meet.save();
-    console.log("meeting [created]".green.italic);
-  } catch (err) {
-    console.log(`Error: ${err}`.red.bold);
-    return false;
-  }
+	try {
+		const encr_url = await jwtEncr(meeting);
+		const meeting_info: Partial<Meeting> = {
+			ownerUsername: meeting.ownerUsername,
+			title: meeting.title,
+			meetingID: meeting.meetingID,
+			link: encr_url,
+		};
+		const meet = new MeetingModel(meeting_info);
+		await meet.save();
+		console.log("meeting [created]".green.italic);
+	} catch (err) {
+		console.log(`Error: ${err}`.red.bold);
+		return false;
+	}
 
   return true;
 }
@@ -54,18 +71,37 @@ export async function getAllMeeting(authToken: string): Promise<Meeting[]> {
       process.env.JWT_PASS as string
     ) as DecodedToken;
 
-    let id = verified._id;
-    let user = (await UserModel.find({ _id: id })) as unknown as [User];
-    let meetings = await MeetingModel.find({
-      ownerUsername: user[0].username as unknown as [User],
-    });
-    console.log("fun getAllMeeting", meetings);
+		let id = verified._id;
+		let user = (await UserModel.find({
+			_id: id,
+		})) as unknown as [User];
 
-    return meetings;
-  } catch (error) {
-    console.log("Error getting meetings", error);
-    return [];
-  }
+		let meetings = await MeetingModel.find({
+			ownerUsername: user[0].username as unknown as [User],
+		});
+		return meetings;
+	} catch (error) {
+		console.log("Error getting meetings", error);
+		return [];
+	}
+}
+
+/**
+ * Get just one meeting detail
+ * @param {string} meetingID
+ * @returns {Promise<[Meeting, boolean]>} meeting, isSuccessful
+ */
+export async function getOneMeeting(
+	meetingID: string,
+): Promise<Meeting | undefined> {
+	try {
+		const meeting = (await MeetingModel.findOne({
+			meetingID: meetingID,
+		})) as Meeting;
+		return meeting;
+	} catch (error) {
+		return undefined;
+	}
 }
 
 /**
@@ -114,4 +150,55 @@ export async function updateMeeting(
     console.log("Error updating meeting: ", error);
   }
   return true;
+}
+
+/**
+ * joins via link
+ * 1. validates the jwt,
+ * 2. sends a response {LinkResponse}
+ * @param {string} meet_token - token for joining the room
+ * @returns {LinkResponse} - in response to the req. of joining
+ */
+export async function joinViaLink(
+	meet_token: string,
+	authToken: string,
+): Promise<LinkResponse> {
+	let meeting = jwt.verify(
+		meet_token,
+		process.env.MEETING_ENCR_PASS as string,
+	) as unknown as Meeting;
+
+	const meeting_key = `meeting:${meeting.meetingID}`;
+	let verified: DecodedToken = jwt.verify(
+		authToken,
+		process.env.JWT_PASS as string,
+	) as DecodedToken;
+
+	let id = verified._id;
+
+	// TODO: Bind the username also with the authToken, so that we can avoid
+	// the mongodb query (it'll be faster)
+	let user = (await UserModel.find({
+		_id: id,
+	})) as unknown as [User];
+
+	try {
+		const reply = await redisClient.exists(meeting_key);
+		if (reply == 1) {
+			if (user[0].username == meeting.ownerUsername) {
+				console.log("[link] {valid: true, admin: true}");
+				return { valid: true, admin: true };
+			} else {
+				return { valid: true, admin: false };
+			}
+		} else {
+			return { valid: false, admin: false };
+		}
+	} catch (error) {
+		console.log(
+			`error fetching existance of roomID ${meeting.meetingID} from redis`,
+			error,
+		);
+		return { valid: false, admin: false };
+	}
 }
