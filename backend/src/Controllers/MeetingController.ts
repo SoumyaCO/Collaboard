@@ -186,6 +186,13 @@ export async function joinViaLink(
         _id: id,
     })) as unknown as [User]
 
+    let reply = 0
+    try {
+        reply = await redisClient.exists(meeting_key)
+    } catch (e) {
+        reply = 0
+    }
+
     try {
         if (user[0].username == meeting.ownerUsername) {
             return {
@@ -195,7 +202,6 @@ export async function joinViaLink(
                 adminIn: false,
             }
         } else {
-            const reply = await redisClient.exists(meeting_key)
             if (reply == 1) {
                 return {
                     valid: true,
