@@ -193,8 +193,6 @@ export async function joinViaLink(
 	//};
 
 	try {
-		const reply = await redisClient.exists(meeting_key);
-
 		if (user[0].username == meeting.ownerUsername) {
 			return {
 				valid: true,
@@ -203,6 +201,7 @@ export async function joinViaLink(
 				adminIn: false,
 			};
 		} else {
+			const reply = await redisClient.exists(meeting_key);
 			if (reply == 1) {
 				return {
 					valid: true,
@@ -222,7 +221,6 @@ export async function joinViaLink(
 	} catch (error) {
 		console.log(
 			`error fetching existance of roomID ${meeting.meetingID} from redis`,
-			error,
 		);
 		return { valid: false, admin: false, id: null, adminIn: false };
 	}
