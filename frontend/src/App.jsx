@@ -1,10 +1,5 @@
 import React, { useReducer, createContext } from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Home from "./components/HomePage";
@@ -13,6 +8,8 @@ import HashPage from "./components/Create_hash";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
+import Params_query from "./components/Params_query";
+
 import { initialState, reducer } from "../src/Reducer/useReducer";
 
 // contextApi
@@ -27,25 +24,13 @@ const Routing = () => {
       <Route path="/Login" element={<Login />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/Profile" element={<Profile />} />
+      <Route path="/params_query/:Jwtbyuser" element={<Params_query />} />
 
       {/* <Route path="*" element={<ErrorPage />} /> */}
     </Routes>
   );
 };
 
-const AppContent = () => {
-  const location = useLocation(); // Get the current location
-
-  // check if the current path is not "/Canvas"
-  const notshowNavbar = location.pathname !== "/Canvas";
-
-  return (
-    <>
-      {notshowNavbar && <Navbar />} {/* Conditiona for  render Navbar */}
-      <Routing />
-    </>
-  );
-};
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState); // used dispatch to send actions to the reducer.
   return (
@@ -54,7 +39,8 @@ function App() {
         {/*Provider component makes the state and 
         dispatch available to any nested components that need them. 
         for managing global state  */}
-        <AppContent />
+        <Navbar />
+        <Routing />
       </UserContext.Provider>
     </Router>
   );

@@ -39,7 +39,7 @@ export default function Profile() {
       setUser(data);
       localStorage.setItem("username", data.username);
 
-      setOriginalUser(data);
+      // setOriginalUser(data);
       setEditedUser(data);
     } catch (err) {
       console.error(err);
