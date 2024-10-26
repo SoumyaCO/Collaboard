@@ -22,6 +22,7 @@ export interface LinkResponse {
 	valid: boolean;
 	admin: boolean;
 	id: string | null;
+	adminIn: boolean;
 }
 
 async function jwtEncr(info: Partial<Meeting>): Promise<string> {
@@ -183,23 +184,46 @@ export async function joinViaLink(
 		_id: id,
 	})) as unknown as [User];
 
+	// TODO: implement a shorter form of the message
+	//let returnMsg: LinkResponse = {
+	//	valid: false,
+	//	admin: true,
+	//	id: meeting.meetingID,
+	//	adminIn: false,
+	//};
+
 	try {
 		const reply = await redisClient.exists(meeting_key);
-		if (reply == 1) {
-			if (user[0].username == meeting.ownerUsername) {
-				console.log("[link] {valid: true, admin: true}");
-				return { valid: true, admin: true, id: meeting.meetingID };
-			} else {
-				return { valid: true, admin: false, id: meeting.meetingID };
-			}
+
+		if (user[0].username == meeting.ownerUsername) {
+			return {
+				valid: true,
+				admin: true,
+				id: meeting.meetingID,
+				adminIn: false,
+			};
 		} else {
-			return { valid: false, admin: false, id: null };
+			if (reply == 1) {
+				return {
+					valid: true,
+					admin: false,
+					id: meeting.meetingID,
+					adminIn: true,
+				};
+			} else {
+				return {
+					valid: true,
+					admin: false,
+					id: meeting.meetingID,
+					adminIn: false,
+				};
+			}
 		}
 	} catch (error) {
 		console.log(
 			`error fetching existance of roomID ${meeting.meetingID} from redis`,
 			error,
 		);
-		return { valid: false, admin: false, id: null };
+		return { valid: false, admin: false, id: null, adminIn: false };
 	}
 }

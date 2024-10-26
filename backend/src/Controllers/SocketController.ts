@@ -1,7 +1,6 @@
 import { Socket } from "socket.io";
 import { User } from "../Models/User";
 import { io } from "../index";
-socketconr;
 import jwt from "jsonwebtoken";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { redisClient, connectRedis, disconnectRedis } from "../db/redis";
