@@ -26,17 +26,6 @@ export interface Message {
 
 export async function createRoom(client: Socket, data: any) {
 	client.join(data.id);
-	// console.log(
-	// 	`[ADMIN CREATED} ${client.handshake.auth.username} created the room: ${data.id}`,
-	// );
-
-	// await RoomModel.create({
-	// 	roomId: data.id,
-	// 	adminId: client.id,
-	// 	members: [client.handshake.auth.username],
-	// });
-
-	// redis -----------------------------
 	await connectRedis(redisClient);
 	const meeting_key = `meeting:${data.id}`;
 	const members_key = `${data.id}:members`;
@@ -63,7 +52,6 @@ export async function createRoom(client: Socket, data: any) {
  */
 
 async function joinRoom(client: Socket, roomID: string) {
-	// redis --------------------------------
 	const meeting_key = `meeting:${roomID}`;
 	const members_key = `${roomID}:members`;
 	const new_member = {
@@ -206,9 +194,9 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 		onDrawingHandler(client, data.id, message);
 	});
 
-	client.on("disconnect", function () {
+	client.on("disconnect", async function () {
 		console.log(`[disconnect] ${client.handshake.auth.username} disconnected`);
-		redisClient.sRem(
+		await redisClient.sRem(
 			`${data.id}:members`,
 			JSON.stringify({
 				username: client.handshake.auth.username,
@@ -216,7 +204,7 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 				full_name: client.handshake.auth.fullname,
 			}),
 		);
-		disconnectRedis(redisClient);
+		await disconnectRedis(redisClient);
 	});
 
 	/* Send the roomID and also the client who sent it */
@@ -226,14 +214,6 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 		client.broadcast.to(message.roomID as string).emit("send-message", message);
 	});
 }
-
-/**
- * Triggers when someone joins via a link
- * 1. Verify the jwt - received from request
- * 2. Check for the room and the admin's presence
- * 3. sends join request to the admin like others
- */
-export async function joinViaLinkHandler() {}
 
 /* Socket Middleware */
 
@@ -262,8 +242,6 @@ export function socketAuthMiddleware(
 ) {
 	try {
 		let token = socket.handshake.auth.token;
-		console.log("token from backend ", socket.handshake.auth.token);
-
 		if (!token) {
 			throw new Error("Missing Token");
 		}

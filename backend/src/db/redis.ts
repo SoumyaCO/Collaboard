@@ -1,4 +1,9 @@
-import { createClient, RedisClientType } from "redis";
+import {
+	ClientClosedError,
+	createClient,
+	DisconnectsClientError,
+	RedisClientType,
+} from "redis";
 
 const isLocalEnv: boolean = process.env.NODE_ENVIRONMENT === "local";
 const port = process.env.REDIS_PORT as unknown;
@@ -29,7 +34,13 @@ export async function connectRedis(client: RedisClientType) {
 	try {
 		await client.connect();
 	} catch (error) {
-		console.error(error);
+		if (error == DisconnectsClientError) {
+			console.log("[Connect] DisconnectsClientError");
+		} else if (error == ClientClosedError) {
+			console.log("[Connect] ClientClosedError");
+		} else {
+			console.log("[Connect] Error Occurred");
+		}
 	}
 }
 
@@ -44,6 +55,12 @@ export async function disconnectRedis(client: RedisClientType) {
 	try {
 		await client.disconnect();
 	} catch (error) {
-		console.error(error);
+		if (error == DisconnectsClientError) {
+			console.log("[Disconnect] DisconnectsClientError");
+		} else if (error == ClientClosedError) {
+			console.log("[Disconnect] ClientClosedError");
+		} else {
+			console.log("[Disconnect] Error Occurred");
+		}
 	}
 }
