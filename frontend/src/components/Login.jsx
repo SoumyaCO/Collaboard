@@ -31,7 +31,7 @@ const Login = () => {
           setTimeout(() => {
             navigate("/");
             window.location.reload();
-          }, 2000);
+          }, 1000);
         } else {
           showAlert("Login failed: " + response.data.message);
         }

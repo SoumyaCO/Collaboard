@@ -12,14 +12,7 @@ function HomePage() {
     const [roomHash, setRoomHash] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-    useEffect(() => {
-        // check's if there is a meet_token present in location state
-        const meetToken = location.state?.meet_token
-        if (meetToken) {
-            setRoomHash(meetToken)
-            handleJoinRoom()
-        }
-    }, [location.state])
+
     const handleCreateRoom = () => {
         navigate("/HashPage")
     }
@@ -27,11 +20,20 @@ function HomePage() {
     const handleInputChange = (e) => {
         setRoomHash(e.target.value)
     }
+    useEffect(() => {
+        const meetToken = location.state?.meet_token
+        if (meetToken) {
+            setRoomHash(meetToken)
+            console.log("room hash", roomHash)
 
+            const dummyEvent = { preventDefault: () => {} }
+            setTimeout(() => {
+                handleJoinRoom(dummyEvent)
+            }, 1000)
+        }
+    }, [location.state])
     const handleJoinRoom = async (e) => {
         e.preventDefault()
-        console.log("handleJoinRoom invoked")
-
         if (!roomHash) {
             setError("Room link is required")
             return
@@ -58,8 +60,7 @@ function HomePage() {
 
         socket.on("permission-from-admin", (message) => {
             console.log("permission-from-admin", message)
-            setLoading(false) // Stop loading when permission is received
-
+            setLoading(false)
             if (message.allow) {
                 navigate("/Canvas", {
                     state: { drawingStack: message.drawingStack },

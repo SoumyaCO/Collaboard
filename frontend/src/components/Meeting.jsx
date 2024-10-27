@@ -26,7 +26,6 @@ const Headerquery = () => {
             }
 
             const data = await result.json()
-            console.log("data", data)
 
             if (data.msg.valid && data.msg.admin && data.msg.id) {
                 socket.connect()
@@ -41,7 +40,6 @@ const Headerquery = () => {
                 data.msg.id &&
                 data.msg.adminIn
             ) {
-                // valid but not admin, navigate to HomePage
                 navigate("/", { state: { meet_token: data.msg.id } })
             } else if (
                 data.msg.valid &&
