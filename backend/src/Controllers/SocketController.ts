@@ -52,6 +52,7 @@ export async function createRoom(client: Socket, data: any) {
  */
 
 async function joinRoom(client: Socket, roomID: string) {
+	client.join(roomID); // joins the client to the room
 	const meeting_key = `meeting:${roomID}`;
 	const members_key = `${roomID}:members`;
 	const new_member = {
@@ -85,14 +86,14 @@ async function joinRoom(client: Socket, roomID: string) {
 async function getAdmin(roomId: string): Promise<string> {
 	try {
 		const meeting_key = `meeting:${roomId}`;
-		const adminSocketID = redisClient.hGet(meeting_key, "ownerSocketID");
+		const adminSocketID = await redisClient.hGet(meeting_key, "ownerSocketID");
 		if (!adminSocketID) {
-			console.log("admin not found");
+			console.log("Admin not found");
 		} else {
 			return adminSocketID as unknown as string;
 		}
 	} catch (error) {
-		console.error("Error fetching admin: ", error);
+		console.log("[Error] Error fetching admin");
 	}
 
 	console.error("can't find the admin, maybe not yet joined");
@@ -151,18 +152,32 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 	});
 
 	socket.on("chat-message", (message: Message) => {
-		console.log("HIT chat message");
-		console.log("Message: ", message);
+		console.log("Message from admin:\n", message);
 		socket.broadcast.to(message.roomID as string).emit("send-message", message);
 	});
 
 	socket.on("disconnect", async function () {
-		const meeting_key = `meeting:${data.id}`;
-		const members_key = `${data.id}:members`;
-		await redisClient.expire(meeting_key, EXPIRE_TIME);
-		await redisClient.expire(members_key, EXPIRE_TIME);
-		console.log(`[disconnect] ${socket.handshake.auth.username} disconnected`);
-		await disconnectRedis(redisClient);
+		// NOTE: Often time, the "disConnetRedis()" function throws an error,
+		// keeping the the two segment inside a try catch statement will prevent
+		// to apply an "expiry" timer to the meeting.
+		// So, these two operations are in a seperate try..catch.. block (intentionally)
+		try {
+			const meeting_key = `meeting:${data.id}`;
+			const members_key = `${data.id}:members`;
+			await redisClient.expire(meeting_key, EXPIRE_TIME);
+			await redisClient.expire(members_key, EXPIRE_TIME);
+		} catch (error) {
+			console.log("[error] while adding expiry to the meeting");
+		}
+
+		try {
+			console.log(
+				`[disconnect] ${socket.handshake.auth.username} disconnected`,
+			);
+			await disconnectRedis(redisClient);
+		} catch (error) {
+			console.log("[error mild] while disconnecting the admin");
+		}
 	});
 }
 
@@ -195,22 +210,27 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 	});
 
 	client.on("disconnect", async function () {
-		console.log(`[disconnect] ${client.handshake.auth.username} disconnected`);
-		await redisClient.sRem(
-			`${data.id}:members`,
-			JSON.stringify({
-				username: client.handshake.auth.username,
-				dp_url: client.handshake.auth.dp_url,
-				full_name: client.handshake.auth.fullname,
-			}),
-		);
-		await disconnectRedis(redisClient);
+		try {
+			console.log(
+				`[disconnect] ${client.handshake.auth.username} disconnected`,
+			);
+			await redisClient.sRem(
+				`${data.id}:members`,
+				JSON.stringify({
+					username: client.handshake.auth.username,
+					dp_url: client.handshake.auth.dp_url,
+					full_name: client.handshake.auth.fullname,
+				}),
+			);
+			await disconnectRedis(redisClient);
+		} catch (error) {
+			console.log("[error mild] while disconnecting redis client");
+		}
 	});
 
 	/* Send the roomID and also the client who sent it */
 	client.on("chat-message", (message: Message) => {
-		console.log("HIT chat message");
-		console.log("Message: ", message);
+		console.log("Message from a client:\n", message);
 		client.broadcast.to(message.roomID as string).emit("send-message", message);
 	});
 }
