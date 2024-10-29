@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { createSocket } from "../utils/Socket"
+import { socketClient } from "../utils/Socket"
 import { makeid } from "../utils/MakeId.js"
 import { showAlert } from "../utils/alert.js"
-const generateRandomHash = () => makeid(30)
-export const socket = createSocket()
+const generateRandomHash = () => makeid(10)
 
 const SmallScreenComponent = () => {
     const [hash, setHash] = useState(generateRandomHash())
@@ -34,10 +33,10 @@ const SmallScreenComponent = () => {
     }
 
     const handleCreateRoom = () => {
-        socket.connect()
+        socketClient.connect()
 
         //create a room with hash
-        socket.emit("create-room", { id: hash }, (response) => {
+        socketClient.emit("create-room", { id: hash }, (response) => {
             if (response.success) {
                 navigate("/Canvas")
             } else {
@@ -45,13 +44,13 @@ const SmallScreenComponent = () => {
             }
         })
 
-        // Handle socket disconnections
-        socket.on("disconnect", () => {
-            console.log("Socket disconnected")
+        // Handle socketClient disconnections
+        socketClient.on("disconnect", () => {
+            console.log("socketClient disconnected")
         })
 
         return () => {
-            socket.disconnect()
+            socketClient.disconnect()
         }
     }
 

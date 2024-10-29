@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { socket } from "./Create_hash"
+import { socketClient } from "../utils/Socket"
 import Lottie from "lottie-react"
 import animationData from "../assets/loader2.json"
 
@@ -28,12 +28,18 @@ const Headerquery = () => {
             const data = await result.json()
 
             if (data.msg.valid && data.msg.admin && data.msg.id) {
-                socket.connect()
-                socket.emit("create-room", { id: data.msg.id }, (response) => {
-                    if (response.success) {
-                        navigate("/Canvas")
+                socketClient.connect()
+                console.log("admin in")
+
+                socketClient.emit(
+                    "create-room",
+                    { id: data.msg.id },
+                    (response) => {
+                        if (response.success) {
+                            navigate("/Canvas")
+                        }
                     }
-                })
+                )
             } else if (
                 data.msg.valid &&
                 !data.msg.admin &&

@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react"
-
+import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import BannerBackground from "../assets/background_r_img.png"
-import { socket } from "./Create_hash"
+import { socketClient } from "../utils/Socket"
 import LoadingSpinner from "./LoadingSpinner"
 
 function HomePage() {
     const location = useLocation()
-
     const navigate = useNavigate()
-    const [roomHash, setRoomHash] = useState("")
+    const roomHashRef = useRef("") // ref to store roomHash
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
 
@@ -18,22 +16,25 @@ function HomePage() {
     }
 
     const handleInputChange = (e) => {
-        setRoomHash(e.target.value)
+        roomHashRef.current = e.target.value // Update the ref value
     }
+
     useEffect(() => {
         const meetToken = location.state?.meet_token
         if (meetToken) {
-            setRoomHash(meetToken)
-            console.log("room hash", roomHash)
+            roomHashRef.current = meetToken // Set the ref value
 
             const dummyEvent = { preventDefault: () => {} }
+
             setTimeout(() => {
                 handleJoinRoom(dummyEvent)
-            }, 1000)
+            }, 200)
         }
     }, [location.state])
     const handleJoinRoom = async (e) => {
         e.preventDefault()
+        const roomHash = roomHashRef.current // access the ref value
+
         if (!roomHash) {
             setError("Room link is required")
             return
@@ -43,9 +44,9 @@ function HomePage() {
         setError("")
 
         try {
-            socket.connect()
+            socketClient.connect()
             sessionStorage.setItem("sessionHash", roomHash)
-            socket.emit("join-room", { id: roomHash })
+            socketClient.emit("join-room", { id: roomHash })
         } catch (err) {
             console.error("Error occurred while joining the room:", err)
             setError("Error occurred while joining the room")
@@ -54,11 +55,11 @@ function HomePage() {
     }
 
     useEffect(() => {
-        socket.on("event", (message) => {
-            socket.emit("event", message)
+        socketClient.on("event", (message) => {
+            socketClient.emit("event", message)
         })
 
-        socket.on("permission-from-admin", (message) => {
+        socketClient.on("permission-from-admin", (message) => {
             console.log("permission-from-admin", message)
             setLoading(false)
             if (message.allow) {
@@ -70,17 +71,17 @@ function HomePage() {
             }
         })
 
-        socket.on("disconnect", () => {
-            console.log("Socket disconnected")
+        socketClient.on("disconnect", () => {
+            console.log("socketClient disconnected")
             setLoading(false)
         })
 
         return () => {
-            socket.off("event")
-            socket.off("permission-from-admin")
-            socket.off("disconnect")
+            socketClient.off("event")
+            socketClient.off("permission-from-admin")
+            socketClient.off("disconnect")
         }
-    }, [socket, navigate])
+    }, [navigate])
 
     return (
         <div className="home_contain">
@@ -93,7 +94,6 @@ function HomePage() {
                         type="text"
                         placeholder="Enter Room Link"
                         className="Room_link"
-                        value={roomHash}
                         onChange={handleInputChange}
                     />
                     <button
