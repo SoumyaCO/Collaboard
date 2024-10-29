@@ -10,6 +10,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer, { Transporter } from "nodemailer";
+import { upload } from "../Middleware/multer.middleware";
+import handleImageUpload from "../utils/uploadImage";
 
 const router = express.Router();
 
@@ -23,7 +25,17 @@ declare global {
 
 const secret = process.env.JWT_PASS;
 
-router.post("/register", async (req: Request, res: Response) => {
+/* -- Note for frontend --
+  Make sure the form has 'enctype' attribute set to 'multipart/form-data'  
+  Make the 'name' attribute of the profile picture upload field set to 'avatar'
+*/
+
+router.post("/register", upload.fields([{ name: 'avatar', maxCount: 1 }]), async (req: Request, res: Response) => {
+
+  // Optional image upload logic
+  const imageUrl = await handleImageUpload(req, res);
+
+
   // validate data before creating user
   const { error, value } = registerValidation(req.body);
   if (error)
@@ -70,6 +82,7 @@ router.post("/register", async (req: Request, res: Response) => {
     lastName: req.body.lastName,
     email: req.body.email,
     password: hashPassword,
+    avatar: imageUrl
   };
   await createUser(newUser)
     .then(() => res.status(201).send({ message: "user created" }))
@@ -140,14 +153,14 @@ router.post("/forgot-password", async (req, res) => {
   const transporter: Transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "skyhighyes@gmail.com",
-      pass: "gqgg iwfk iurj ovan",
+      user: process.env.MAILER_EMAIL,
+      pass: process.env.MAILER_PASS,
     },
   });
 
   // Define the mail options
   const mailOptions = {
-    from: "skyhighyes@gmail.com",
+    from: process.env.MAILER_EMAIL,
     to: user.email,
     subject: "Reset your password",
     text: `http://localhost:${process.env.PORT}/auth/reset-password/${user.id}/${TOKEN}`,
