@@ -67,6 +67,9 @@ async function joinRoom(client: Socket, roomID: string) {
 		if (reply == 1) {
 			await redisClient.sAdd(members_key, JSON.stringify(new_member));
 			console.log(`${new_member.username}[member] added to the meeting`);
+            // notify all the members
+			let members = await getAllUsers(roomID);
+			client.to(roomID).emit("on-users-list", { members: members });
 		} else {
 			console.log(`[error] room id ${roomID} does not exist`);
 		}
@@ -98,6 +101,32 @@ async function getAdmin(roomId: string): Promise<string> {
 
 	console.error("can't find the admin, maybe not yet joined");
 	return "can't find the admin";
+}
+
+/**
+ * Query the redis db for all the users in the meeting
+ */
+export interface UsersInMeeting {
+	name: string;
+	photo: string;
+	role: string;
+}
+
+/**
+ * Query for all the users in the meeting
+ * @param {string} roomID - room id of the client/owner requesting
+ */
+export async function getAllUsers(roomID: string): Promise<string[]> {
+	const members_key = `${roomID}:members`;
+
+	try {
+		let members = await redisClient.sMembers(members_key);
+		console.log("Triggered, here are members: \n", members);
+		return members;
+	} catch (error) {
+		console.log("[Error] Error getting users");
+		return [];
+	}
 }
 
 /* Socket event handlers */
@@ -152,8 +181,12 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 	});
 
 	socket.on("chat-message", (message: Message) => {
-		console.log("Message from admin:\n", message);
 		socket.broadcast.to(message.roomID as string).emit("send-message", message);
+	});
+
+	socket.on("get-all-users", async () => {
+		let members = await getAllUsers(data.id);
+		socket.to(data.id).emit("on-users-list", { members: members });
 	});
 
 	socket.on("disconnect", async function () {
@@ -166,6 +199,9 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 			const members_key = `${data.id}:members`;
 			await redisClient.expire(meeting_key, EXPIRE_TIME);
 			await redisClient.expire(members_key, EXPIRE_TIME);
+			// inform all the members
+			let members = await getAllUsers(data.id);
+			socket.to(data.id).emit("on-users-list", { members: members });
 		} catch (error) {
 			console.log("[error] while adding expiry to the meeting");
 		}
@@ -209,6 +245,11 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 		onDrawingHandler(client, data.id, message);
 	});
 
+	client.on("get-all-users", async () => {
+		let members = await getAllUsers(data.id);
+		client.to(data.id).emit("on-users-list", { members: members });
+	});
+
 	client.on("disconnect", async function () {
 		try {
 			console.log(
@@ -222,15 +263,16 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 					full_name: client.handshake.auth.fullname,
 				}),
 			);
-			await disconnectRedis(redisClient);
+            // notify all the members
+			let members = await getAllUsers(data.id);
+			client.to(data.id).emit("on-users-list", { members: members });
 		} catch (error) {
 			console.log("[error mild] while disconnecting redis client");
 		}
 	});
 
 	/* Send the roomID and also the client who sent it */
-	client.on("chat-message", (message: Message) => {
-		console.log("Message from a client:\n", message);
+	client.on("chat-message", async (message: Message) => {
 		client.broadcast.to(message.roomID as string).emit("send-message", message);
 	});
 }
