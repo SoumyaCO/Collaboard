@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import BannerBackground from "../assets/background_r_img.png"
 import { socketClient } from "../utils/Socket"
-import LoadingSpinner from "./LoadingSpinner"
+import { LoadingSpinner } from "./LoadingSpinner"
 
 function HomePage() {
     const location = useLocation()
@@ -22,7 +22,7 @@ function HomePage() {
     useEffect(() => {
         const meetToken = location.state?.meet_token
         if (meetToken) {
-            roomHashRef.current = meetToken // Set the ref value
+            roomHashRef.current = meetToken
 
             const dummyEvent = { preventDefault: () => {} }
 
@@ -33,8 +33,7 @@ function HomePage() {
     }, [location.state])
     const handleJoinRoom = async (e) => {
         e.preventDefault()
-        const roomHash = roomHashRef.current // access the ref value
-
+        const roomHash = roomHashRef.current
         if (!roomHash) {
             setError("Room link is required")
             return

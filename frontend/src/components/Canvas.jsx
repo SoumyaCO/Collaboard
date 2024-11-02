@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from "react"
+import { useRef, useState, useCallback, useEffect } from "react"
 import Rectangle from "../utils/Rectangle"
 import Ellipse from "../utils/Ellipse"
 import pen from "../assets/pen.png"
@@ -6,7 +6,7 @@ import eraser from "../assets/eraser.png"
 import rectangle from "../assets/rectangle.png"
 import ellipse from "../assets/ellipse.png"
 import edit from "../assets/edit.png"
-
+import { InlineLoadingSpinner } from "./LoadingSpinner"
 import send from "../assets/send.png"
 import { useNavigate } from "react-router-dom"
 
@@ -25,7 +25,7 @@ const Canvas = () => {
 
     const [mouseState, setMouseState] = useState("idle") // idle', 'mousedown', 'mouseup', or 'mousemove'
     const [mouseMoved, setMouseMoved] = useState(false)
-    const [isCustomCursor, setIsCustomCursor] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     const [selectedId, setSelectedId] = useState(null)
     const [mouseX, setMouseX] = useState(0)
@@ -51,10 +51,10 @@ const Canvas = () => {
     const [activeTab, setActiveTab] = useState("members")
     const [messages, setMessages] = useState([])
     const [chatInput, setChatInput] = useState("")
-    const [users, setUsers] = useState([{ username: "", photo: "" }])
-    const [currentUserId, setCurrentUserId] = useState(
-        localStorage.getItem("username") || "unknown"
-    )
+    // let users = []
+    const [users, setUsers] = useState([])
+    // const usersRef = useRef([users])
+    const currentUserId = useState(localStorage.getItem("username"))
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -128,15 +128,46 @@ const Canvas = () => {
     }
 
     const handleTabChange = (tab) => {
-        setActiveTab(tab)
+        setActiveTab(tab) // Change active tab
     }
+
+    // useEffect to handle fetching users when the members tab is active
+    useEffect(() => {
+        if (activeTab === "members") {
+            setLoading(true) // Set loading state
+
+            // Emit socket event to get all users
+            socketClient.emit("get-all-users", { roomID: roomID })
+
+            const handleUsersList = (data) => {
+                console.log("Received users data:", data) // Log received data
+
+                if (data && Array.isArray(data.members)) {
+                    setUsers(data.members) // Set users if data format is correct
+                } else {
+                    console.error("Unexpected data format:", data)
+                    setUsers([]) // Reset users if data is not valid
+                }
+                setLoading(false) // Set loading to false after data is processed
+            }
+
+            // Listen for the on-users-list event
+            socketClient.on("on-users-list", handleUsersList)
+
+            // Cleanup function to remove event listener
+            return () => {
+                socketClient.off("on-users-list", handleUsersList)
+            }
+        } else {
+            setLoading(false) // Reset loading if not on the members tab
+        }
+    }, [activeTab, roomID]) // Dependencies: rerun when activeTab or roomID changes
 
     const handleChatInputChange = (event) => {
         setChatInput(event.target.value)
     }
     useEffect(() => {
         socketClient.on("send-message", (msg) => {
-
             setMessages((prevMessages) => [...prevMessages, msg])
         })
         return () => {
@@ -987,19 +1018,21 @@ const Canvas = () => {
                             </button>
                         </div>
                         {activeTab === "members" && (
-                            <div className="members-tab">
-                                {users.map((user) => (
-                                    <div key={user.username} className="member">
-                                        <img
-                                            src=""
-                                            alt="username"
-                                            className="member-photo"
-                                        />
-                                        <span>{user.username}</span>
-                                    </div>
-                                ))}
+                            <div className="members-list">
+                                {loading ? (
+                                    <InlineLoadingSpinner />
+                                ) : (
+                                    (console.log("inside member", users),
+                                    users.map((user, index) => (
+                                        <div key={index} className="user-item">
+                                            <img src={user.dp_url} />
+                                            <span>{user.full_name}</span>
+                                        </div>
+                                    )))
+                                )}
                             </div>
                         )}
+
                         {activeTab === "chat" && (
                             <div className="chat-tab">
                                 <div className="messages">
