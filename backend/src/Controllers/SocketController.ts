@@ -190,7 +190,7 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 	socket.on("get-all-users", async () => {
 		let members = await getAllUsers(data.id);
         console.log('[CREATE ROOM HANDLER] members (roomInfo: ', data.id, "): ", members, "\n--------------------\n")
-		socket.to(data.id).emit("on-users-list", { members: members });
+		io.to(socket.id).emit("on-users-list", { members: members });
 	});
 
 	socket.on("disconnect", async function () {
@@ -253,7 +253,7 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 	client.on("get-all-users", async () => {
 		let members = await getAllUsers(data.id);
         console.log('[JOIN ROOM HANDLER] members(roominfo: ', data.id,")", members, "\n--------------------\n")
-		client.to(data.id).emit("on-users-list", { members: members });
+		io.to(client.id).emit("on-users-list", { members: members });
 	});
 
 	client.on("disconnect", async function () {
