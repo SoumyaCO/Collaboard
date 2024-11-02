@@ -69,6 +69,7 @@ async function joinRoom(client: Socket, roomID: string) {
 			console.log(`${new_member.username}[member] added to the meeting`);
             // notify all the members
 			let members = await getAllUsers(roomID);
+            console.log("[joinRoom function] members: ", members, "\n-----------\n")
 			client.to(roomID).emit("on-users-list", { members: members });
 		} else {
 			console.log(`[error] room id ${roomID} does not exist`);
@@ -116,16 +117,18 @@ export interface UsersInMeeting {
  * Query for all the users in the meeting
  * @param {string} roomID - room id of the client/owner requesting
  */
-export async function getAllUsers(roomID: string): Promise<string[]> {
+export async function getAllUsers(roomID: string): Promise<Object[]> {
 	const members_key = `${roomID}:members`;
 
 	try {
 		let members = await redisClient.sMembers(members_key);
-		console.log("Triggered, here are members: \n", members);
-		return members;
+        console.log('Whether <members> is an array: ', Array.isArray(members))
+		// console.log("Triggered, here are members: \n", members); // ----debug
+        let members_object_array = members.map((member) => JSON.parse(member))
+		return members_object_array;
 	} catch (error) {
 		console.log("[Error] Error getting users");
-		return [];
+		return [{error: "Error"}];
 	}
 }
 
@@ -186,11 +189,12 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 
 	socket.on("get-all-users", async () => {
 		let members = await getAllUsers(data.id);
+        console.log('[CREATE ROOM HANDLER] members (roomInfo: ', data.id, "): ", members, "\n--------------------\n")
 		socket.to(data.id).emit("on-users-list", { members: members });
 	});
 
 	socket.on("disconnect", async function () {
-		// NOTE: Often time, the "disConnetRedis()" function throws an error,
+		// NOTE: Often time, the "disconnetRedis()" function throws an error,
 		// keeping the the two segment inside a try catch statement will prevent
 		// to apply an "expiry" timer to the meeting.
 		// So, these two operations are in a seperate try..catch.. block (intentionally)
@@ -201,6 +205,7 @@ export function createRoomHandler(socket: Socket, data: RoomData) {
 			await redisClient.expire(members_key, EXPIRE_TIME);
 			// inform all the members
 			let members = await getAllUsers(data.id);
+            console.log("[owner disconnect] members: ", members, "\n---------------\n")
 			socket.to(data.id).emit("on-users-list", { members: members });
 		} catch (error) {
 			console.log("[error] while adding expiry to the meeting");
@@ -247,6 +252,7 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 
 	client.on("get-all-users", async () => {
 		let members = await getAllUsers(data.id);
+        console.log('[JOIN ROOM HANDLER] members(roominfo: ', data.id,")", members, "\n--------------------\n")
 		client.to(data.id).emit("on-users-list", { members: members });
 	});
 
@@ -264,7 +270,9 @@ export async function joinRoomHandler(client: Socket, data: RoomData) {
 				}),
 			);
             // notify all the members
+            //
 			let members = await getAllUsers(data.id);
+            console.log("[client disconnect] members: ", members, "\n---------------\n")
 			client.to(data.id).emit("on-users-list", { members: members });
 		} catch (error) {
 			console.log("[error mild] while disconnecting redis client");
