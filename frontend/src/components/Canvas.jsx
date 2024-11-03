@@ -51,10 +51,11 @@ const Canvas = () => {
     const [activeTab, setActiveTab] = useState("members")
     const [messages, setMessages] = useState([])
     const [chatInput, setChatInput] = useState("")
-    // let users = []
     const [users, setUsers] = useState([])
-    // const usersRef = useRef([users])
-    const currentUserId = useState(localStorage.getItem("username"))
+    const [currentUserId] = useState(
+        localStorage.getItem("username") || "unknown"
+    )
+    const messagesEndRef = useRef(null)
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -128,44 +129,41 @@ const Canvas = () => {
     }
 
     const handleTabChange = (tab) => {
-        setActiveTab(tab) // Change active tab
+        setActiveTab(tab)
     }
 
-    // useEffect to handle fetching users when the members tab is active
     useEffect(() => {
         if (activeTab === "members") {
-            setLoading(true) // Set loading state
+            setLoading(true)
 
-            // Emit socket event to get all users
             socketClient.emit("get-all-users", { roomID: roomID })
 
             const handleUsersList = (data) => {
-                console.log("Received users data:", data) // Log received data
+                console.log("Received users data:", data)
 
                 if (data && Array.isArray(data.members)) {
-                    setUsers(data.members) // Set users if data format is correct
+                    setUsers(data.members)
                 } else {
                     console.error("Unexpected data format:", data)
-                    setUsers([]) // Reset users if data is not valid
+                    setUsers([])
                 }
-                setLoading(false) // Set loading to false after data is processed
+                setLoading(false)
             }
 
-            // Listen for the on-users-list event
             socketClient.on("on-users-list", handleUsersList)
 
-            // Cleanup function to remove event listener
             return () => {
                 socketClient.off("on-users-list", handleUsersList)
             }
         } else {
-            setLoading(false) // Reset loading if not on the members tab
+            setLoading(false)
         }
-    }, [activeTab, roomID]) // Dependencies: rerun when activeTab or roomID changes
+    }, [activeTab, roomID])
 
-    const handleChatInputChange = (event) => {
-        setChatInput(event.target.value)
-    }
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, [messages])
+
     useEffect(() => {
         socketClient.on("send-message", (msg) => {
             setMessages((prevMessages) => [...prevMessages, msg])
@@ -1035,44 +1033,48 @@ const Canvas = () => {
 
                         {activeTab === "chat" && (
                             <div className="chat-tab">
-                                <div className="messages">
-                                    {messages.map((message) => (
-                                        <div
-                                            key={
-                                                message.id || message.timestamp
-                                            }
-                                            className={`message ${
-                                                message.senderId ===
-                                                currentUserId
-                                                    ? "message-sent"
-                                                    : "message-received"
-                                            }`}
-                                        >
-                                            <div className="username">
-                                                {message.senderId ===
-                                                currentUserId
-                                                    ? "You"
-                                                    : message.username}
+                                <div className="messages-container">
+                                    <div className="messages">
+                                        {messages.map((message) => (
+                                            <div
+                                                key={
+                                                    message.id ||
+                                                    message.timestamp
+                                                }
+                                                className={`message ${
+                                                    message.senderId ===
+                                                    currentUserId
+                                                        ? "message-sent"
+                                                        : "message-received"
+                                                }`}
+                                            >
+                                                <div className="username">
+                                                    {message.senderId ===
+                                                    currentUserId
+                                                        ? "You"
+                                                        : message.username}
+                                                </div>
+                                                <div className="message-text">
+                                                    {message.text}
+                                                </div>
                                             </div>
-                                            <div className="message-text">
-                                                {message.text}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                        {/* Scroll to this ref whenever messages change */}
+                                        <div ref={messagesEndRef} />
+                                    </div>
                                 </div>
                                 <div className="chat-input">
                                     <input
                                         type="text"
                                         value={chatInput}
-                                        onChange={handleChatInputChange}
-                                        placeholder="Type a message..."
+                                        onChange={(e) =>
+                                            setChatInput(e.target.value)
+                                        }
+                                        placeholder="Type your message..."
                                     />
-                                    <img
-                                        className="send-button"
-                                        onClick={handleSendMessage}
-                                        src={send}
-                                        alt="Send"
-                                    />
+                                    <button onClick={handleSendMessage}>
+                                        Send
+                                    </button>
                                 </div>
                             </div>
                         )}

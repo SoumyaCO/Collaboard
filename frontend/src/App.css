@@ -713,15 +713,15 @@ canvas {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 33px;
+    padding-top: 10px;
 }
 .hamburger-menu {
     position: fixed;
     top: 0;
     right: 0;
-    width: 340px;
+    width: 350px;
     height: 100%;
-    background-color: #f5eded;
+    background-color: #cbd2a4;
     border-left: 1px solid #ddd;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     transform: translateX(100%);
@@ -751,7 +751,7 @@ canvas {
 
 .tab.active {
     font-weight: bold;
-    border-bottom: 3px solid #000;
+    border-bottom: 3px solid #3b1e54;
 }
 
 .members-tab,
@@ -775,40 +775,56 @@ canvas {
 }
 
 .chat-tab {
-    position: relative;
-    padding-bottom: 70px;
-    min-height: 550px;
-    border: none;
+    display: flex;
+    flex-direction: column;
+    height: 89%;
+    min-height: 500px;
+    width: 320px;
 }
 
 .username {
     font-weight: bold;
     margin-bottom: 5px;
 }
+.messages-container {
+    max-height: calc(100% - 70px);
+    padding: 5px;
+    background-color: #ecdfcc;
+    display: flex;
+    border-radius: 10px;
 
-.message {
+    flex-direction: column-reverse;
+    border: none;
+}
+
+.messages {
+    overflow-y: auto;
+
     display: flex;
     flex-direction: column;
-    margin-bottom: 10px;
-    padding: 3px;
-    border-radius: 9px;
+    align-items: flex-start;
 }
 
 .message-sent {
     background-color: #86d293;
-    align-items: flex-end;
-    padding-top: 20px;
+    align-self: flex-end;
+    padding: 5px;
+    border-radius: 10px;
+    margin-bottom: 7px;
 }
 
 .message-received {
-    padding-top: 20px;
-    background-color: #697565;
-    align-items: flex-start;
+    background-color: #629584;
+    align-self: flex-start;
+    padding: 5px;
+    border-radius: 10px;
+    margin-bottom: 7px;
 }
 
 .message-text {
-    padding: 1px 10px;
-    border-radius: 5px;
+    padding: 1px 15px;
+    border-radius: 10px;
+    color: #fff;
 }
 
 .chat-input {
@@ -818,12 +834,16 @@ canvas {
     right: 0;
     display: flex;
     padding: 10px;
+    border-radius: 10px;
+
+    background-color: #fff;
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.2);
 }
 
 .chat-input input {
     flex: 1;
     padding: 10px;
-    border-radius: 10px;
+    border-radius: 15px;
     border: 1px solid #697565;
     background-color: #dee5d4;
 }
