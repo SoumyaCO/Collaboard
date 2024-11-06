@@ -2,6 +2,7 @@ require("dotenv").config();
 import "colors";
 import express, { Request, Response } from "express";
 import { deleteUser, updateUser, getUser } from "../Controllers/userController";
+import { upload } from "../Middleware/multer.middleware";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.delete("/:username", async (req: Request, res: Response) => {
 	}
 });
 
-router.put("/:username", updateUser);
+router.put("/:username",upload.fields([{ name: 'avatar', maxCount: 1 }]), updateUser);
 
 // for testing purpose this route returns a message
 router.get("/:email", async (req: Request, res: Response) => {

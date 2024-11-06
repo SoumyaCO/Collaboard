@@ -37,6 +37,8 @@ router.post("/register", upload.fields([{ name: 'avatar', maxCount: 1 }]), async
 
 
   // validate data before creating user
+  console.log(req.body);
+  
   const { error, value } = registerValidation(req.body);
   if (error)
     return res

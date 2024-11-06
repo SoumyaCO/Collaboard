@@ -28,7 +28,9 @@ export const deleteUser = async (username: string) => {
 export const updateUser = async (req: Request, res: Response) => {
 	const username = req.params.username;
 
+	
 	try {
+		console.log();
 		// Call handleImageUpload to get the image URL from Cloudinary
 		const imageUrl = await handleImageUpload(req, res);
 
