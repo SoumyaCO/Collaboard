@@ -7,7 +7,6 @@ import rectangle from "../assets/rectangle.png"
 import ellipse from "../assets/ellipse.png"
 import edit from "../assets/edit.png"
 import { InlineLoadingSpinner } from "./LoadingSpinner"
-import send from "../assets/send.png"
 import { useNavigate } from "react-router-dom"
 
 import { socketClient } from "../utils/Socket"
@@ -50,6 +49,8 @@ const Canvas = () => {
     const [menuVisible, setMenuVisible] = useState(false)
     const [activeTab, setActiveTab] = useState("members")
     const [messages, setMessages] = useState([])
+    const [newMessagesDot, setnewMessagesDot] = useState(false)
+
     const [chatInput, setChatInput] = useState("")
     const [users, setUsers] = useState([])
     const [currentUserId] = useState(
@@ -123,13 +124,23 @@ const Canvas = () => {
         })
         setPopupVisible(false)
     }
-
     const handleMenuToggle = () => {
-        setMenuVisible((prev) => !prev)
+        setMenuVisible((prev) => {
+            const newVisibleState = !prev
+            if (newVisibleState === false) {
+                setnewMessagesDot(false)
+            }
+            return newVisibleState
+        })
     }
 
     const handleTabChange = (tab) => {
         setActiveTab(tab)
+        if (tab === "chat") {
+            setnewMessagesDot(false)
+        } else if (tab === "members") {
+            setnewMessagesDot(false)
+        }
     }
 
     useEffect(() => {
@@ -159,6 +170,12 @@ const Canvas = () => {
             setLoading(false)
         }
     }, [activeTab, roomID])
+    useEffect(() => {
+        if (messages.length > 0) {
+            setnewMessagesDot(true)
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        }
+    }, [messages])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -985,6 +1002,14 @@ const Canvas = () => {
                         onClick={handleMenuToggle}
                     >
                         ☰
+                        {newMessagesDot &&
+                            activeTab === "chat" &&
+                            !menuVisible && (
+                                <span className="notification-dot"></span>
+                            )}
+                        {newMessagesDot && activeTab === "members" && (
+                            <span className="notification-dot"></span>
+                        )}
                     </button>
                 </div>
                 <div
@@ -995,6 +1020,9 @@ const Canvas = () => {
                         onClick={handleMenuToggle}
                     >
                         ⬅
+                        {newMessagesDot && activeTab === "members" && (
+                            <span className="notification-dot"></span>
+                        )}
                     </button>
                     <div className="menu-content">
                         <div className="tabs">
@@ -1013,6 +1041,11 @@ const Canvas = () => {
                                 onClick={() => handleTabChange("chat")}
                             >
                                 Chat
+                                {newMessagesDot &&
+                                activeTab === "chat" &&
+                                !menuVisible ? (
+                                    <span className="notification-dot"></span>
+                                ) : null}
                             </button>
                         </div>
                         {activeTab === "members" && (
@@ -1059,7 +1092,6 @@ const Canvas = () => {
                                                 </div>
                                             </div>
                                         ))}
-                                        {/* Scroll to this ref whenever messages change */}
                                         <div ref={messagesEndRef} />
                                     </div>
                                 </div>
