@@ -13,6 +13,8 @@ export default function Profile() {
     const [editingMeetingIndex, setEditingMeetingIndex] = useState(null)
     const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null)
     const [isAddingMeeting, setIsAddingMeeting] = useState(false)
+    const [imageFile, setImageFile] = useState(null)
+    const [imagePreview, setImagePreview] = useState(null)
     const [newMeeting, setNewMeeting] = useState({
         title: "",
         date: "",
@@ -87,27 +89,38 @@ export default function Profile() {
         fetchMeetings()
     }, [])
 
-    // Handle user edit input changes
     const handleEditChange = (e) => {
         const { name, value } = e.target
         setEditedUser((prev) => ({ ...prev, [name]: value }))
         setIsEditing(true)
     }
-
+    const handleFileChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setImageFile(file)
+            setImagePreview(URL.createObjectURL(file))
+            setIsEditing(true)
+        }
+    }
     // Save edited user information
+
     const handleSaveUser = async () => {
         if (!user) return
+        const formData = new FormData()
+        Object.keys(editedUser).forEach((key) => {
+            formData.append(key, editedUser[key])
+        })
+        if (imageFile) {
+            formData.append("avatar", imageFile)
+        }
+
         try {
             const res = await fetch(
                 `http://localhost:8080/user/${user.username}`,
                 {
                     method: "PUT",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
+                    body: formData,
                     credentials: "include",
-                    body: JSON.stringify(editedUser),
                 }
             )
 
@@ -117,7 +130,7 @@ export default function Profile() {
             const data = await res.json()
             setUser(data.data)
             setEditedUser(data.data)
-            showAlert(user.username + "'s profile edited successfully!")
+            showAlert(`${user.username}'s profile edited successfully!`)
             setIsEditing(false)
         } catch (err) {
             showAlert("An error occurred: " + err.message)
@@ -161,7 +174,7 @@ export default function Profile() {
 
     // Save the new meeting
     const handleCreateMeeting = async () => {
-        let meetingID = makeid(10) // Generate meeting ID
+        let meetingID = makeid(10)
         try {
             const res = await fetch(
                 "http://localhost:8080/meeting/createMeeting",
@@ -180,7 +193,6 @@ export default function Profile() {
                 throw new Error("Failed to create meeting")
             }
 
-            // Fetch meetings to get the updated list
             await fetchMeetings()
             setIsAddingMeeting(false)
             setNewMeeting({
@@ -204,7 +216,14 @@ export default function Profile() {
     return (
         <div className="profile-page-grid">
             <div className="profile-photo">
-                <img src={user.avatar} alt="Profile Photo" />
+                <img src={imagePreview || user.avatar} alt="Profile Photo" />
+                {isEditing && (
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                )}
             </div>
             <div className="profile-info">
                 <h1 className="profile-username">{user.username}</h1>
@@ -270,7 +289,7 @@ export default function Profile() {
                     {meetings.length > 0 ? (
                         meetings.map((meeting, index) => (
                             <li
-                                key={meeting.meetingID} // Use meetingID as the key
+                                key={meeting.meetingID}
                                 className={`meeting-item ${
                                     selectedMeetingIndex === index
                                         ? "selected"

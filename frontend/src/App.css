@@ -439,17 +439,17 @@ canvas {
 }
 
 .profile-username {
-    color: #333333; /* Dark color */
+    color: #333333;
     font-size: 2rem;
 }
 
 .profile-name {
-    color: #666666; /* Medium gray */
+    color: #666666;
     font-size: 1.5rem;
 }
 
 .profile-email {
-    color: #999999; /* Light gray */
+    color: #999999; 
     font-size: 1rem;
 }
 
@@ -832,7 +832,7 @@ canvas {
 }
 
 .message-received {
-    background-color: #629584; 
+    background-color: #A2D2DF; 
     align-self: flex-start;
     padding: 5px;
     border-radius: 10px;
