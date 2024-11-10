@@ -20,6 +20,7 @@ We're constantly improving the documentation.
 |-------------|--------------------------------------------------------------------------------|------------------------|
 | 01          | [Realtime communication implementation](./docs/socket-implementation.md)       | Soumyadip Bhattacharjya|
 | 02          | System Design of the application                                               | *Pending...*           |
+| 03          | WebRTC Audio Calling Implementation                                            | *Pending...*           |
 
 
 ## Contribution:
@@ -53,7 +54,7 @@ start the **frontend**
 
 ```bash
 cd frontend
-npm run dev
+npm run start
 ```
 
 Everyone's Contribution is highly welcomed!

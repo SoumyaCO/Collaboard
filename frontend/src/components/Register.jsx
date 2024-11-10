@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Login_Register.css";
 import axios from "axios";
+import { showAlert } from "../utils/alert.js";
+
 const Register = () => {
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -23,16 +25,16 @@ const Register = () => {
       })
       .then((r) => {
         if (r.data.message === "user created") {
-          alert("Registration successful!");
+          showAlert("Registration successful!");
 
           navigate("/login");
         } else if (r.data.message === "Email already exists") {
           console.log(r);
-          alert("Email already exists. Please use a different email.");
+          showAlert("Email already exists. Please use a different email.");
         }
       })
       .catch((e) => {
-        alert("Registration failed. Please try again.");
+        showAlert("Registration failed. Please try again.");
         console.error("Registration error:", e);
       });
   };
