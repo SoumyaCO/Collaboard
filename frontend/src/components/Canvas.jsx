@@ -41,14 +41,14 @@ const Canvas = () => {
         strokeWidth: 2,
     })
     const dotDataRef = useRef({
-        tr: null,
-        tl: null,
-        br: null,
-        bl: null,
-        tp: null,
-        bottom: null,
-        left: null,
-        right: null,
+        tr: new Path2D(),
+        tl: new Path2D(),
+        br: new Path2D(),
+        bl: new Path2D(),
+        tp: new Path2D(),
+        bottom: new Path2D(),
+        left: new Path2D(),
+        right: new Path2D(),
     })
 
     const [popupVisible, setPopupVisible] = useState(false)
@@ -265,17 +265,19 @@ const Canvas = () => {
 
     const createDots = (ctx, x, y, width, height) => {
         const radius = 5
+        const newDotData = dotDataRef.current
 
-        const newDotData = {
-            tr: new Path2D(),
-            tl: new Path2D(),
-            br: new Path2D(),
-            bl: new Path2D(),
-            tp: new Path2D(),
-            bottom: new Path2D(),
-            left: new Path2D(),
-            right: new Path2D(),
-        }
+        // check if the Path2D objects are already initialized
+        // if they are initialized, clear their paths by re-creating them
+        if (newDotData.tr instanceof Path2D) newDotData.tr = new Path2D()
+        if (newDotData.tl instanceof Path2D) newDotData.tl = new Path2D()
+        if (newDotData.br instanceof Path2D) newDotData.br = new Path2D()
+        if (newDotData.bl instanceof Path2D) newDotData.bl = new Path2D()
+        if (newDotData.tp instanceof Path2D) newDotData.tp = new Path2D()
+        if (newDotData.bottom instanceof Path2D)
+            newDotData.bottom = new Path2D()
+        if (newDotData.left instanceof Path2D) newDotData.left = new Path2D()
+        if (newDotData.right instanceof Path2D) newDotData.right = new Path2D()
 
         newDotData.tr.ellipse(
             x + width,
@@ -342,9 +344,8 @@ const Canvas = () => {
             Math.PI * 2
         )
 
-        dotDataRef.current = newDotData
-
         ctx.fillStyle = "#0080ff"
+
         Object.values(newDotData).forEach((dot) => {
             ctx.fill(dot)
         })
@@ -353,12 +354,21 @@ const Canvas = () => {
     }
 
     const highlight = (ctx, id, stack) => {
+        console.log("Highlight function called with id:", id)
         const gap = 10
         ctx.strokeStyle = "#0080ff"
         ctx.lineWidth = 2
 
         const rect = stack[id]
+        console.log("Retrieved rectangle:", rect) // Log the rectangle data
+
+        if (!rect) {
+            console.error("Error: rect is undefined for id:", id)
+            return
+        }
+
         const [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap)
+        console.log("Buffer values:", bufferX, bufferY) // Log buffer values
 
         const x = rect.x - bufferX
         const y = rect.y - bufferY
@@ -385,6 +395,8 @@ const Canvas = () => {
             s.rect(x, y, width, height)
             createDots(ctx, x, y, width, height)
         }
+
+        console.log("Created highlight path:", dotDataRef)
 
         ctx.stroke(s)
     }
@@ -428,15 +440,14 @@ const Canvas = () => {
             const ctx = canvas.getContext("2d")
             let cursor = "auto"
 
-            // ctx.clearRect(0, 0, canvas.width, canvas.height)
-            // drawFromStack(drawingStack)
+            if (!ishighlight) {
+                return
+            }
 
             let hoveredDotPositions = dotDataRef.current
-            console.log(dotDataRef.current)
 
             Object.keys(hoveredDotPositions).forEach((dotKey) => {
                 const dotPath = hoveredDotPositions[dotKey]
-                console.log(hoveredDotPositions[dotKey])
 
                 if (ctx.isPointInPath(dotPath, offsetX, offsetY)) {
                     if (dotKey === "tl" || dotKey === "br") {
@@ -453,7 +464,7 @@ const Canvas = () => {
 
             canvas.style.cursor = cursor
         },
-        [drawingStack]
+        [drawingStack, ishighlight] // Add `ishighlight` to dependencies
     )
 
     const handleMouseDown = useCallback(
@@ -462,18 +473,33 @@ const Canvas = () => {
             const { offsetX, offsetY } = event
             const id = detectCollision({ offsetX, offsetY }, drawingStack)
 
+            console.log(
+                "Mouse Down Event: offsetX:",
+                offsetX,
+                "offsetY:",
+                offsetY
+            )
+            console.log("Detected Collision ID:", id)
+
             setMouseState("mousedown")
             let MouseDownDotPositions = null
 
             if (tool === "edit" && id !== -1) {
-                setPersistantID(id)
+                setPersistantID(id) // ! error persistent id not sets
                 setSelectedId(id)
                 setIsDrawing(true)
                 setIsHighlight(true)
                 setMouseX(offsetX)
                 setMouseY(offsetY)
-                highlight(ctx, persistantID, drawingStack)
-                MouseDownDotPositions = dotDataRef.current
+                console.log(
+                    "ID  and drawing stack in mouse down",
+                    id,
+                    drawingStack
+                )
+
+                highlight(ctx, id, drawingStack)
+
+                // MouseDownDotPositions = dotDataRef.current
             } else if (tool === "eraser" && id !== -1) {
                 setPersistantID(null)
                 setIsHighlight(false)
@@ -500,10 +526,18 @@ const Canvas = () => {
 
             let resizeDetected = false
             if (ishighlight && tool === "edit") {
+                MouseDownDotPositions = dotDataRef.current
+
                 Object.keys(MouseDownDotPositions).forEach((dotKey) => {
                     const dotPath = MouseDownDotPositions[dotKey]
+                    console.log("MouseDown Dot:", dotKey, dotPath) // Log MouseDownDot
+
                     if (ctx.isPointInPath(dotPath, offsetX, offsetY)) {
                         setResizeHandle(dotKey)
+                        console.log(
+                            "Resize handle in mouse down:",
+                            resizeHandle
+                        )
                         resizeDetected = true
                     }
                 })
@@ -518,6 +552,8 @@ const Canvas = () => {
 
     const handleMouseUp = useCallback(
         (event) => {
+            console.log("persistent id ", persistantID)
+
             if (mouseState !== "mousedown") return
             setMouseState("mouseup")
             setMouseMoved(false)
@@ -531,11 +567,8 @@ const Canvas = () => {
                 return
             }
 
-            // if (tool === "edit" && ishighlight&& mouseMoved) {
-            //     highlight(ctx, persistantID, drawingStack)
-            // }
+            console.log("Mouse Up Event triggered")
 
-            const ctx = getContext()
             const { offsetX, offsetY } = event
             const width = offsetX - drawingData.startX
             const height = offsetY - drawingData.startY
@@ -582,6 +615,7 @@ const Canvas = () => {
                               },
                           ]
 
+                console.log("Updated Stack for Rect:", updatedStack)
                 setDrawingStack(updatedStack)
                 drawFromStack(updatedStack)
                 setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }))
@@ -625,6 +659,7 @@ const Canvas = () => {
                               },
                           ]
 
+                console.log("Updated Stack for Ellipse:", updatedStack)
                 setDrawingStack(updatedStack)
                 drawFromStack(updatedStack)
                 setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }))
@@ -651,72 +686,79 @@ const Canvas = () => {
             mouseState,
         ]
     )
+
     const handleMouseMove = useCallback(
         (event) => {
             const { offsetX, offsetY } = event
             const canvas = canvasRef.current
             const ctx = getContext()
+
             if (tool === "edit" && persistantID !== null && ishighlight) {
                 handleCanvasMouseMove(event)
+            } else {
+                setPersistantID(null)
+                setIsHighlight(false)
             }
+
             if (tool === "edit" && !ishighlight) {
                 setPersistantID(null)
             }
+
             if (mouseState === "mousedown") {
                 if (tool === "edit" && persistantID !== null) {
-                    console.log(persistantID)
-
-                    if (ishighlight) {
-                        highlight(ctx, persistantID, drawingStack)
-                    }
                     const rect = drawingStack[persistantID]
                     let updatedStack = [...drawingStack]
                     let updatedRect = { ...rect }
-
                     if (resizeHandle) {
-                        // Resize logic (adjusting shape size when dragging handle)
-                        const gap = 7
                         switch (resizeHandle) {
-                            case "bottom-right":
-                                updatedRect.width = offsetX - rect.x + gap
-                                updatedRect.height = offsetY - rect.y + gap
+                            case "br":
+                                updatedRect.width = offsetX - rect.x
+                                updatedRect.height = offsetY - rect.y
                                 break
-                            case "top-left":
+
+                            case "tl":
                                 updatedRect.width =
-                                    rect.width + (rect.x - offsetX) + gap
+                                    rect.width + (rect.x - offsetX)
                                 updatedRect.height =
-                                    rect.height + (rect.y - offsetY) + gap
+                                    rect.height + (rect.y - offsetY)
                                 updatedRect.x = offsetX
                                 updatedRect.y = offsetY
                                 break
-                            case "top-right":
-                                updatedRect.width = offsetX - rect.x + gap
+
+                            case "tr":
+                                updatedRect.width = offsetX - rect.x
                                 updatedRect.height =
-                                    rect.height + (rect.y - offsetY) + gap
+                                    rect.height + (rect.y - offsetY)
                                 updatedRect.y = offsetY
                                 break
-                            case "bottom-left":
+
+                            case "bl":
                                 updatedRect.width =
-                                    rect.width + (rect.x - offsetX) + gap
-                                updatedRect.height = offsetY - rect.y + gap
+                                    rect.width + (rect.x - offsetX)
+                                updatedRect.height = offsetY - rect.y
                                 updatedRect.x = offsetX
                                 break
-                            case "top":
+
+                            case "tp":
                                 updatedRect.height =
-                                    rect.height + (rect.y - offsetY) + gap
+                                    rect.height - (offsetY - rect.y)
                                 updatedRect.y = offsetY
                                 break
+
                             case "bottom":
-                                updatedRect.height = offsetY - rect.y + gap
+                                updatedRect.height = offsetY - rect.y
                                 break
+
                             case "left":
                                 updatedRect.width =
-                                    rect.width + (rect.x - offsetX) + gap
+                                    rect.width + (rect.x - offsetX)
                                 updatedRect.x = offsetX
                                 break
+
                             case "right":
-                                updatedRect.width = offsetX - rect.x + gap
+                                updatedRect.width = offsetX - rect.x
                                 break
+
                             default:
                                 break
                         }
@@ -726,7 +768,7 @@ const Canvas = () => {
                         drawFromStack(updatedStack)
                         highlight(ctx, persistantID, drawingStack)
                     } else {
-                        // Handle moving the rectangle
+                        // Handle moving the shape (when not resizing)
                         updatedRect.x += offsetX - mouseX
                         updatedRect.y += offsetY - mouseY
                         updatedStack[persistantID] = updatedRect
@@ -737,7 +779,7 @@ const Canvas = () => {
                         highlight(ctx, persistantID, drawingStack)
                     }
                 } else if (tool === "rect" || tool === "ellipse") {
-                    // Handle shape preview (during mouse move)
+                    // Handle drawing a new shape preview
                     const width = offsetX - drawingData.startX
                     const height = offsetY - drawingData.startY
 
