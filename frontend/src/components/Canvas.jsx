@@ -264,7 +264,7 @@ const Canvas = () => {
     }
 
     const createDots = (ctx, x, y, width, height) => {
-        const radius = 5
+        const radius = 7
         const newDotData = dotDataRef.current
 
         // check if the Path2D objects are already initialized
@@ -368,7 +368,7 @@ const Canvas = () => {
         }
 
         const [bufferX, bufferY] = calculateBuffer(rect.width, rect.height, gap)
-        console.log("Buffer values:", bufferX, bufferY) // Log buffer values
+        console.log("buffers in highlight", bufferX, bufferY)
 
         const x = rect.x - bufferX
         const y = rect.y - bufferY
@@ -379,17 +379,17 @@ const Canvas = () => {
 
         if (rect.tool === "ellipse") {
             s.rect(
-                x - rect.width - bufferX,
-                y - rect.height - bufferY,
-                rect.width * 2 + bufferX * 2,
-                rect.height * 2 + bufferY * 2
+                x - rect.width / 190,
+                y - rect.height / 250,
+                rect.width + bufferX * 2,
+                rect.height + bufferY * 2
             )
             createDots(
                 ctx,
-                x - rect.width - bufferX,
-                y - rect.height - bufferY,
-                rect.width * 2 + bufferX * 2,
-                rect.height * 2 + bufferY * 2
+                x - rect.width / 200,
+                y - rect.height / 200,
+                rect.width + 20,
+                rect.height + 20
             )
         } else if (rect.tool === "rect") {
             s.rect(x, y, width, height)
@@ -401,10 +401,11 @@ const Canvas = () => {
         ctx.stroke(s)
     }
 
-    const detectCollision = ({ offsetX, offsetY }, shapes) => {
+    const detectCollision = ({ offsetX, offsetY }, shapes, dotDataRef) => {
         const canvas = canvasRef.current
         const ctx = canvas.getContext("2d")
 
+        // Check for collision with shapes (rectangles and ellipses)
         for (let i = shapes.length - 1; i >= 0; i--) {
             const shape = shapes[i]
             const { x, y, width, height, tool } = shape
@@ -425,14 +426,23 @@ const Canvas = () => {
             }
 
             if (ctx.isPointInPath(path, offsetX, offsetY)) {
-                console.log("id from detectColliction", i)
+                console.log("Detected shape collision with ID:", i)
+                return i // Return the index of the detected shape
+            }
+        }
 
-                return i
+        const MouseDownDotPositions = dotDataRef.current
+        for (let dotKey in MouseDownDotPositions) {
+            const dotPath = MouseDownDotPositions[dotKey]
+
+            if (ctx.isPointInPath(dotPath, offsetX, offsetY)) {
+                return -2
             }
         }
 
         return -1
     }
+
     const handleCanvasMouseMove = useCallback(
         (event) => {
             const { offsetX, offsetY } = event
@@ -440,7 +450,13 @@ const Canvas = () => {
             const ctx = canvas.getContext("2d")
             let cursor = "auto"
 
+            // Clear dot paths when highlight is not active
             if (!ishighlight) {
+                // Clear dot paths
+                Object.keys(dotDataRef.current).forEach((dotKey) => {
+                    dotDataRef.current[dotKey] = new Path2D() // Reset each dot path
+                })
+                canvas.style.cursor = cursor
                 return
             }
 
@@ -464,42 +480,45 @@ const Canvas = () => {
 
             canvas.style.cursor = cursor
         },
-        [drawingStack, ishighlight] // Add `ishighlight` to dependencies
+        [ishighlight] // Add ishighlight as a dependency to clear the dots when it changes
     )
 
     const handleMouseDown = useCallback(
         (event) => {
             const ctx = getContext()
             const { offsetX, offsetY } = event
-            const id = detectCollision({ offsetX, offsetY }, drawingStack)
-
-            console.log(
-                "Mouse Down Event: offsetX:",
-                offsetX,
-                "offsetY:",
-                offsetY
+            const id = detectCollision(
+                { offsetX, offsetY },
+                drawingStack,
+                dotDataRef
             )
-            console.log("Detected Collision ID:", id)
 
             setMouseState("mousedown")
             let MouseDownDotPositions = null
 
-            if (tool === "edit" && id !== -1) {
-                setPersistantID(id) // ! error persistent id not sets
+            if (id === -1) {
+                setIsHighlight(false)
+                setPersistantID(null)
+                setSelectedId(null)
+                drawFromStack(drawingStack)
+            }
+
+            if (tool === "edit" && id !== -1 && id !== -2) {
+                setIsHighlight(true)
+
+                setPersistantID(id)
                 setSelectedId(id)
                 setIsDrawing(true)
-                setIsHighlight(true)
                 setMouseX(offsetX)
                 setMouseY(offsetY)
                 console.log(
-                    "ID  and drawing stack in mouse down",
+                    "ID and drawing stack in mouse down",
                     id,
                     drawingStack
                 )
+                drawFromStack(drawingStack)
 
                 highlight(ctx, id, drawingStack)
-
-                // MouseDownDotPositions = dotDataRef.current
             } else if (tool === "eraser" && id !== -1) {
                 setPersistantID(null)
                 setIsHighlight(false)
@@ -530,7 +549,6 @@ const Canvas = () => {
 
                 Object.keys(MouseDownDotPositions).forEach((dotKey) => {
                     const dotPath = MouseDownDotPositions[dotKey]
-                    console.log("MouseDown Dot:", dotKey, dotPath) // Log MouseDownDot
 
                     if (ctx.isPointInPath(dotPath, offsetX, offsetY)) {
                         setResizeHandle(dotKey)
@@ -547,12 +565,13 @@ const Canvas = () => {
                 setResizeHandle(null)
             }
         },
-        [drawingStack, tool]
+        [drawingStack, tool, ishighlight, selectedId]
     )
 
     const handleMouseUp = useCallback(
         (event) => {
             console.log("persistent id ", persistantID)
+            const ctx = getContext()
 
             if (mouseState !== "mousedown") return
             setMouseState("mouseup")
@@ -627,6 +646,9 @@ const Canvas = () => {
                     [width / 2, height / 2],
                     drawingData.color
                 )
+                if (tool === "edit" && persistantID !== null) {
+                    highlight(ctx, persistantID, drawingStack)
+                }
 
                 updatedStack =
                     tool === "edit" && selectedId !== null
@@ -705,6 +727,8 @@ const Canvas = () => {
             }
 
             if (mouseState === "mousedown") {
+                console.log("mouse down  move", persistantID)
+
                 if (tool === "edit" && persistantID !== null) {
                     const rect = drawingStack[persistantID]
                     let updatedStack = [...drawingStack]
@@ -839,9 +863,9 @@ const Canvas = () => {
         ]
     )
 
-    useEffect(() => {
-        drawFromStack(drawingStack)
-    }, [drawingStack])
+    // useEffect(() => {
+    //     drawFromStack(drawingStack)
+    // }, [drawingStack])
 
     useEffect(() => {
         const canvas = canvasRef.current
