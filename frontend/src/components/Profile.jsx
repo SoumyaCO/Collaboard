@@ -267,16 +267,26 @@ export default function Profile() {
             const data = await res.json()
             if (res.ok) {
                 fetchMeetings()
-                alert("Meeting deleted successfully!")
+                showAlert("Meeting deleted successfully!")
             } else {
-                alert(
+                showAlert(
                     data.msg || "An error occurred while deleting the meeting."
                 )
             }
         } catch (err) {
             console.error("Error deleting meeting:", err)
-            alert("An error occurred while deleting the meeting.")
+            showAlert("An error occurred while deleting the meeting.")
         }
+    }
+
+    // for invite meetings
+    const handleInviteClick = (meetingLink) => {
+        navigator.clipboard
+            .writeText(meetingLink)
+            .then(() => {
+                showAlert("Meeting link copied")
+            })
+            .catch(showAlert("Failed to copy the meeting link."))
     }
 
     return (
@@ -393,6 +403,7 @@ export default function Profile() {
                                                         meeting.meetingID
                                                     )
                                                 }
+                                                className="edit-action-button save-button"
                                             >
                                                 SAVE
                                             </button>
@@ -400,6 +411,7 @@ export default function Profile() {
                                                 onClick={() =>
                                                     setEditingMeetingIndex(null)
                                                 }
+                                                className="edit-action-button cancel-button"
                                             >
                                                 CANCEL
                                             </button>
@@ -409,6 +421,7 @@ export default function Profile() {
                                                         meeting.meetingID
                                                     )
                                                 }
+                                                className="edit-action-button delete-button"
                                             >
                                                 Delete
                                             </button>
@@ -435,7 +448,14 @@ export default function Profile() {
                                                     alt="edit"
                                                 />
                                             </button>
-                                            <button className="meeting-invite">
+                                            <button
+                                                className="meeting-invite"
+                                                onClick={() =>
+                                                    handleInviteClick(
+                                                        meeting.link
+                                                    )
+                                                }
+                                            >
                                                 Invite
                                             </button>
                                         </>

@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from "react"
 import profile from "../assets/profile_img.png"
 import logo from "../assets/logo.png"
-import SettingsIcon from "../assets/Settings.png"
+// import SettingsIcon from "../assets/Settings.png"
 import { useNavigate } from "react-router-dom"
 import { UserContext } from "../App"
 import Cookies from "js-cookie"
@@ -86,13 +86,13 @@ const Navbar = () => {
 
     const RenderMenu = () => (
         <div className="profile_container">
-            <div className="setting">
+            {/* <div className="setting">
                 <img
                     src={SettingsIcon}
                     alt="settings"
                     className="settings_icon"
                 />
-            </div>
+            </div> */}
             <div
                 className="profile_wrapper"
                 onMouseEnter={() => setIsDropdownVisible(true)}

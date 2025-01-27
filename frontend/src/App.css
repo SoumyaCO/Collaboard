@@ -132,10 +132,10 @@ body {
 }
 
 .alert {
-    background-color: #ff885b;
-    color: #ffe5cf;
+    background-color: #AEEA94;
+    color: #212121;
     padding: 17px;
-    border: 1px solid #f5c6cb;
+    border: 1px solid #77B254;
     position: fixed;
     top: 10%;
     left: 50%;
@@ -147,6 +147,7 @@ body {
     align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
+    
 }
 .close-button {
     background: none;
@@ -262,8 +263,7 @@ body {
     outline: none;
     box-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
 }
-/* canvas -------------------*/
-/* Tools and colors container */
+/* canvas ---------------------------------------------------------------------------------------------------------------*/
 .tools-and-colors-container {
     display: flex;
     justify-content: space-between;
@@ -439,7 +439,7 @@ canvas {
 }
 
 .profile-username {
-    color: #333333;
+    color:#DF9755;
     font-size: 2rem;
 }
 
@@ -550,7 +550,7 @@ canvas {
 }
 
 .meetings > ul > li > div > button:hover {
-    background-color: #ff4500;
+    background-color: #218838;
 }
 
 .meetings > ul > li > div > button:active {
@@ -581,10 +581,7 @@ canvas {
     grid-column: 5;
     margin-right: 0px;
 }
-.meeting-Delete{
-    background-color: #218838;
- 
-}
+
 .meeting-item.selected {
     border: 2px solid blue;
     background-color: rgba(173, 216, 230, 0.5);
@@ -653,6 +650,8 @@ canvas {
 .meeting-form-buttons button:last-child:hover {
     background-color: #c82333;
 }
+
+
 
 //popup//
 .popup {
@@ -755,7 +754,7 @@ canvas {
     flex-grow: 1;
     text-align: center;
     margin: 0 5px; 
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
+    transition: background-color 0.3s; 
 }
 
 
@@ -912,5 +911,152 @@ img {
     100% {
         transform: scale(1);
         box-shadow: 0 0 5px 2px rgba(0, 255, 0, 0.6);
+    }
+}
+
+
+
+
+
+/* Media Queries */
+@media only screen and (max-width: 768px) {
+    .home-banner-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .home-bannerImage-container img {
+        width: 100%;
+        height: auto;
+    }
+
+    .primary-heading {
+        font-size: 2rem;
+        margin: 2rem;
+    }
+
+    .secondary-text {
+        font-size: 1.2rem;
+        margin: 1rem 2rem;
+    }
+
+    .btn_input_btn {
+        margin: 2rem 0;
+    }
+
+    .meeting-heading {
+        flex-direction: column;
+        padding: 20px 20px;
+    }
+
+    .meeting-heading > h1 {
+        font-size: 1.2rem;
+    }
+
+    .meeting-heading > button {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .profile_container {
+        flex-direction: column;
+    }
+
+    .profile_img, .settings_icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+
+    .profile_dropdown {
+        width: 80px;
+        padding: 10px;
+    }
+
+    .profile_dropdown .user_id {
+        font-size: 16px;
+    }
+
+    .profile_dropdown button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .meeting-form .save-button,
+    .meeting-form .cancel-button {
+        font-size: 14px;
+    }
+
+    .profile-photo {
+        height: 200px;
+        width: 200px;
+    }
+
+    .profile-info {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .edit-profile-icon, .save-profile-icon {
+        width: 80%;
+        height: 45px;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .primary-heading {
+        font-size: 1.5rem;
+        margin: 1rem;
+    }
+
+    .secondary-text {
+        font-size: 1rem;
+        margin: 1rem;
+    }
+
+    .btn_input_btn {
+        margin: 1.5rem 0;
+    }
+
+    .meeting-heading > h1 {
+        font-size: 1.1rem;
+    }
+
+    .meeting-heading > button {
+        width: 100%;
+        height: 45px;
+        font-size: 14px;
+    }
+
+    .profile_img, .settings_icon {
+        width: 25px;
+        height: 25px;
+        margin-right: 15px;
+    }
+
+    /* .profile-dropdown {
+        width: 80px;
+    } */
+
+    .profile-photo {
+        height: 150px;
+        width: 150px;
+    }
+
+    .profile-info {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .edit-profile-icon, .save-profile-icon {
+        width: 70%;
+        height: 40px;
+    }
+
+    .meeting-title {
+        font-size: 0.8rem;
+    }
+
+    .meeting-invite {
+        font-size: 0.8rem;
     }
 }
