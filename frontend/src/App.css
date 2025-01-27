@@ -577,9 +577,13 @@ canvas {
     height: 20px;
 }
 
-.meeting-invite {
+.meeting-invite  {
     grid-column: 5;
     margin-right: 0px;
+}
+.meeting-Delete{
+    background-color: #218838;
+ 
 }
 .meeting-item.selected {
     border: 2px solid blue;
@@ -874,4 +878,39 @@ img {
     cursor: pointer;
     margin-top: 3px;
     height: 30px;
+}
+
+@keyframes billow {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-10px);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Wave Animation for Avatar */
+.user-item.speaking .user-avatar {
+    animation: wave 1.5s infinite ease-in-out;
+}
+
+@keyframes wave {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 5px 2px rgba(0, 255, 0, 0.6);
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 10px 4px rgba(0, 255, 0, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 5px 2px rgba(0, 255, 0, 0.6);
+    }
 }

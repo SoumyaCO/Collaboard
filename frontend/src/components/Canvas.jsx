@@ -6,6 +6,8 @@ import eraser from "../assets/eraser.png"
 import rectangle from "../assets/rectangle.png"
 import ellipse from "../assets/ellipse.png"
 import edit from "../assets/edit.png"
+import textfield from "../assets/text-field.png"
+
 import { InlineLoadingSpinner } from "./LoadingSpinner"
 import { useNavigate } from "react-router-dom"
 
@@ -33,12 +35,23 @@ const Canvas = () => {
     const [drawingData, setDrawingData] = useState({
         id: 1,
         tool: "pen",
-        color: "red",
+        color: "",
         startX: 0,
         startY: 0,
         width: 0,
         height: 0,
         strokeWidth: 2,
+        textData: {
+            id: 1,
+            startX: 0,
+            startY: 0,
+            width: 0,
+            height: 0,
+            text: "",
+            fontSize: 0,
+            fontFamily: "",
+            fontColor: "",
+        },
     })
     const dotDataRef = useRef({
         tr: new Path2D(),
@@ -50,19 +63,25 @@ const Canvas = () => {
         left: new Path2D(),
         right: new Path2D(),
     })
+    const [persistantID, setPersistantID] = useState("")
+    const [ishighlight, setIsHighlight] = useState(false)
+
+    // const [textData, setTextData] = useState([])
+    // const [isAddingText, setIsAddingText] = useState(false)
+    const [activeText, setActiveText] = useState(null)
+    const [newText, setNewText] = useState("")
 
     const [popupVisible, setPopupVisible] = useState(false)
     const [popupUsername, setPopupUsername] = useState("")
     const [clientID, setClientID] = useState("")
     const [roomID, setRoomID] = useState("")
-    const [persistantID, setPersistantID] = useState("")
-    const [ishighlight, setIsHighlight] = useState(false)
 
     const [menuVisible, setMenuVisible] = useState(false)
     const [activeTab, setActiveTab] = useState("members")
     const [messages, setMessages] = useState([])
     const [newMessagesDot, setnewMessagesDot] = useState(false)
-
+    const [isSpeaking, setIsSpeaking] = useState(false)
+    const [speakingUser, setSpeakingUser] = useState(null)
     const [chatInput, setChatInput] = useState("")
     const [users, setUsers] = useState([])
     const [currentUserId] = useState(
@@ -136,6 +155,7 @@ const Canvas = () => {
         })
         setPopupVisible(false)
     }
+
     const handleMenuToggle = () => {
         setMenuVisible((prev) => {
             const newVisibleState = !prev
@@ -217,18 +237,18 @@ const Canvas = () => {
         }
     }
 
-    const getContext = useCallback(() => {
-        // todo need to change name get canvas context
+    const getCanvasContext = useCallback(() => {
         const canvas = canvasRef.current
         const ctx = canvas.getContext("2d")
         return ctx
     }, [])
+
     const drawFromStack = (stack = []) => {
         const canvas = canvasRef.current
         const ctx = canvas.getContext("2d")
         ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        stack.forEach((shape, index) => {
+        stack.forEach((shape) => {
             if (shape.tool === "rect" && shape.isAlive) {
                 const rectangle = new Rectangle(
                     [shape.x, shape.y],
@@ -243,6 +263,14 @@ const Canvas = () => {
                     shape.color
                 )
                 ellipse.drawEllipseFill(ctx)
+            }
+            // Draw text if the tool is 'textfield'
+            else if (shape.tool === "textfield" && shape.isAlive) {
+                ctx.fillStyle = shape.color
+                ctx.fillRect(shape.x, shape.y, shape.width, shape.height) // Draw the rectangle
+                ctx.font = shape.font
+                ctx.fillStyle = shape.textColor // Text color
+                ctx.fillText(shape.text, shape.x + 10, shape.y + 20) // Adjust the position of the text inside the rectangle
             }
         })
     }
@@ -261,6 +289,56 @@ const Canvas = () => {
             bufferY = gap
         }
         return [bufferX, bufferY]
+    }
+
+    const handleTextChange = (e) => {
+        setNewText(e.target.value)
+    }
+    const commitTextToCanvas = () => {
+        if (newText.trim()) {
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext("2d")
+
+            ctx.font = "20px Arial"
+            const textWidth = ctx.measureText(newText).width
+            const textHeight = 20
+
+            const paddingX = 5
+            const paddingY = 5
+            const rectWidth = textWidth + paddingX * 2
+            const rectHeight = textHeight + paddingY * 2
+
+            const newId = drawingData.id + 1
+
+            // Create a new object to represent the text + rectangle with a unique ID
+            const newDrawingStack = [
+                ...drawingStack,
+                {
+                    id: newId,
+                    tool: "textfield",
+                    x: activeText.x,
+                    y: activeText.y,
+                    width: rectWidth,
+                    height: rectHeight,
+                    color: "rgba(255, 255, 255, 0)",
+                    text: newText,
+                    font: "20px Arial",
+                    textColor: "black",
+                    isAlive: true,
+                },
+            ]
+
+            setDrawingStack(newDrawingStack)
+            setDrawingData((prevData) => ({
+                ...prevData,
+                id: newId,
+            }))
+
+            drawFromStack(newDrawingStack)
+        }
+
+        setNewText("")
+        setActiveText(null)
     }
 
     const createDots = (ctx, x, y, width, height) => {
@@ -405,7 +483,6 @@ const Canvas = () => {
         const canvas = canvasRef.current
         const ctx = canvas.getContext("2d")
 
-        // Check for collision with shapes (rectangles and ellipses)
         for (let i = shapes.length - 1; i >= 0; i--) {
             const shape = shapes[i]
             const { x, y, width, height, tool } = shape
@@ -423,11 +500,13 @@ const Canvas = () => {
                     0,
                     2 * Math.PI
                 )
+            } else if (tool === "textfield") {
+                path.rect(x, y, width, height)
             }
 
             if (ctx.isPointInPath(path, offsetX, offsetY)) {
                 console.log("Detected shape collision with ID:", i)
-                return i // Return the index of the detected shape
+                return i
             }
         }
 
@@ -480,12 +559,12 @@ const Canvas = () => {
 
             canvas.style.cursor = cursor
         },
-        [ishighlight] // Add ishighlight as a dependency to clear the dots when it changes
+        [ishighlight]
     )
 
     const handleMouseDown = useCallback(
         (event) => {
-            const ctx = getContext()
+            const ctx = getCanvasContext()
             const { offsetX, offsetY } = event
             const id = detectCollision(
                 { offsetX, offsetY },
@@ -500,37 +579,64 @@ const Canvas = () => {
                 setIsHighlight(false)
                 setPersistantID(null)
                 setSelectedId(null)
+                setIsDrawing(false)
                 drawFromStack(drawingStack)
+
+                if (tool === "textfield") {
+                    setIsDrawing(true)
+                    setMouseMoved(true)
+                    setDrawingData((prevData) => ({
+                        ...prevData,
+                        tool: "textfield",
+                        textData: {
+                            id: prevData.textData.id + 1,
+                            startX: offsetX,
+                            startY: offsetY,
+                            text: "",
+                        },
+                    }))
+
+                    setActiveText({ x: offsetX, y: offsetY })
+                }
             }
 
+            // If the tool is 'edit' and an object is clicked (id !== -1 and id !== -2)
             if (tool === "edit" && id !== -1 && id !== -2) {
                 setIsHighlight(true)
-
                 setPersistantID(id)
                 setSelectedId(id)
                 setIsDrawing(true)
                 setMouseX(offsetX)
                 setMouseY(offsetY)
-                console.log(
-                    "ID and drawing stack in mouse down",
-                    id,
-                    drawingStack
-                )
                 drawFromStack(drawingStack)
-
                 highlight(ctx, id, drawingStack)
             } else if (tool === "eraser" && id !== -1) {
                 setPersistantID(null)
                 setIsHighlight(false)
-                const updatedStack = drawingStack.filter(
-                    (_, index) => index !== id
-                )
-                setDrawingStack(updatedStack)
-                drawFromStack(updatedStack)
-                emitDrawing(socketClient, {
-                    drawingStack: updatedStack,
-                    message: "hi",
-                })
+
+                if (drawingStack[id]?.tool === "textfield") {
+                    const updatedStack = drawingStack.filter(
+                        (_, index) => index !== id
+                    )
+
+                    setDrawingStack(updatedStack)
+                    drawFromStack(updatedStack)
+                    emitDrawing(socketClient, {
+                        drawingStack: updatedStack,
+                        message: "hi",
+                    })
+                } else {
+                    const updatedStack = drawingStack.filter(
+                        (_, index) => index !== id
+                    )
+
+                    setDrawingStack(updatedStack)
+                    drawFromStack(updatedStack)
+                    emitDrawing(socketClient, {
+                        drawingStack: updatedStack,
+                        message: "hi",
+                    })
+                }
             } else if (tool === "rect" || tool === "ellipse") {
                 setIsDrawing(true)
                 setMouseMoved(true)
@@ -565,13 +671,13 @@ const Canvas = () => {
                 setResizeHandle(null)
             }
         },
-        [drawingStack, tool, ishighlight, selectedId]
+        [drawingStack, tool, ishighlight, selectedId, selectedColor]
     )
 
     const handleMouseUp = useCallback(
         (event) => {
             console.log("persistent id ", persistantID)
-            const ctx = getContext()
+            const ctx = getCanvasContext()
 
             if (mouseState !== "mousedown") return
             setMouseState("mouseup")
@@ -596,12 +702,6 @@ const Canvas = () => {
 
             if (tool === "rect") {
                 if (width === 0 || height === 0) return
-
-                let rect = new Rectangle(
-                    [drawingData.startX, drawingData.startY],
-                    [width, height],
-                    drawingData.color
-                )
 
                 updatedStack =
                     tool === "edit" && selectedId !== null
@@ -641,11 +741,6 @@ const Canvas = () => {
             } else if (tool === "ellipse") {
                 if (width === 0 || height === 0) return
 
-                let ellipse = new Ellipse(
-                    [drawingData.startX, drawingData.startY],
-                    [width / 2, height / 2],
-                    drawingData.color
-                )
                 if (tool === "edit" && persistantID !== null) {
                     highlight(ctx, persistantID, drawingStack)
                 }
@@ -687,22 +782,22 @@ const Canvas = () => {
                 setDrawingData((prev) => ({ ...prev, id: prev.id + 1 }))
             }
 
+            canvasRef.current.style.cursor = "auto"
+
             setIsDrawing(false)
             setSelectedId(null)
             setResizeHandle(null)
-
             emitDrawing(socketClient, {
                 drawingStack: updatedStack,
                 message: "hi",
             })
-            canvasRef.current.style.cursor = "auto"
         },
         [
             isDrawing,
             mouseMoved,
             drawingData,
             tool,
-            getContext,
+            getCanvasContext,
             drawingStack,
             selectedId,
             mouseState,
@@ -713,7 +808,7 @@ const Canvas = () => {
         (event) => {
             const { offsetX, offsetY } = event
             const canvas = canvasRef.current
-            const ctx = getContext()
+            const ctx = getCanvasContext()
 
             if (tool === "edit" && persistantID !== null && ishighlight) {
                 handleCanvasMouseMove(event)
@@ -853,7 +948,7 @@ const Canvas = () => {
             mouseState,
             drawingData,
             tool,
-            getContext,
+            getCanvasContext,
             drawingStack,
             selectedId,
             mouseX,
@@ -862,10 +957,6 @@ const Canvas = () => {
             handleCanvasMouseMove,
         ]
     )
-
-    // useEffect(() => {
-    //     drawFromStack(drawingStack)
-    // }, [drawingStack])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -892,7 +983,7 @@ const Canvas = () => {
         setTool(newTool)
         setDrawingData((prev) => ({ ...prev, tool: newTool }))
     }
-
+    // useEffect(() => {})
     const colors = ["red", "blue", "green", "yellow", "black"]
 
     return (
@@ -912,6 +1003,7 @@ const Canvas = () => {
                     </div>
                 </div>
             )}
+
             <div className="tools-and-colors-container">
                 <div className="tools">
                     <div
@@ -947,6 +1039,37 @@ const Canvas = () => {
                         <img src={eraser} alt="eraser" />
                     </div>
                     <div
+                        className={`tool textfield ${
+                            tool === "textfield" ? "active-button" : ""
+                        }`}
+                        onClick={() => selectTool("textfield")}
+                    >
+                        <img src={textfield} alt="text" />
+                    </div>
+                    {tool === "textfield" && activeText && (
+                        <input
+                            type="text"
+                            value={newText}
+                            onChange={(e) => {
+                                handleTextChange(e)
+                            }}
+                            onBlur={() => {
+                                commitTextToCanvas()
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    commitTextToCanvas()
+                                }
+                            }}
+                            style={{
+                                position: "absolute",
+                                left: activeText.x + "px",
+                                top: activeText.y + 90 + "px",
+                                zIndex: 100,
+                            }}
+                        />
+                    )}
+                    <div
                         className={`tool edit ${
                             tool === "edit" ? "active-button" : ""
                         }`}
@@ -973,6 +1096,7 @@ const Canvas = () => {
                         </div>
                     ))}
                 </div>
+
                 {/* Hamburger Menu */}
                 <div className="hamburger-container">
                     <button
@@ -1026,6 +1150,7 @@ const Canvas = () => {
                                 ) : null}
                             </button>
                         </div>
+
                         {activeTab === "members" && (
                             <div className="members-list">
                                 {loading ? (
@@ -1033,8 +1158,18 @@ const Canvas = () => {
                                 ) : (
                                     (console.log("inside member", users),
                                     users.map((user, index) => (
-                                        <div key={index} className="user-item">
-                                            <img src={user.dp_url} />
+                                        <div
+                                            key={index}
+                                            className={`user-item ${
+                                                user.isSpeaking
+                                                    ? "speaking"
+                                                    : ""
+                                            }`}
+                                        >
+                                            <img
+                                                src={user.dp_url}
+                                                className="user-avatar"
+                                            />
                                             <span>{user.full_name}</span>
                                         </div>
                                     )))
@@ -1091,10 +1226,22 @@ const Canvas = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Voice Wave Container */}
+            <div className="voice-wave-container">
+                {isSpeaking && (
+                    <>
+                        <div className="speaking-user-name">
+                            {speakingUser} is speaking...
+                        </div>
+                    </>
+                )}
+            </div>
+
             <canvas
                 ref={canvasRef}
-                width={1680}
-                height={640}
+                width={1690}
+                height={710}
                 style={{ border: "1px solid black" }}
             ></canvas>
         </div>
