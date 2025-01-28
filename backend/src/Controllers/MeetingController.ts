@@ -25,12 +25,23 @@ export interface LinkResponse {
     adminIn: boolean
 }
 
+/**
+ * For Encoding the meeting link with additional data
+ * @param info {Partial<Meeting>} meeting info, can be partial
+ * @returns encr_url {Promise<string>} - encoded meeting link
+ */
 async function jwtEncr(info: Partial<Meeting>): Promise<string> {
-    const encr_url = jwt.sign(
-        info,
-        process.env.MEETING_ENCR_PASS as string
-    ) as string
-    return encr_url
+    // to seperate the error from the "createMeeting" method's error
+    try {
+        const encr_url = jwt.sign(
+            info,
+            process.env.MEETING_ENCR_PASS as string
+        ) as string
+        return encr_url
+    } catch (error) {
+        console.log(`ErrorEncodingMeetingLink: \n${error}`.red.bold)
+        return ""
+    }
 }
 
 /**
@@ -43,17 +54,22 @@ export async function createMeeting(
 ): Promise<boolean> {
     try {
         const encr_url = await jwtEncr(meeting)
+
+        // if there is an error generating the encoded url
+        if (encr_url == "") return false
+
         const meeting_info: Partial<Meeting> = {
             ownerUsername: meeting.ownerUsername,
             title: meeting.title,
             meetingID: meeting.meetingID,
+            date: meeting.date,
             link: encr_url,
         }
         const meet = new MeetingModel(meeting_info)
         await meet.save()
         console.log("meeting [created]".green.italic)
     } catch (err) {
-        console.log(`Error: ${err}`.red.bold)
+        console.log(`ErrorCreatingMeeting:\n ${err}`.red.bold)
         return false
     }
 
