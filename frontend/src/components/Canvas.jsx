@@ -70,7 +70,10 @@ const Canvas = () => {
     )
     const messagesEndRef = useRef(null)
     const navigate = useNavigate()
-
+    const audioRef = useRef(null)
+    const peerConnectionRef = useRef(null)
+    const localStreamRef = useRef(null)
+    const [talk, setTalk] = useState(false)
     useEffect(() => {
         const isPageRefreshed = sessionStorage.getItem("isPageRefreshed")
 
@@ -136,6 +139,76 @@ const Canvas = () => {
         })
         setPopupVisible(false)
     }
+    /**
+     * creates a peer connection
+     * @returns {RTCPeerConnection}
+     */
+    const createPeerConnection = async () => {
+        const servers = {
+            iceServers: [
+                {
+                    urls: [
+                        "stun:stun1.l.google.com:19302",
+                        "stun:stun2.l.google.com:19302",
+                    ],
+                },
+            ],
+        }
+        const peerConnection = new RTCPeerConnection(servers)
+        peerConnectionRef.current = peerConnection;
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate)
+                socketClient.emit("ICECandidate", event.candidate)
+        }
+        peerConnection.ontrack = (event) => {
+            if (remoteAudioRef.current)
+                remoteAudioRef.current.srcObject = event.streams[0]
+        }
+        return peerConnection
+    }
+    /**
+     * creates offer
+     */
+    const isTalking = async () => {
+        setTalk(true)
+        const localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false,
+        })
+        const peerConnection = createPeerConnection()
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream)
+        })
+        const offer = await peerConnection.createOffer()
+        await peerConnection.setLocalDescription(offer)
+        socketClient.emit("offer", offer)
+    }
+    // for voice calling
+    useEffect(() => {
+        /**
+         * creates answer by first creating the peer connection 
+         * then takes the offer from  the socket and emits 'answer' event 
+         * @param {offer}
+         */
+        socketClient.on("offer", async (offer) => {
+            const peerConnection = createPeerConnection()
+            await peerConnection.setRemoteDescription(offer)
+            const answer = peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socketClient.emit('answer', answer);
+        })
+        socketClient.on('answer', async(answer)=>{
+            peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer))
+        })
+        socketClient.on('ICECandidate', async(candidate)=>{
+            peerConnectionRef.current.addIceCandidate(candidate)
+        })
+        return () => {
+            socketClient.off('offer')
+            socketClient.off('answer')
+            socketClient.off('ICECandidate')
+        }
+    }, [])
     const handleMenuToggle = () => {
         setMenuVisible((prev) => {
             const newVisibleState = !prev
