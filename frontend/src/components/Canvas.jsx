@@ -71,6 +71,7 @@ const Canvas = () => {
     const messagesEndRef = useRef(null)
     const navigate = useNavigate()
     const audioRef = useRef(null)
+    const remoteAudioRef = useRef(null)
     const peerConnectionRef = useRef(null)
     const localStreamRef = useRef(null)
     const [talk, setTalk] = useState(false)
@@ -155,10 +156,11 @@ const Canvas = () => {
             ],
         }
         const peerConnection = new RTCPeerConnection(servers)
-        peerConnectionRef.current = peerConnection;
+        peerConnectionRef.current = peerConnection
         peerConnection.onicecandidate = (event) => {
             if (event.candidate)
                 socketClient.emit("ICECandidate", event.candidate)
+            
         }
         peerConnection.ontrack = (event) => {
             if (remoteAudioRef.current)
@@ -175,7 +177,9 @@ const Canvas = () => {
             audio: true,
             video: false,
         })
-        const peerConnection = createPeerConnection()
+        localStreamRef.current = localStream;
+        let peerConnection = await createPeerConnection()
+        peerConnectionRef.current = peerConnection;
         localStream.getTracks().forEach((track) => {
             peerConnection.addTrack(track, localStream)
         })
@@ -186,27 +190,33 @@ const Canvas = () => {
     // for voice calling
     useEffect(() => {
         /**
-         * creates answer by first creating the peer connection 
-         * then takes the offer from  the socket and emits 'answer' event 
+         * creates answer by first creating the peer connection
+         * then takes the offer from  the socket and emits 'answer' event
          * @param {offer}
          */
-        socketClient.on("offer", async (offer) => {
-            const peerConnection = createPeerConnection()
-            await peerConnection.setRemoteDescription(offer)
-            const answer = peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socketClient.emit('answer', answer);
+        socketClient.on("sdp-offer", async (offer) => {
+            const peerConnection = await createPeerConnection()
+            console.log("LocalStream:", localStreamRef);
+            
+            peerConnection.setRemoteDescription(offer)
+            const answer = peerConnection.createAnswer()
+            peerConnection.setLocalDescription(answer)
+            socketClient.emit("answer", answer)
         })
-        socketClient.on('answer', async(answer)=>{
-            peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer))
+        socketClient.on("sdp-answer", async (answer) => {
+            const sdp = new RTCSessionDescription(answer)
+            console.log('answer:', answer);
+            console.log('SDP: ', sdp);
+             
+            peerConnectionRef.current?.setRemoteDescription(sdp)
         })
-        socketClient.on('ICECandidate', async(candidate)=>{
-            peerConnectionRef.current.addIceCandidate(candidate)
+        socketClient.on("onICECandidate", async (candidate) => {
+            peerConnectionRef.current?.addIceCandidate(candidate)
         })
         return () => {
-            socketClient.off('offer')
-            socketClient.off('answer')
-            socketClient.off('ICECandidate')
+            socketClient.off("offer")
+            socketClient.off("answer")
+            socketClient.off("ICECandidate")
         }
     }, [])
     const handleMenuToggle = () => {
@@ -1075,6 +1085,10 @@ const Canvas = () => {
                             <span className="notification-dot"></span>
                         )}
                     </button>
+                    <div>
+                        <button onClick={isTalking}>TALK</button>
+                        <audio ref={remoteAudioRef} autoPlay></audio>
+                    </div>
                     <div className="menu-content">
                         <div className="tabs">
                             <button
