@@ -66,8 +66,6 @@ const Canvas = () => {
     const [persistantID, setPersistantID] = useState("")
     const [ishighlight, setIsHighlight] = useState(false)
 
-    // const [textData, setTextData] = useState([])
-    // const [isAddingText, setIsAddingText] = useState(false)
     const [activeText, setActiveText] = useState(null)
     const [newText, setNewText] = useState("")
 
@@ -82,6 +80,7 @@ const Canvas = () => {
     const [newMessagesDot, setnewMessagesDot] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
     const [speakingUser, setSpeakingUser] = useState(null)
+
     const [chatInput, setChatInput] = useState("")
     const [users, setUsers] = useState([])
     const [currentUserId] = useState(
@@ -957,6 +956,14 @@ const Canvas = () => {
             handleCanvasMouseMove,
         ]
     )
+    const handleSpeakerToggle = (username) => {
+        const updatedUsers = users.map((user) =>
+            user.username === username
+                ? { ...user, isMuted: !user.isMuted }
+                : user
+        )
+        setUsers(updatedUsers)
+    }
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -983,7 +990,6 @@ const Canvas = () => {
         setTool(newTool)
         setDrawingData((prev) => ({ ...prev, tool: newTool }))
     }
-    // useEffect(() => {})
     const colors = ["red", "blue", "green", "yellow", "black"]
 
     return (
@@ -1156,7 +1162,6 @@ const Canvas = () => {
                                 {loading ? (
                                     <InlineLoadingSpinner />
                                 ) : (
-                                    (console.log("inside member", users),
                                     users.map((user, index) => (
                                         <div
                                             key={index}
@@ -1165,14 +1170,34 @@ const Canvas = () => {
                                                     ? "speaking"
                                                     : ""
                                             }`}
+                                            onClick={() =>
+                                                setSpeakingUser(user.full_name)
+                                            }
                                         >
                                             <img
                                                 src={user.dp_url}
                                                 className="user-avatar"
+                                                alt={user.full_name}
                                             />
                                             <span>{user.full_name}</span>
+
+                                            {/* Speaker Button */}
+                                            <button
+                                                className={`speaker-btn ${
+                                                    user.isMuted
+                                                        ? "muted"
+                                                        : "active"
+                                                }`}
+                                                onClick={() =>
+                                                    handleSpeakerToggle(
+                                                        user.username
+                                                    )
+                                                }
+                                            >
+                                                {user.isMuted ? "🔇" : "📢"}
+                                            </button>
                                         </div>
-                                    )))
+                                    ))
                                 )}
                             </div>
                         )}
@@ -1229,11 +1254,12 @@ const Canvas = () => {
 
             {/* Voice Wave Container */}
             <div className="voice-wave-container">
-                {isSpeaking && (
+                {speakingUser && (
                     <>
                         <div className="speaking-user-name">
                             {speakingUser} is speaking...
                         </div>
+                        <div className="wave-animation"></div>
                     </>
                 )}
             </div>
