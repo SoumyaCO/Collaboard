@@ -8,10 +8,11 @@ const Headerquery = () => {
     const { Jwtbyuser } = useParams()
     const navigate = useNavigate()
     const [errorMessage, setErrorMessage] = useState("")
+    const apiUrl = import.meta.env.VITE_API_KEY
 
     const fetchMeetingDetails = async () => {
         try {
-            const result = await fetch("http://localhost:8080/meeting/link", {
+            const result = await fetch(`${apiUrl}/meeting/link`, {
                 method: "POST",
                 headers: {
                     Accept: "application/json",

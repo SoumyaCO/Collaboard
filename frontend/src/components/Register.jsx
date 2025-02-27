@@ -12,11 +12,12 @@ const Register = () => {
     const [password, setPassword] = useState("")
 
     const navigate = useNavigate()
+    const apiUrl = import.meta.env.VITE_API_KEY
 
     const handleSubmit = (e) => {
         e.preventDefault()
         axios
-            .post("http://localhost:8080/auth/register", {
+            .post(`${apiUrl}/auth/register`, {
                 username,
                 firstName,
                 lastName,

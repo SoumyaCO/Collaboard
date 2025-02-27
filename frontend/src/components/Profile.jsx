@@ -22,6 +22,7 @@ export default function Profile() {
         meetingID: "",
     })
     const navigate = useNavigate()
+    const apiUrl = import.meta.env.VITE_API_KEY
 
     // Function to format date to 'YYYY-MM-DD'
     const formatDate = (dateString) => {
@@ -35,7 +36,7 @@ export default function Profile() {
     // Fetch user profile
     const callProfilePage = async () => {
         try {
-            const res = await fetch("http://localhost:8080/auth/profile", {
+            const res = await fetch(`${apiUrl}/auth/profile`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
@@ -64,17 +65,14 @@ export default function Profile() {
     // Fetch meetings
     const fetchMeetings = async () => {
         try {
-            const res = await fetch(
-                "http://localhost:8080/meeting/getAllMeeting",
-                {
-                    method: "PUT",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                }
-            )
+            const res = await fetch(`${apiUrl}/meeting/getAllMeeting`, {
+                method: "PUT",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to fetch meetings")
@@ -124,14 +122,11 @@ export default function Profile() {
         }
 
         try {
-            const res = await fetch(
-                `http://localhost:8080/user/${user.username}`,
-                {
-                    method: "PUT",
-                    body: formData,
-                    credentials: "include",
-                }
-            )
+            const res = await fetch(`${apiUrl}/user/${user.username}`, {
+                method: "PUT",
+                body: formData,
+                credentials: "include",
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to save user profile")
@@ -187,7 +182,7 @@ export default function Profile() {
         )
         try {
             const res = await fetch(
-                `http://localhost:8080/meeting/updateMeeting/${meetingID}`,
+                `${apiUrl}/meeting/updateMeeting/${meetingID}`,
                 {
                     method: "PUT",
                     headers: {
@@ -214,18 +209,15 @@ export default function Profile() {
     const handleCreateMeeting = async () => {
         let meetingID = makeid(10)
         try {
-            const res = await fetch(
-                "http://localhost:8080/meeting/createMeeting",
-                {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                    body: JSON.stringify({ ...newMeeting, meetingID }),
-                }
-            )
+            const res = await fetch(`${apiUrl}/meeting/createMeeting`, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ ...newMeeting, meetingID }),
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to create meeting")
@@ -254,7 +246,7 @@ export default function Profile() {
     const handleDeleteMeeting = async (meetingID) => {
         try {
             const res = await fetch(
-                `http://localhost:8080/meeting/deleteMeeting/${meetingID}`,
+                `${apiUrl}/meeting/deleteMeeting/${meetingID}`,
                 {
                     method: "DELETE",
                     headers: {

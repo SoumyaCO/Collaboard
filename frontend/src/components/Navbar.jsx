@@ -11,6 +11,7 @@ const Navbar = () => {
     const [isDropdownVisible, setIsDropdownVisible] = useState(false)
     const [user, setUser] = useState(null)
     const navigate = useNavigate()
+    const apiUrl = import.meta.env.VITE_API_KEY
 
     useEffect(() => {
         const token = Cookies.get("authToken")
@@ -24,7 +25,7 @@ const Navbar = () => {
     }, [dispatch]) // effect runs when ever dispatch changes
     const fetchUserProfile = async () => {
         try {
-            const res = await fetch("http://localhost:8080/auth/getdata", {
+            const res = await fetch(`${apiUrl}/auth/getdata`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -60,7 +61,7 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            const res = await fetch("http://localhost:8080/auth/logout", {
+            const res = await fetch(`${apiUrl}/auth/logout`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",

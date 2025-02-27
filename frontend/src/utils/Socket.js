@@ -1,7 +1,7 @@
 import { io } from "socket.io-client"
 import Cookies from "js-cookie"
 
-const Server_Url = "http://localhost:8080"
+const Server_Url = import.meta.env.VITE_API_KEY
 
 export const createSocket = () => {
     const username = localStorage.getItem("username")
