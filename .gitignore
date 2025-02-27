@@ -5,7 +5,7 @@ frontend/src/components/canvas_exp.jsx
 frontend/src/components/CanvasBorder.jsx
 frontend/src/components/c_exp.jsx
 
-
+.env
 # backend directories
 backend/node_modules
 backend/.env
