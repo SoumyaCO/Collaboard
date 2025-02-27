@@ -134,7 +134,13 @@ router.post("/login", async (req: Request, res: Response) => {
     const token: String = jwt.sign({ _id: user._id }, secret);
     res
       .status(200)
-      .cookie("authToken", token)
+      .cookie("authToken", token, {
+        sameSite: "none",
+        secure: true,
+        partitioned: true,
+        httpOnly: true,
+        maxAge: 3600000
+      })
       .send({ message: "login sucessful" });
   }
 });

@@ -1,5 +1,6 @@
 # frontend directories
 frontend/node_modules
+frontend/.env
 frontend/src/components/canvas_exp_2.jsx
 frontend/src/components/canvas_exp.jsx
 frontend/src/components/CanvasBorder.jsx
@@ -11,7 +12,6 @@ backend/node_modules
 backend/.env
 backend/data
 backend/redis_data
-
 # backend build directory
 backend/dist
 
