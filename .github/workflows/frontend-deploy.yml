@@ -3,7 +3,7 @@ name: Deploy to S3 and Cloudfront
 on:
   push:
     branches:
-      - main
+      - deployment 
 
 jobs:
   build-n-deploy:
@@ -30,8 +30,9 @@ jobs:
       # Build
       - name: Build react app
         working-directory: ./frontend
-        run: npm run build
-      # env: VITE_API_KEY : ${{secret.VITE_API_KEY}} adding the key-value pairs will ensure the values are injected in the build (from secrets) 
+        run: | 
+            npm run build
+            echo "${{secrets.ALL_SECRETS}}"
 
       - name: Deploy to S3
         env:
