@@ -28,10 +28,10 @@ const app = express()
 
 // CORS configuration
 const corsOptions = {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-}
+	origin: "https://collaboard.gooddevs.org",
+	methods: ["GET", "POST", "PUT"],
+	credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+};
 app.use(
     bodyParser.urlencoded({
         extended: true,
