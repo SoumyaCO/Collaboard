@@ -30,8 +30,9 @@ jobs:
       # Build
       - name: Build react app
         working-directory: ./frontend
-        run: | 
-            npm run build
+        env: 
+          VITE_API_KEY: ${{secrets.VITE_API_KEY}}
+        run: npm run build
 
       - name: Deploy to S3
         env:
