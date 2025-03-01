@@ -22,11 +22,21 @@ export default function Profile() {
         meetingID: "",
     })
     const navigate = useNavigate()
+    const apiUrl = import.meta.env.VITE_API_KEY
+
+    // Function to format date to 'YYYY-MM-DD'
+    const formatDate = (dateString) => {
+        const date = new Date(dateString)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, "0")
+        const day = String(date.getDate()).padStart(2, "0")
+        return `${day}-${month}-${year}`
+    }
 
     // Fetch user profile
     const callProfilePage = async () => {
         try {
-            const res = await fetch("http://localhost:8080/auth/profile", {
+            const res = await fetch(`${apiUrl}/auth/profile`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
@@ -55,17 +65,14 @@ export default function Profile() {
     // Fetch meetings
     const fetchMeetings = async () => {
         try {
-            const res = await fetch(
-                "http://localhost:8080/meeting/getAllMeeting",
-                {
-                    method: "PUT",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                }
-            )
+            const res = await fetch(`${apiUrl}/meeting/getAllMeeting`, {
+                method: "PUT",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to fetch meetings")
@@ -115,14 +122,11 @@ export default function Profile() {
         }
 
         try {
-            const res = await fetch(
-                `http://localhost:8080/user/${user.username}`,
-                {
-                    method: "PUT",
-                    body: formData,
-                    credentials: "include",
-                }
-            )
+            const res = await fetch(`${apiUrl}/user/${user.username}`, {
+                method: "PUT",
+                body: formData,
+                credentials: "include",
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to save user profile")
@@ -161,7 +165,7 @@ export default function Profile() {
         setSelectedMeetingIndex(selectedMeetingIndex === index ? null : index)
     }
 
-    // Handle input changes for new meeting
+    //  input changes for new meeting
     const handleNewMeetingChange = (e) => {
         const { name, value } = e.target
         setNewMeeting((prev) => ({
@@ -171,23 +175,49 @@ export default function Profile() {
             meetingID: "",
         }))
     }
-
-    // Save the new meeting
-    const handleCreateMeeting = async () => {
-        let meetingID = makeid(10)
+    // edited meeting
+    const handleSaveMeeting = async (meetingID) => {
+        const updatedMeeting = meetings.find(
+            (meeting) => meeting.meetingID === meetingID
+        )
         try {
             const res = await fetch(
-                "http://localhost:8080/meeting/createMeeting",
+                `${apiUrl}/meeting/updateMeeting/${meetingID}`,
                 {
-                    method: "POST",
+                    method: "PUT",
                     headers: {
                         Accept: "application/json",
                         "Content-Type": "application/json",
                     },
                     credentials: "include",
-                    body: JSON.stringify({ ...newMeeting, meetingID }),
+                    body: JSON.stringify(updatedMeeting),
                 }
             )
+
+            if (!res.ok) {
+                throw new Error("Failed to update meeting")
+            }
+
+            await fetchMeetings()
+            setEditingMeetingIndex(null)
+        } catch (err) {
+            console.error("Error in editing meeting:", err)
+        }
+    }
+
+    // save the new meeting
+    const handleCreateMeeting = async () => {
+        let meetingID = makeid(10)
+        try {
+            const res = await fetch(`${apiUrl}/meeting/createMeeting`, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ ...newMeeting, meetingID }),
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to create meeting")
@@ -211,6 +241,44 @@ export default function Profile() {
     }
     if (!user) {
         return <div className="profile-container">No user data available</div>
+    }
+
+    const handleDeleteMeeting = async (meetingID) => {
+        try {
+            const res = await fetch(
+                `${apiUrl}/meeting/deleteMeeting/${meetingID}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                }
+            )
+
+            const data = await res.json()
+            if (res.ok) {
+                fetchMeetings()
+                showAlert("Meeting deleted successfully!")
+            } else {
+                showAlert(
+                    data.msg || "An error occurred while deleting the meeting."
+                )
+            }
+        } catch (err) {
+            console.error("Error deleting meeting:", err)
+            showAlert("An error occurred while deleting the meeting.")
+        }
+    }
+
+    // for invite meetings
+    const handleInviteClick = (meetingLink) => {
+        navigator.clipboard
+            .writeText(meetingLink)
+            .then(() => {
+                showAlert("Meeting link copied")
+            })
+            .catch(showAlert("Failed to copy the meeting link."))
     }
 
     return (
@@ -323,8 +391,11 @@ export default function Profile() {
                                             />
                                             <button
                                                 onClick={() =>
-                                                    setEditingMeetingIndex(null)
+                                                    handleSaveMeeting(
+                                                        meeting.meetingID
+                                                    )
                                                 }
+                                                className="edit-action-button save-button"
                                             >
                                                 SAVE
                                             </button>
@@ -332,8 +403,19 @@ export default function Profile() {
                                                 onClick={() =>
                                                     setEditingMeetingIndex(null)
                                                 }
+                                                className="edit-action-button cancel-button"
                                             >
                                                 CANCEL
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    handleDeleteMeeting(
+                                                        meeting.meetingID
+                                                    )
+                                                }
+                                                className="edit-action-button delete-button"
+                                            >
+                                                Delete
                                             </button>
                                         </>
                                     ) : (
@@ -342,7 +424,7 @@ export default function Profile() {
                                                 {meeting.title}
                                             </div>
                                             <div className="meeting-date">
-                                                {meeting.date}
+                                                {formatDate(meeting.date)}
                                             </div>
                                             <button className="meeting-join-icon">
                                                 Join
@@ -358,7 +440,14 @@ export default function Profile() {
                                                     alt="edit"
                                                 />
                                             </button>
-                                            <button className="meeting-invite">
+                                            <button
+                                                className="meeting-invite"
+                                                onClick={() =>
+                                                    handleInviteClick(
+                                                        meeting.link
+                                                    )
+                                                }
+                                            >
                                                 Invite
                                             </button>
                                         </>

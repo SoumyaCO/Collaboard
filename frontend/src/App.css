@@ -55,9 +55,9 @@ nav {
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: #def9c4; // transparency
+    background-color: #def9c4; 
     border: 1px solid rgba(173, 216, 230, 0.5);
-    border: 1px solid rgba(0, 0, 0, 0.1); /* Light border */
+    border: 1px solid rgba(0, 0, 0, 0.1); 
     border-radius: 9px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     padding: 12px;
@@ -67,9 +67,9 @@ nav {
     align-items: center;
     width: 150px;
 
-    opacity: 0; /* Start hidden */
+    opacity: 0; 
     visibility: hidden;
-    transform: translateY(10px); /* offset for initial hidden state */
+    transform: translateY(10px); 
 
     transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
 }
@@ -85,7 +85,7 @@ nav {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    margin-bottom: 10px; /* Space between avatar and username */
+    margin-bottom: 10px;
 }
 
 .profile_dropdown .user_id {
@@ -132,10 +132,10 @@ body {
 }
 
 .alert {
-    background-color: #ff885b;
-    color: #ffe5cf;
+    background-color: #AEEA94;
+    color: #212121;
     padding: 17px;
-    border: 1px solid #f5c6cb;
+    border: 1px solid #77B254;
     position: fixed;
     top: 10%;
     left: 50%;
@@ -147,6 +147,7 @@ body {
     align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
+    
 }
 .close-button {
     background: none;
@@ -225,9 +226,7 @@ body {
 .New_Room,
 .join_btn {
     background-color: #ff6347;
-    /* Tomato */
     border: 2px solid #ff4500;
-    /* OrangeRed */
     color: white;
     padding: 15px 32px;
     text-align: center;
@@ -258,12 +257,10 @@ body {
 }
 
 .Room_link:focus {
-    /* border-color: #ff4500 */
     outline: none;
     box-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
 }
-/* canvas -------------------*/
-/* Tools and colors container */
+/* canvas ---------------------------------------------------------------------------------------------------------------*/
 .tools-and-colors-container {
     display: flex;
     justify-content: space-between;
@@ -439,7 +436,7 @@ canvas {
 }
 
 .profile-username {
-    color: #333333;
+    color:#DF9755;
     font-size: 2rem;
 }
 
@@ -550,7 +547,7 @@ canvas {
 }
 
 .meetings > ul > li > div > button:hover {
-    background-color: #ff4500;
+    background-color: #218838;
 }
 
 .meetings > ul > li > div > button:active {
@@ -577,10 +574,11 @@ canvas {
     height: 20px;
 }
 
-.meeting-invite {
+.meeting-invite  {
     grid-column: 5;
     margin-right: 0px;
 }
+
 .meeting-item.selected {
     border: 2px solid blue;
     background-color: rgba(173, 216, 230, 0.5);
@@ -649,6 +647,8 @@ canvas {
 .meeting-form-buttons button:last-child:hover {
     background-color: #c82333;
 }
+
+
 
 //popup//
 .popup {
@@ -751,7 +751,7 @@ canvas {
     flex-grow: 1;
     text-align: center;
     margin: 0 5px; 
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
+    transition: background-color 0.3s; 
 }
 
 
@@ -779,6 +779,28 @@ canvas {
     border-radius: 50%;
     margin-right: 10px;
 }
+.speaker-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    color: #86d293;
+    transition: color 0.3s ease;
+}
+
+.speaker-btn.active {
+    color: green; 
+}
+
+.speaker-btn.muted {
+    color: #ff6347; 
+}
+
+.speaker-btn:hover {
+    color: #007bff; 
+}
+
 
 .chat-tab {
     display: flex;
@@ -792,7 +814,17 @@ canvas {
     font-weight: bold;
     margin-bottom: 5px;
     font-size: 13px;
-    color: #F3F3E0; 
+    color: #F96E2A;
+    width: 100%; /* Makes it occupy full width */
+    text-align: left; /* Default to left alignment */
+}
+
+.message-sent .username {
+    text-align: right; /* Aligns the username to the right for sent messages */
+}
+
+.message-received .username {
+    text-align: left; /* Aligns the username to the left for received messages */
 }
 
 .messages-container {
@@ -802,6 +834,7 @@ canvas {
     display: flex;
     border-radius: 10px;
     flex-direction: column-reverse;
+
 }
 
 .messages {
@@ -823,22 +856,30 @@ canvas {
     right: 15px;
 }
 
+
 .message-sent {
     background-color: #86d293;
     align-self: flex-end;
     padding: 5px;
     border-radius: 10px;
     margin-bottom: 7px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: auto;
 }
 
 .message-received {
-    background-color: #A2D2DF; 
+    background-color: #A2D2DF;
     align-self: flex-start;
     padding: 5px;
     border-radius: 10px;
     margin-bottom: 7px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: auto;
 }
-
 .message-text {
     padding: 1px 15px;
     border-radius: 10px;
@@ -853,7 +894,7 @@ canvas {
     display: flex;
     padding: 10px;
     border-radius: 10px;
-    background-color: #fff;
+    background-color: #EAFAEA;
     box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -874,4 +915,205 @@ img {
     cursor: pointer;
     margin-top: 3px;
     height: 30px;
+}
+
+@keyframes billow {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-10px);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Wave Animation for Avatar */
+.voice-wave-container {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+.wave-animation {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(120deg, rgba(0, 162, 255, 0.7) 25%, rgba(255, 255, 255, 0.4) 50%, rgba(0, 162, 255, 0.7) 75%);
+    background-size: 150% 100%;
+    animation: wave 2s infinite linear;
+    position: absolute;
+    bottom: 0;
+}
+
+@keyframes wave {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 100% 0;
+    }
+}
+
+.speaking-user-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    z-index: 1;
+}
+
+
+
+
+
+/* Media Queries */
+@media only screen and (max-width: 768px) {
+    .home-banner-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .home-bannerImage-container img {
+        width: 100%;
+        height: auto;
+    }
+
+    .primary-heading {
+        font-size: 2rem;
+        margin: 2rem;
+    }
+
+    .secondary-text {
+        font-size: 1.2rem;
+        margin: 1rem 2rem;
+    }
+
+    .btn_input_btn {
+        margin: 2rem 0;
+    }
+
+    .meeting-heading {
+        flex-direction: column;
+        padding: 20px 20px;
+    }
+
+    .meeting-heading > h1 {
+        font-size: 1.2rem;
+    }
+
+    .meeting-heading > button {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .profile_container {
+        flex-direction: column;
+    }
+
+    .profile_img, .settings_icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+
+    .profile_dropdown {
+        width: 80px;
+        padding: 10px;
+    }
+
+    .profile_dropdown .user_id {
+        font-size: 16px;
+    }
+
+    .profile_dropdown button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .meeting-form .save-button,
+    .meeting-form .cancel-button {
+        font-size: 14px;
+    }
+
+    .profile-photo {
+        height: 200px;
+        width: 200px;
+    }
+
+    .profile-info {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .edit-profile-icon, .save-profile-icon {
+        width: 80%;
+        height: 45px;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .primary-heading {
+        font-size: 1.5rem;
+        margin: 1rem;
+    }
+
+    .secondary-text {
+        font-size: 1rem;
+        margin: 1rem;
+    }
+
+    .btn_input_btn {
+        margin: 1.5rem 0;
+    }
+
+    .meeting-heading > h1 {
+        font-size: 1.1rem;
+    }
+
+    .meeting-heading > button {
+        width: 100%;
+        height: 45px;
+        font-size: 14px;
+    }
+
+    .profile_img, .settings_icon {
+        width: 25px;
+        height: 25px;
+        margin-right: 15px;
+    }
+
+    /* .profile-dropdown {
+        width: 80px;
+    } */
+
+    .profile-photo {
+        height: 150px;
+        width: 150px;
+    }
+
+    .profile-info {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .edit-profile-icon, .save-profile-icon {
+        width: 70%;
+        height: 40px;
+    }
+
+    .meeting-title {
+        font-size: 0.8rem;
+    }
+
+    .meeting-invite {
+        font-size: 0.8rem;
+    }
 }
