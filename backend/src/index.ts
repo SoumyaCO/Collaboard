@@ -78,7 +78,7 @@ mongoose
 export const httpServer = createServer(app)
 export const io: Server = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: "https://collaboard.gooddevs.org",
         methods: ["GET", "POST"],
         credentials: true,
     },
