@@ -32,7 +32,7 @@ jobs:
         working-directory: ./frontend
         run: | 
             npm run build
-            echo "${{secrets.ALL_SECRETS}}"
+            echo "${{secrets.AWS_SECRET_ACCESS_KEY}}"
 
       - name: Deploy to S3
         env:
