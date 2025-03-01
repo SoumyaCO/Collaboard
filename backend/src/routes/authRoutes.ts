@@ -154,7 +154,9 @@ router.post("/login", async (req: Request, res: Response) => {
         secure: true,
         partitioned: true,
         httpOnly: true,
-        maxAge: 3600000
+        maxAge: 3600000,
+        domain: ".gooddevs.org",
+        path: "/"
       })
       .send({ message: "login sucessful" });
   }
