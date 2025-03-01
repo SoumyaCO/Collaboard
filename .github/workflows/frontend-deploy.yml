@@ -31,6 +31,7 @@ jobs:
       - name: Build react app
         working-directory: ./frontend
         run: npm run build
+      # env: VITE_API_KEY : ${{secret.VITE_API_KEY}} adding the key-value pairs will ensure the values are injected in the build (from secrets) 
 
       - name: Deploy to S3
         env:
