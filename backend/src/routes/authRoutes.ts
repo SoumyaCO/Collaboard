@@ -142,17 +142,25 @@ router.post("/login", async (req: Request, res: Response) => {
             message: "Invalid credentials",
         })
 
-    if (!secret) {
-        console.log("Not a secret")
-    } else {
-        // Create JWT token
-        const token: String = jwt.sign({ _id: user._id }, secret)
-        res.status(200)
-            .cookie("authToken", token)
-            .send({ message: "login sucessful" })
-    }
-})
-let TOKEN: string = ""
+  if (!secret) {
+    console.log("Not a secret");
+  } else {
+    // Create JWT token
+    const token: String = jwt.sign({ _id: user._id }, secret);
+    res
+      .status(200)
+      .cookie("authToken", token, {
+        sameSite: "none",
+        secure: true,
+        partitioned: true,
+        httpOnly: true,
+        maxAge: 3600000
+      })
+      .send({ message: "login sucessful" });
+  }
+});
+let TOKEN: string = "";
+
 router.post("/forgot-password", async (req, res) => {
     const email = req.body.email
     const user: User | null = await UserModel.findOne({ email: email })
