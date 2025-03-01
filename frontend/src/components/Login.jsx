@@ -31,7 +31,7 @@ const Login = () => {
                     showAlert("Login successful!")
                     setTimeout(() => {
                         navigate("/")
-                        window.location.reload()
+                        //window.location.reload()
                     }, 1000)
                 } else {
                     showAlert("Login failed: " + response.data.message)
