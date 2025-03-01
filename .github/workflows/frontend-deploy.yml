@@ -3,7 +3,7 @@ name: Deploy to S3 and Cloudfront
 on:
   push:
     branches:
-      - deployment 
+      - main 
 
 jobs:
   build-n-deploy:
@@ -32,7 +32,6 @@ jobs:
         working-directory: ./frontend
         run: | 
             npm run build
-            echo "${{secrets.AWS_SECRET_ACCESS_KEY}}"
 
       - name: Deploy to S3
         env:
@@ -42,7 +41,6 @@ jobs:
         working-directory: ./frontend
         run: |
             aws s3 sync ./dist/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --region $AWS_REGION
-            echo "${{secrets.ALL_SECRETS}}"
 
       - name: Clear Cloudfront Cache
         env:
