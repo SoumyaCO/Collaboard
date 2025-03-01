@@ -136,7 +136,7 @@ router.post("/login", async (req: Request, res: Response) => {
       .status(200)
       .cookie("authToken", token, {
         sameSite: "none",
-        secure: false,
+        secure: true,
         partitioned: true,
         httpOnly: true,
         maxAge: 3600000
