@@ -44,6 +44,8 @@ const Navbar = () => {
 
     useEffect(() => {
         const token = Cookies.get("authToken")
+        console.log("repair branch authToken", token)
+
         if (token) {
             dispatch({ type: "USER", payload: true })
             fetchUserProfile()

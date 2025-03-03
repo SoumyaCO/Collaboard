@@ -58,12 +58,10 @@ router.post(
         // validate data before creating user
         const { error, value } = registerValidation(req.body)
         if (error)
-            return res
-                .status(400)
-                .send({
-                    message: "Validation failed",
-                    error: error.details[0].message,
-                })
+            return res.status(400).send({
+                message: "Validation failed",
+                error: error.details[0].message,
+            })
 
         // check if user already exists
         const emailExists = await UserModel.findOne({ email: req.body.email })
@@ -121,12 +119,10 @@ router.post("/login", async (req: Request, res: Response) => {
     // validate data before creating user
     const { error, value } = loginValidation(req.body)
     if (error)
-        return res
-            .status(400)
-            .send({
-                message: "Validation failed",
-                error: error.details[0].message,
-            })
+        return res.status(400).send({
+            message: "Validation failed",
+            error: error.details[0].message,
+        })
 
     // check if user exists
     const user = await UserModel.findOne({ email: req.body.email })
@@ -142,26 +138,25 @@ router.post("/login", async (req: Request, res: Response) => {
             message: "Invalid credentials",
         })
 
-  if (!secret) {
-    console.log("Not a secret");
-  } else {
-    // Create JWT token
-    const token: String = jwt.sign({ _id: user._id }, secret);
-    res
-      .status(200)
-      .cookie("authToken", token, {
-        sameSite: "none",
-        secure: true,
-        partitioned: true,
-        httpOnly: true,
-        maxAge: 3600000,
-        domain: ".gooddevs.org",
-        path: "/"
-      })
-      .send({ message: "login sucessful" });
-  }
-});
-let TOKEN: string = "";
+    if (!secret) {
+        console.log("Not a secret")
+    } else {
+        // Create JWT token
+        const token: String = jwt.sign({ _id: user._id }, secret)
+        res.status(200)
+            .cookie("authToken", token, {
+                sameSite: "none",
+                secure: true,
+                partitioned: true,
+                httpOnly: true,
+                maxAge: 3600000,
+                domain: ".gooddevs.org",
+                path: "/",
+            })
+            .send({ message: "login sucessful" })
+    }
+})
+let TOKEN: string = ""
 
 router.post("/forgot-password", async (req, res) => {
     const email = req.body.email
