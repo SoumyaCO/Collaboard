@@ -43,8 +43,8 @@ const Navbar = () => {
     }, [setUser])
 
     useEffect(() => {
-        const token = Cookies.get("authToken")
-        console.log("repair branch authToken", token)
+        const token = document.cookie
+        console.log("repair branch authToken", document.cookie)
 
         if (token) {
             dispatch({ type: "USER", payload: true })
