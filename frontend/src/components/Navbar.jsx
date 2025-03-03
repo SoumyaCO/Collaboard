@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react"
+import { useContext, useState, useEffect, useCallback } from "react"
 import profile from "../assets/profile_img.png"
 import logo from "../assets/logo.png"
 // import SettingsIcon from "../assets/Settings.png"
@@ -13,17 +13,8 @@ const Navbar = () => {
     const navigate = useNavigate()
     const apiUrl = import.meta.env.VITE_API_KEY
 
-    useEffect(() => {
-        const token = Cookies.get("authToken")
-        if (token) {
-            dispatch({ type: "USER", payload: true })
-            fetchUserProfile()
-        } else {
-            dispatch({ type: "USER", payload: false })
-            setUser(null)
-        }
-    }, [dispatch]) // effect runs when ever dispatch changes
-    const fetchUserProfile = async () => {
+    // effect runs when ever dispatch changes
+    const fetchUserProfile = useCallback(async () => {
         try {
             const res = await fetch(`${apiUrl}/auth/getdata`, {
                 method: "GET",
@@ -49,7 +40,18 @@ const Navbar = () => {
         } catch (err) {
             console.error(err)
         }
-    }
+    }, [setUser])
+
+    useEffect(() => {
+        const token = Cookies.get("authToken")
+        if (token) {
+            dispatch({ type: "USER", payload: true })
+            fetchUserProfile()
+        } else {
+            dispatch({ type: "USER", payload: false })
+            setUser(null)
+        }
+    }, [dispatch, fetchUserProfile, setUser])
 
     const handleProfileClick = () => {
         if (state?.isLoggedIn) {
